@@ -12,17 +12,26 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y python3-pip openjdk-17-jdk unzip zip aidl
+          sudo apt install -y python3-pip openjdk-17-jdk unzip zip aidl wget
           pip install --upgrade pip
           pip install buildozer cython==0.29.33
-      - name: Accept Android Licenses
+
+      - name: Setup Android SDK fix
         run: |
+          mkdir -p ~/.buildozer/android/platform/android-sdk/tools/bin
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline.zip
+          unzip -q /tmp/cmdline.zip -d /tmp/
+          mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+          cp -r /tmp/cmdline-tools/* ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/ 2>/dev/null || cp -r /tmp/cmdline-tools/cmdline-tools/* ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/
+          ln -sf ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
           mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af55d8d6b72" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
+
       - name: Build APK
         run: |
           yes | buildozer android debug
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
