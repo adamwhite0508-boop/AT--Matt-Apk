@@ -18,16 +18,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libtinfo5 cmake libffi-dev libssl-dev
 
-      - name: Fix sdkmanager path for buildozer
+      - name: Fix sdkmanager path and licenses
         run: |
-          mkdir -p /home/runner/.buildozer/android/platform/android-sdk/tools/bin
-          ln -sf $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager /home/runner/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
-          mkdir -p $ANDROID_HOME/licenses
-          mkdir -p /home/runner/.buildozer/android/platform/android-sdk/licenses
-          for d in $ANDROID_HOME/licenses /home/runner/.buildozer/android/platform/android-sdk/licenses; do
-            echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $d/android-sdk-license
-            echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $d/android-sdk-license
-          done
+          SDK1=$ANDROID_HOME
+          SDK2=/home/runner/.buildozer/android/platform/android-sdk
+          mkdir -p $SDK1/licenses
+          mkdir -p $SDK2/licenses
+          mkdir -p $SDK2/tools/bin
+          ln -sf $SDK1/cmdline-tools/latest/bin/sdkmanager $SDK2/tools/bin/sdkmanager || true
+          # 2 licenses chahiye - yahi main galti thi
+          printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n" > $SDK1/licenses/android-sdk-license
+          printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n" > $SDK2/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c1059b8ea4b2db" > $SDK1/licenses/android-sdk-preview-license
+          echo "24333f8a63b6825ea9c5514f83c1059b8ea4b2db" > $SDK2/licenses/android-sdk-preview-license
+          # force accept
+          yes | $SDK1/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          yes | $SDK1/cmdline-tools/latest/bin/sdkmanager "build-tools;37.0.0" || true
+          cat $SDK2/licenses/android-sdk-license
+          ls -l $SDK2/build-tools/ || echo "no build-tools yet - will be installed by buildozer"
 
       - name: Build APK
         run: |
