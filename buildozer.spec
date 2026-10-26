@@ -19,3 +19,7 @@ android.minapi = 23
 android.sdk = 35
 android.ndk = 27c
 android.accept_sdk_license_agreement = True
+p4a.fork = kivy
+p4a.branch = master
+p4a.bootstrap = sdl2
+p4a.source_dir = 
