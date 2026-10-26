@@ -4,7 +4,7 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
@@ -13,7 +13,7 @@ jobs:
           java-version: '17'
 
       - name: Setup Python 3.10
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -21,27 +21,20 @@ jobs:
         run: |
           echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
           echo "$JAVA_HOME_17_X64/bin" >> $GITHUB_PATH
-          java -version
 
       - name: Install Dependencies
         run: |
           pip install --upgrade pip
           pip install buildozer cython==0.29.33
           sudo apt-get update
-          sudo apt-get install -y zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev libltdl-dev libgl1-mesa-dev
-
-      - name: Accept Android Licenses
-        run: |
-          yes | sdkmanager --licenses || true
-          mkdir -p ~/.buildozer/android/platform/android-sdk
-          touch ~/.buildozer/android/platform/android-sdk/.accepted_license
+          sudo apt-get install -y zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev libltdl-dev
 
       - name: Build APK
         run: |
           buildozer android debug
 
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: AT-World-Matter-Final-APK
           path: bin/*.apk
