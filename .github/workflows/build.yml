@@ -28,3 +28,4 @@ jobs:
         with:
           name: AT-Matt-APK
           path: bin/*.apk
+android.accept_sdk_license_agreement = True
