@@ -1,13 +1,17 @@
 [app]
-title = AT-Matt
-package.name = atworld.atmatt
-package.domain = com.atworld
+title = AT World Matter
+package.name = atworldmatter
+package.domain = com.at.worldmatter
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas
-version = 0.1
-requirements = python3,kivy,kivymd
+source.include_exts = py,png,kv
+version = 1.0
+requirements = python3,kivy==2.3.0,kivymd==1.1.1,pillow
+icon.filename = %(source.dir)s/icon.png
+presplash.filename = %(source.dir)s/icon.png
 orientation = portrait
-android.permissions = INTERNET
-
-[buildozer]
-log_level = 2
+[app:android]
+android.permissions = INTERNET,RECORD_AUDIO,CAMERA,READ_CONTACTS
+android.api = 33
+android.minapi = 21
+android.ndk = 25b
+android.accept_sdk_license_agreement = True
