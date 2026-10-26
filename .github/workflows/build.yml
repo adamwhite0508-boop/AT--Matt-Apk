@@ -18,22 +18,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libtinfo5 cmake libffi-dev libssl-dev
 
-      - name: Create Licenses
+      - name: Fix sdkmanager path for buildozer
         run: |
+          mkdir -p /home/runner/.buildozer/android/platform/android-sdk/tools/bin
+          ln -sf $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager /home/runner/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
           mkdir -p $ANDROID_HOME/licenses
           mkdir -p /home/runner/.buildozer/android/platform/android-sdk/licenses
           for d in $ANDROID_HOME/licenses /home/runner/.buildozer/android/platform/android-sdk/licenses; do
             echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $d/android-sdk-license
             echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $d/android-sdk-license
-            echo "24333f8a63b6825ea9c5514f83c1059b8ea4b2db" > $d/android-sdk-preview-license
           done
 
       - name: Build APK
         run: |
           pip install --upgrade pip
-          pip install cython==0.29.33
-          pip install https://github.com/kivy/python-for-android/archive/master.zip
-          pip install buildozer
+          pip install cython==0.29.33 buildozer
+          pip install --force-reinstall --no-deps https://github.com/kivy/python-for-android/archive/master.zip
           buildozer android debug
 
       - name: Upload APK
