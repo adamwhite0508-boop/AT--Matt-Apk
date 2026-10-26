@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Fix JAVA_HOME to 17
+      - name: Fix JAVA_HOME
         run: |
           echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
           echo "$JAVA_HOME_17_X64/bin" >> $GITHUB_PATH
@@ -27,7 +27,14 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython==0.29.33
           sudo apt-get update
-          sudo apt-get install -y zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libltdl-dev cmake libffi-dev libssl-dev libgl1-mesa-dev
+          sudo apt-get install -y zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev libltdl-dev libgl1-mesa-dev
+
+      - name: Accept Android SDK Licenses & Install Build-Tools
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager --install "build-tools;33.0.2" "build-tools;37.0.0" "platform-tools" "platforms;android-33" || true
+          sdkmanager --licenses || true
+          ls $ANDROID_HOME/build-tools/ || ls /usr/local/lib/android/sdk/build-tools/ || true
 
       - name: Build APK
         run: |
