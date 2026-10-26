@@ -14,14 +14,12 @@ log_level = 2
 warn_on_root = 1
 
 [app:android]
-android.api = 35
+android.api = 33
 android.minapi = 23
-android.sdk = 35
-android.ndk = 27c
+android.sdk = 33
+android.ndk = 25.1.8937393
 android.accept_sdk_license_agreement = True
 p4a.fork = kivy
-p4a.branch = master
 p4a.bootstrap = sdl2
-p4a.source_dir = 
 p4a.sdk_dir = /usr/local/lib/android/sdk
 p4a.ndk_dir = /usr/local/lib/android/sdk/ndk/25.1.8937393
