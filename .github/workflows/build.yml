@@ -16,34 +16,27 @@ jobs:
       - name: Install system libs
         run: |
           sudo apt-get update
-          sudo apt-get install -y zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libtinfo5 cmake libffi-dev libssl-dev
+          sudo apt-get install -y zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libtinfo5 cmake libffi-dev libssl-dev libltdl-dev
 
       - name: Pre-install and Link SDK
         run: |
           SDK=$ANDROID_HOME
-          echo "SDK is $SDK"
           mkdir -p $SDK/licenses
           printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n" > $SDK/licenses/android-sdk-license
           echo "24333f8a63b6825ea9c5514f83c1059b8ea4b2db" > $SDK/licenses/android-sdk-preview-license
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses
-          yes | $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;37.0.0" "platforms;android-35" "platform-tools" "ndk;25.1.8937393"
-          # --- YEH FIX SABSE IMPORTANT HAI ---
+          yes | $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;37.0.0" "platforms;android-33" "platform-tools" "ndk;25.1.8937393"
           mkdir -p $SDK/tools/bin
           ln -sf $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
           ln -sf $SDK/cmdline-tools/latest/bin/avdmanager $SDK/tools/bin/avdmanager
-          # Ab buildozer ke path ko system SDK se jodo
           mkdir -p /home/runner/.buildozer/android/platform
           rm -rf /home/runner/.buildozer/android/platform/android-sdk
           ln -sfn $SDK /home/runner/.buildozer/android/platform/android-sdk
-          ls -l /home/runner/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
-          /home/runner/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager --version
-          ls /home/runner/.buildozer/android/platform/android-sdk/build-tools/37.0.0/aidl
 
       - name: Build APK
         run: |
           pip install --upgrade pip
-          pip install cython==0.29.33 buildozer
-          pip install --force-reinstall --no-deps https://github.com/kivy/python-for-android/archive/master.zip
+          pip install "cython==0.29.33" "buildozer==1.5.0"
           buildozer android debug
 
       - name: Upload APK
