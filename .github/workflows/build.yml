@@ -12,6 +12,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+
       - name: Install Dependencies
         run: |
           pip install --upgrade pip
@@ -20,21 +21,28 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev libltdl-dev libgl1-mesa-dev
 
-      - name: Fix SDK Path for Buildozer
+      - name: Fix License + Install Aidl
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "ANDROIDSDK=$ANDROID_HOME" >> $GITHUB_ENV
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools/bin
-          ln -sf $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager || true
-          ln -sf $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager $HOME/.buildozer/android/platform/android-sdk/tools/bin/avdmanager || true
+          # 1. License file 3 jagah banao
           mkdir -p $ANDROID_HOME/licenses
+          mkdir -p $HOME/.android/licenses
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $ANDROID_HOME/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" > $ANDROID_HOME/licenses/android-sdk-preview-license
+          cp $ANDROID_HOME/licenses/* $HOME/.android/licenses/
+          cp $ANDROID_HOME/licenses/* $HOME/.buildozer/android/platform/android-sdk/licenses/
+          
+          # 2. Dono SDK me build-tools 37.0.0 install karo - yahi aidl deta hai
           yes | sdkmanager --licenses || true
+          sdkmanager --sdk_root=$ANDROID_HOME "build-tools;37.0.0" "build-tools;35.0.0" "platforms;android-35" "platform-tools" || true
+          sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk "build-tools;37.0.0" "build-tools;35.0.0" "platforms;android-35" "platform-tools" || true
+          
+          # 3. Check karo aidl bana ya nahi
+          ls $ANDROID_HOME/build-tools/37.0.0/aidl || true
+          ls $HOME/.buildozer/android/platform/android-sdk/build-tools/37.0.0/aidl || true
 
       - name: Build APK
-        run: |
-          buildozer android debug
+        run: buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
