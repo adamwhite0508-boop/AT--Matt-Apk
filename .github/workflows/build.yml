@@ -18,7 +18,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libtinfo5 cmake libffi-dev libssl-dev
 
-      - name: Pre-install Android SDK packages
+      - name: Pre-install and Link SDK
         run: |
           SDK=$ANDROID_HOME
           mkdir -p $SDK/licenses
@@ -26,7 +26,13 @@ jobs:
           echo "24333f8a63b6825ea9c5514f83c1059b8ea4b2db" > $SDK/licenses/android-sdk-preview-license
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;37.0.0" "platforms;android-35" "platform-tools" "ndk;25.1.8937393"
-          ls $SDK/build-tools/37.0.0/aidl
+          # --- YEH SABSE IMPORTANT HAI ---
+          # Buildozer ke SDK ko System SDK se link karo
+          mkdir -p /home/runner/.buildozer/android/platform
+          rm -rf /home/runner/.buildozer/android/platform/android-sdk
+          ln -sfn $SDK /home/runner/.buildozer/android/platform/android-sdk
+          ls /home/runner/.buildozer/android/platform/android-sdk/build-tools/37.0.0/aidl
+          echo "Link done"
 
       - name: Build APK
         run: |
