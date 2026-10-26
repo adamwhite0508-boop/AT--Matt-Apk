@@ -16,30 +16,19 @@ jobs:
       - name: Build APK
         run: |
           pip install --upgrade pip
-          pip install https://github.com/kivy/buildozer/archive/master.zip
-          pip install https://github.com/kivy/python-for-android/archive/master.zip
-          pip install cython==0.29.33
+          pip install buildozer cython==0.29.33
           sudo apt-get update
-          sudo apt-get install -y zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libtinfo5 cmake libffi-dev libssl-dev libltdl-dev libgl1-mesa-dev
-          
-          # sdkmanager ka nakli rasta banao
+          sudo apt-get install -y zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev libltdl-dev libgl1-mesa-dev libtinfo5 || sudo apt-get install -y libtinfo-dev
           mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools/bin
-          ln -sf $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
-          ln -sf $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager $HOME/.buildozer/android/platform/android-sdk/tools/bin/avdmanager
-          
-          # license accept karo
-          mkdir -p $ANDROID_HOME/licenses $HOME/.buildozer/android/platform/android-sdk/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" | tee $ANDROID_HOME/licenses/android-sdk-license $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license > /dev/null
+          ln -sf $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager || true
+          mkdir -p $ANDROID_HOME/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $ANDROID_HOME/licenses/android-sdk-license
           yes | sdkmanager --licenses || true
-          
-          # 37.0.0 install karo taaki aidl mil jaye
-          sdkmanager "build-tools;37.0.0" "build-tools;35.0.0" "platforms;android-35" "platform-tools" || true
-          
-          # ab build karo
+          sdkmanager "build-tools;37.0.0" "build-tools;35.0.0" "platforms;android-35" || true
           buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AT-World-Matter-Final-APK
+          name: APK
           path: bin/*.apk
