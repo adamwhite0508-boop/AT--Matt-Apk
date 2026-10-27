@@ -16,25 +16,12 @@ jobs:
         run: |
           python3.10 -m pip install --upgrade pip
           python3.10 -m pip install buildozer Cython==0.29.36
-      - name: FORCE Create License Files for Buildozer SDK
+      - name: Build APK
         run: |
-          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
-          echo "24333f8a63b6825ea9c5514f83c1059b8ea5a0b" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-arm-dbt-license
-          mkdir -p $HOME/.android
-          touch $HOME/.android/repositories.cfg
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;37.0.0" "build-tools;33.0.2" "platforms;android-33" || true
-          cp -r $ANDROID_HOME/licenses/* ~/.buildozer/android/platform/android-sdk/licenses/ || true
-          cp -r $ANDROID_HOME/build-tools/* ~/.buildozer/android/platform/android-sdk/build-tools/ 2>/dev/null || true
-          echo "License files created"
-          ls ~/.buildozer/android/platform/android-sdk/licenses/
-      - name: Fix spec
-        run: |
-          rm -rf .buildozer bin
-          # bin mat hatao, .buildozer ka SDK licenses wala folder bacha ke rakho
-          mkdir -p .buildozer
+          # 1. Pehle sab delete
+          rm -rf .buildozer bin ~/.buildozer
+          
+          # 2. Spec banao - NDK 28c rakho taaki download ka chakkar khatam
           cat > buildozer.spec << 'EOF'
           [app]
           title = AT Matt Apk
@@ -42,25 +29,34 @@ jobs:
           package.domain = org.atmattapk
           source.dir = .
           version = 1.0
-          requirements = hostpython3==3.11.6,python3==3.11.6,kivy==2.2.0
+          requirements = python3==3.11.6,kivy==2.2.0
           orientation = portrait
           [buildozer]
           log_level = 1
           [app:android]
           android.api = 33
           android.minapi = 21
-          android.ndk = 25b
+          android.ndk = 28c
           android.accept_sdk_license_agreement = True
-          android.build_tools_version = 33.0.2
           android.archs = arm64-v8a
-          p4a.branch = 2024.1.21
+          p4a.branch = master
           EOF
-          # licenses ko wapas copy karo kyunki rm -rf .buildozer se delete hua tha, toh dobara banao
+
+          # 3. License aur sdkmanager ka path fix
+          mkdir -p ~/.buildozer/android/platform/android-sdk/tools/bin
           mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
-      - name: Build APK
-        run: |
+          echo "24333f8a63b6825ea9c5514f83c1059b8ea5a0b" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-arm-dbt-license
+          
+          # 4. System ka sdkmanager copy karo taaki "sdkmanager does not exist" error khatam
+          mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
+          cp -r $ANDROID_HOME/cmdline-tools/latest/* ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/ 2>/dev/null || true
+          ln -sf ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager || true
+          cp -r $ANDROID_HOME/licenses/* ~/.buildozer/android/platform/android-sdk/licenses/ 2>/dev/null || true
+          yes | ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          
+          # 5. Ab build
           python3.10 -m buildozer android debug
       - name: Upload APK
         if: success()
