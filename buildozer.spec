@@ -20,6 +20,6 @@ android.sdk = 33
 android.ndk = 25.1.8937393
 android.archs = arm64-v8a
 p4a.ndk_api = 24
-android.accept_sdk_license_agreement = True
+android.accept_sdk_license_agreements = True
+android.build_tools_version = 33.0.2
 p4a.bootstrap = sdl2
-#android.accept_sdk_license_agreements
