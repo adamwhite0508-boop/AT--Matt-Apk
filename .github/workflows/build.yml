@@ -16,14 +16,38 @@ jobs:
         run: |
           python3.10 -m pip install --upgrade pip
           python3.10 -m pip install buildozer Cython==0.29.36 Kivy==2.2.0
-      - name: Pre-setup Buildozer SDK
+      - name: Setup SDK with License Hack for 37
         run: |
+          cat > buildozer.spec << 'EOF'
+          [app]
+          title = AT Matt Apk
+          package.name = org.atmattapk
+          package.domain = org.atmattapk
+          source.dir = .
+          version = 1.0
+          requirements = python3,kivy
+          orientation = portrait
+          [buildozer]
+          log_level = 2
+          [app:android]
+          android.api = 33
+          android.minapi = 21
+          android.ndk = 28c
+          android.accept_sdk_license_agreement = True
+          android.build_tools_version = 37.0.0
+          android.archs = arm64-v8a
+          EOF
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-33" "build-tools;33.0.2" "platform-tools"
-          mkdir -p ~/.buildozer/android/platform/android-sdk/tools/bin
-          ln -sf $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
-          mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/
-          cp -r $ANDROID_HOME/cmdline-tools/latest ~/.buildozer/android/platform/android-sdk/cmdline-tools/ || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-33" "build-tools;37.0.0" "build-tools;33.0.2" "platform-tools"
+          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c1053816b6d832" >> ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "y" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
+          mkdir -p ~/.buildozer/android/platform/android-sdk/build-tools/37.0.0
+          cp -r $ANDROID_HOME/build-tools/37.0.0/* ~/.buildozer/android/platform/android-sdk/build-tools/37.0.0/
+          chmod +x ~/.buildozer/android/platform/android-sdk/build-tools/37.0.0/aidl
+          ls -lh ~/.buildozer/android/platform/android-sdk/build-tools/37.0.0/aidl
       - name: Build APK
         run: |
           python3.10 -m buildozer android debug
