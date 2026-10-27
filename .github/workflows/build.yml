@@ -16,16 +16,25 @@ jobs:
         run: |
           python3.10 -m pip install --upgrade pip
           python3.10 -m pip install buildozer Cython==0.29.36
-      - name: Force Accept Licenses + Install All Build-Tools
+      - name: FORCE Create License Files for Buildozer SDK
         run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-33" "build-tools;33.0.2" "build-tools;37.0.0" "platform-tools" "ndk;25.1.8937393"
-          mkdir -p ~/.buildozer/android/platform/
-          ln -sf $ANDROID_HOME/ndk/25.1.8937393 ~/.buildozer/android/platform/android-ndk-r25b || true
-          echo "Licenses accepted and build-tools 37 installed"
-      - name: Fix spec Single Arch
+          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
+          echo "24333f8a63b6825ea9c5514f83c1059b8ea5a0b" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-arm-dbt-license
+          mkdir -p $HOME/.android
+          touch $HOME/.android/repositories.cfg
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;37.0.0" "build-tools;33.0.2" "platforms;android-33" || true
+          cp -r $ANDROID_HOME/licenses/* ~/.buildozer/android/platform/android-sdk/licenses/ || true
+          cp -r $ANDROID_HOME/build-tools/* ~/.buildozer/android/platform/android-sdk/build-tools/ 2>/dev/null || true
+          echo "License files created"
+          ls ~/.buildozer/android/platform/android-sdk/licenses/
+      - name: Fix spec
         run: |
           rm -rf .buildozer bin
+          # bin mat hatao, .buildozer ka SDK licenses wala folder bacha ke rakho
+          mkdir -p .buildozer
           cat > buildozer.spec << 'EOF'
           [app]
           title = AT Matt Apk
@@ -46,6 +55,10 @@ jobs:
           android.archs = arm64-v8a
           p4a.branch = 2024.1.21
           EOF
+          # licenses ko wapas copy karo kyunki rm -rf .buildozer se delete hua tha, toh dobara banao
+          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
       - name: Build APK
         run: |
           python3.10 -m buildozer android debug
