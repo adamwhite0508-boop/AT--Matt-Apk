@@ -14,6 +14,11 @@ jobs:
           python-version: '3.10'
       - name: Clean NDK
         run: sudo rm -rf /usr/local/lib/android/sdk/ndk
+      - name: Accept Android Licenses
+        run: |
+          export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "build-tools;37.0.0"
       - name: Install libs
         run: |
           sudo apt-get update
