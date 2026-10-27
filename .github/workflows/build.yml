@@ -13,7 +13,7 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Build APK - FINAL FIXED
+      - name: Build APK - KIVYMD FINAL
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev cmake libltdl-dev unzip
@@ -21,31 +21,27 @@ jobs:
           pip install --upgrade pip
           pip install Cython==0.29.36 buildozer==1.5.0
           
-          echo "=== FIX SDKMANAGER PATH ==="
+          echo "=== FIX SDKMANAGER ==="
           mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools/bin
           mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
           cp -r $ANDROID_HOME/cmdline-tools/latest/* $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/ 2>/dev/null || true
           cp $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager 2>/dev/null || true
-          cp $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager 2>/dev/null || true
           chmod +x $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
-          chmod +x $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager
           
           mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo "24333f8a63b6825ea9c5514f83c1059b8ea4b984" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
-          
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
           
           cat > buildozer.spec << 'EOF'
           [app]
-          title = AT Matt Apk
-          package.name = at_matt_apk
-          package.domain = com.atmattapk.app
+          title = AT World Matter
+          package.name = atworldmatter
+          package.domain = com.atworldmatter.app
           source.dir = .
-          source.include_exts = py,png,jpg,kv,atlas
+          source.include_exts = py,png,jpg,kv,atlas,json
           version = 1.0
-          requirements = python3,kivy==2.3.0
+          requirements = python3,kivy==2.3.0,kivymd==1.1.1,pillow,materialyoucolor
           orientation = portrait
           [buildozer]
           log_level = 1
@@ -60,7 +56,6 @@ jobs:
           p4a.bootstrap = sdl2
           p4a.branch = v2024.1.21
           EOF
-          cat buildozer.spec
           buildozer android debug
 
       - uses: actions/upload-artifact@v4
