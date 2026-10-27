@@ -16,13 +16,15 @@ jobs:
         run: |
           python3.10 -m pip install --upgrade pip
           python3.10 -m pip install buildozer Cython==0.29.36 Kivy==2.2.0
-      - name: Accept licenses and install SDK
+      - name: Accept licenses and install Build-Tools
         run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-33" "build-tools;33.0.2" "platform-tools"
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-33" "build-tools;37.0.0" "build-tools;33.0.2" "platform-tools" "ndk;28c"
+          mkdir -p ~/.buildozer/android/platform
+          ln -sf $ANDROID_HOME/ndk/28c ~/.buildozer/android/platform/android-ndk-r28c
       - name: Build APK
         run: |
-          rm -rf ~/.buildozer
+          rm -rf ~/.buildozer/android/platform/android-sdk/build-tools
           python3.10 -m buildozer android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
