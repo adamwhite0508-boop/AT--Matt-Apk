@@ -25,8 +25,14 @@ jobs:
       - name: Build APK
         run: |
           rm -rf ~/.buildozer/android/platform/android-sdk
-          mkdir -p ~/.buildozer/android/platform/
-          ln -s $ANDROID_HOME ~/.buildozer/android/platform/android-sdk
+          mkdir -p ~/.buildozer/android/platform/android-sdk/tools/bin
+          ln -s $ANDROID_HOME/cmdline-tools ~/.buildozer/android/platform/android-sdk/cmdline-tools
+          ln -s $ANDROID_HOME/build-tools ~/.buildozer/android/platform/android-sdk/build-tools
+          ln -s $ANDROID_HOME/platforms ~/.buildozer/android/platform/android-sdk/platforms
+          ln -s $ANDROID_HOME/platform-tools ~/.buildozer/android/platform/android-sdk/platform-tools
+          ln -s $ANDROID_HOME/ndk ~/.buildozer/android/platform/android-sdk/ndk
+          ln -s $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+          chmod +x ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
           buildozer android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
