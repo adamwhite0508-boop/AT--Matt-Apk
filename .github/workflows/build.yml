@@ -12,8 +12,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-      - name: Build APK - FINAL GREEN FIXED
+      - name: Build APK - ULTIMATE SINGLE
         run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev libbz2-dev libsqlite3-dev zlib1g-dev libncurses5-dev libncursesw5-dev libreadline-dev liblzma-dev
           rm -rf bin .buildozer ~/.buildozer
           cat > buildozer.spec << 'EOF'
           [app]
@@ -25,23 +27,23 @@ jobs:
           requirements = python3,kivy==2.3.0
           orientation = portrait
           [buildozer]
-          log_level = 1
+          log_level = 2
           [app:android]
           android.api = 33
           android.minapi = 21
-          android.ndk = 25b
+          android.ndk = 28c
           android.accept_sdk_license_agreement = True
           android.archs = arm64-v8a
-          p4a.branch = v2024.1.21
+          p4a.branch = master
           EOF
-          pip install Cython==0.29.36 buildozer==1.5.0
+          pip install --upgrade pip
+          pip install Cython==3.0.10 buildozer
+          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           mkdir -p ~/.buildozer/android/platform/android-sdk/tools/bin
           mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
-          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
           cp -r $ANDROID_HOME/cmdline-tools/latest/* ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/ 2>/dev/null || true
           ln -sf $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager 2>/dev/null || true
-          ln -sf ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager 2>/dev/null || true
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           cp -r $ANDROID_HOME/licenses/* ~/.buildozer/android/platform/android-sdk/licenses/ 2>/dev/null || true
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
           buildozer android debug
