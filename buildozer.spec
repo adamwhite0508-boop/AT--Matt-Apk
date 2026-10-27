@@ -15,9 +15,9 @@ warn_on_root = 1
 
 [app:android]
 android.api = 33
-android.minapi = 23
+android.minapi = 24
 android.sdk = 33
 android.ndk = 25.1.8937393
-android.archs = arm64-v8a
+android.arch = arm64-v8a
 android.accept_sdk_license_agreement = True
 p4a.bootstrap = sdl2
