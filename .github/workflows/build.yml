@@ -33,10 +33,13 @@ jobs:
 
       - name: Build APK
         run: |
+          mkdir -p ~/.buildozer/android/platform/android-sdk/tools/bin
+          cp -rv $ANDROID_HOME/cmdline-tools/latest/bin/* ~/.buildozer/android/platform/android-sdk/tools/bin/ || true
+          cp -rv $ANDROID_HOME/cmdline-tools/latest/lib ~/.buildozer/android/platform/android-sdk/tools/ || true
           mkdir -p ~/.buildozer/android/platform/android-sdk/build-tools/
-          cp -rv $ANDROID_HOME/build-tools/* ~/.buildozer/android/platform/android-sdk/build-tools/
-          ls ~/.buildozer/android/platform/android-sdk/build-tools/
-          ls ~/.buildozer/android/platform/android-sdk/build-tools/33.0.2/
+          cp -rv $ANDROID_HOME/build-tools/* ~/.buildozer/android/platform/android-sdk/build-tools/ || true
+          mkdir -p ~/.buildozer/android/platform/android-sdk/platform-tools/
+          cp -rv $ANDROID_HOME/platform-tools/* ~/.buildozer/android/platform/android-sdk/platform-tools/ || true
           buildozer android debug
 
       - name: Upload APK
