@@ -16,8 +16,9 @@ jobs:
         run: |
           python3.10 -m pip install --upgrade pip
           python3.10 -m pip install buildozer Cython==0.29.36 Kivy==2.2.0
-      - name: Force Fix buildozer.spec
+      - name: Force Fix buildozer.spec with Stable P4A
         run: |
+          rm -rf .buildozer
           cat > buildozer.spec << 'EOF'
           [app]
           title = AT Matt Apk
@@ -25,38 +26,38 @@ jobs:
           package.domain = org.atmattapk
           source.dir = .
           version = 1.0
-          requirements = python3,kivy
+          requirements = python3==3.11.6,kivy==2.2.0
           orientation = portrait
           [buildozer]
-          log_level = 2
+          log_level = 1
           [app:android]
           android.api = 33
           android.minapi = 21
-          android.ndk = 28c
+          android.ndk = 25b
           android.accept_sdk_license_agreement = True
           android.build_tools_version = 33.0.2
           android.archs = arm64-v8a
           p4a.url = https://github.com/kivy/python-for-android.git
-          p4a.branch = develop
+          p4a.branch = 2024.1.21
           EOF
           cat buildozer.spec
-      - name: Pre-setup SDK to fix both errors
+      - name: Pre-setup SDK
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-33" "build-tools;33.0.2" "build-tools;37.0.0" "platform-tools"
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-33" "build-tools;33.0.2" "platform-tools"
           mkdir -p ~/.buildozer/android/platform/android-sdk/tools/bin
           mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
-          cp -r $ANDROID_HOME/cmdline-tools/latest/* ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/ || true
+          cp -r $ANDROID_HOME/cmdline-tools/latest/* ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/ 2>/dev/null || true
           ln -sf ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager || true
           mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
-          cp -r $ANDROID_HOME/licenses/* ~/.buildozer/android/platform/android-sdk/licenses/ || true
+          cp -r $ANDROID_HOME/licenses/* ~/.buildozer/android/platform/android-sdk/licenses/ 2>/dev/null || true
           mkdir -p ~/.buildozer/android/platform/android-sdk/build-tools/
-          cp -r $ANDROID_HOME/build-tools/33.0.2 ~/.buildozer/android/platform/android-sdk/build-tools/ || true
-          cp -r $ANDROID_HOME/build-tools/37.0.0 ~/.buildozer/android/platform/android-sdk/build-tools/ || true
+          cp -r $ANDROID_HOME/build-tools/33.0.2 ~/.buildozer/android/platform/android-sdk/build-tools/ 2>/dev/null || true
       - name: Build APK
         run: |
           python3.10 -m buildozer android debug
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: apk
