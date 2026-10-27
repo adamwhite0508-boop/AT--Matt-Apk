@@ -19,12 +19,9 @@ jobs:
       - name: Accept licenses and install Build-Tools
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-33" "build-tools;37.0.0" "build-tools;33.0.2" "platform-tools" "ndk;28c"
-          mkdir -p ~/.buildozer/android/platform
-          ln -sf $ANDROID_HOME/ndk/28c ~/.buildozer/android/platform/android-ndk-r28c
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-33" "build-tools;37.0.0" "build-tools;33.0.2" "platform-tools"
       - name: Build APK
         run: |
-          rm -rf ~/.buildozer/android/platform/android-sdk/build-tools
           python3.10 -m buildozer android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
