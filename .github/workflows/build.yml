@@ -32,6 +32,8 @@ jobs:
           cp -rv $ANDROID_HOME/build-tools/* ~/.buildozer/android/platform/android-sdk/build-tools/ || true
           mkdir -p ~/.buildozer/android/platform/android-sdk/platform-tools/
           cp -rv $ANDROID_HOME/platform-tools/* ~/.buildozer/android/platform/android-sdk/platform-tools/ || true
+          mkdir -p ~/.buildozer/android/platform/android-sdk/platforms/
+          cp -rv $ANDROID_HOME/platforms/* ~/.buildozer/android/platform/android-sdk/platforms/ || true
           buildozer android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
