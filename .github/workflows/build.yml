@@ -5,46 +5,29 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-
-      - name: Build APK - FINAL WRAPPER FIX
+      - name: Build APK - CLEAN FINAL
         run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip build-essential git python3-dev libssl-dev libffi-dev zlib1g-dev
           pip install --upgrade pip
-          pip install Cython==0.29.36 buildozer==1.5.0
-          rm -rf .buildozer bin buildozer.spec
-          
-          # === MAIN FIX: Create wrapper for old sdkmanager path ===
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools/bin
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
-          cp -r $ANDROID_HOME/cmdline-tools/latest/* $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/ || true
-          
-          # Create WRAPPER SCRIPT - yehi fix hai
-          cat > $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager << 'WRAP'
-          #!/bin/bash
-          exec $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager "$@"
-          WRAP
-          chmod +x $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
-          chmod +x $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager
-          
-          # Licenses
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo "24333f8a63b6825ea9c5514f83c1059b8ea4b984" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
-          
-          # Pre-install SDK to avoid buildozer call
-          yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk --licenses || true
-          $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25b" || true
-          
-          cat > buildozer.spec << 'SPEC'
+          pip install Cython==0.29.33 buildozer==1.5.0
+          sudo apt update && sudo apt install -y zip unzip
+          rm -rf .buildozer bin
+          export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
+          mkdir -p $ANDROIDSDK/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O /tmp/cmd.zip
+          unzip -q /tmp/cmd.zip -d $ANDROIDSDK/cmdline-tools
+          mv $ANDROIDSDK/cmdline-tools/cmdline-tools $ANDROIDSDK/cmdline-tools/latest
+          mkdir -p $ANDROIDSDK/tools/bin
+          echo -e "#!/bin/bash\nexec \$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager \"\$@\"" > $ANDROIDSDK/tools/bin/sdkmanager
+          chmod +x $ANDROIDSDK/tools/bin/sdkmanager
+          yes | $ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null || true
+          cat > buildozer.spec << 'EOF'
           [app]
           title = AT World Matter
           package.name = atworldmatter
@@ -52,23 +35,19 @@ jobs:
           source.dir = .
           source.include_exts = py,png,jpg,kv,atlas
           version = 1.0
-          requirements = python3,kivy==2.2.0,kivymd==1.1.1,Pillow
+          requirements = python3,kivy==2.3.0,kivymd==1.1.1,Pillow
           orientation = portrait
           [buildozer]
           log_level = 2
-          warn_on_root = 1
           [app:android]
           android.api = 33
           android.minapi = 21
           android.ndk = 25b
           android.sdk = 33
-          android.accept_sdk_license_agreement = True
           android.archs = arm64-v8a
-          p4a.bootstrap = sdl2
-          android.allow_backup = False
-          SPEC
-          buildozer android debug
-
+          android.accept_sdk_license_agreement = True
+          EOF
+          buildozer -v android debug
       - uses: actions/upload-artifact@v4
         with:
           name: apk
