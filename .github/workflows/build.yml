@@ -17,9 +17,21 @@ jobs:
       - name: Install and Build
         run: |
           sudo apt update
-          sudo apt install -y python3-pip build-essential libltdl-dev python3-dev libffi-dev libssl-dev
+          sudo apt install -y build-essential libltdl-dev python3-dev libffi-dev libssl-dev
           pip install --upgrade pip
           pip install buildozer Cython==0.29.33
+          mkdir -p ~/.android
+          touch ~/.android/repositories.cfg
+          # Pehle ek baar SDK download karne do
+          buildozer android debug || true
+          # Ab License accept karo
+          SDK="$HOME/.buildozer/android/platform/android-sdk"
+          yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          mkdir -p $SDK/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c4501b8fb0f084" >> $SDK/licenses/android-sdk-license
+          # Ab final build
           buildozer android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
