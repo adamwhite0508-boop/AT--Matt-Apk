@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y python3-pip zip unzip openjdk-17-jdk libffi-dev libssl-dev libbz2-dev libsqlite3-dev
+          sudo apt install -y python3-pip zip unzip openjdk-17-jdk libffi-dev libssl-dev libbz2-dev libsqlite3-dev libncurses5-dev libltdl-dev libtool automake autoconf pkg-config zlib1g-dev libtinfo5 cmake libncurses-dev
           pip install --upgrade pip
           pip install buildozer cython==0.29.36
       - name: Build APK
