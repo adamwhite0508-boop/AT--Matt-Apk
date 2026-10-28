@@ -24,12 +24,4 @@ jobs:
           touch ~/.android/repositories.cfg
           buildozer android debug || true
           SDKMANAGER=$(find ~/.buildozer -name sdkmanager -type f | head -n 1)
-          echo "Found: $SDKMANAGER"
-          yes | $SDKMANAGER --licenses || true
-          $SDKMANAGER "build-tools;37.0.0" || true
-          buildozer android debug
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: AT-World-APK
-          path: bin/*.apk
+          echo "Found sdkmanager at $SDKMANAGER"
