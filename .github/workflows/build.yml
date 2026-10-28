@@ -5,23 +5,39 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       - name: Install and Build
         run: |
           sudo apt update
           sudo apt install -y build-essential libltdl-dev python3-dev libffi-dev libssl-dev
-          pip install --upgrade pip
           pip install buildozer Cython==0.29.33
           mkdir -p ~/.android
           touch ~/.android/repositories.cfg
+          # First run to download SDK
           buildozer android debug || true
-          SDKMANAGER=$(find ~/.buildozer -name sdkmanager -type f | head -n 1)
-          echo "Found sdkmanager at $SDKMANAGER"
+          SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
+          # Force accept all licenses by creating license files
+          mkdir -p $SDK_DIR/licenses
+          mkdir -p ~/.android/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK_DIR/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK_DIR/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c38d3246ff25be" >> $SDK_DIR/licenses/android-sdk-license
+          cp $SDK_DIR/licenses/android-sdk-license ~/.android/licenses/ || true
+          # Find NEW sdkmanager (cmdline-tools), not old one
+          NEW_SDKMANAGER=$(find $SDK_DIR -path "*cmdline-tools*bin/sdkmanager" | head -n 1)
+          echo "Using NEW sdkmanager: $NEW_SDKMANAGER"
+          yes | $NEW_SDKMANAGER --licenses || true
+          $NEW_SDKMANAGER "build-tools;37.0.0"
+          # Now real build
+          buildozer android debug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AT-World-APK
+          path: bin/*.apk
