@@ -18,3 +18,4 @@ android.ndk = 25b
 android.accept_sdk_license_agreement = True
 android.permissions = INTERNET,RECORD_AUDIO,CAMERA
 android.icon = icon.png
+android.build_tools_version = 33.0.2
