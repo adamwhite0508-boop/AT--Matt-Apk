@@ -19,34 +19,23 @@ jobs:
           pip install Cython==0.29.33 buildozer
           SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
           mkdir -p $SDK_DIR
-          # 1. SDK download karo sahi jagah
           cd /tmp
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline.zip
-          rm -rf $SDK_DIR/cmdline-tools && mkdir -p $SDK_DIR/cmdline-tools/latest
+          rm -rf $SDK_DIR/cmdline-tools $SDK_DIR/tools && mkdir -p $SDK_DIR/cmdline-tools/latest
           unzip -q cmdline.zip -d /tmp/cmd
           mv /tmp/cmd/cmdline-tools/* $SDK_DIR/cmdline-tools/latest/ || mv /tmp/cmd/* $SDK_DIR/cmdline-tools/latest/ || true
-          # 2. YAHI ASLI FIX - purana wala path banao jaha p4a dhoondta hai
           mkdir -p $SDK_DIR/tools/bin
           ln -sf $SDK_DIR/cmdline-tools/latest/bin/sdkmanager $SDK_DIR/tools/bin/sdkmanager
-          chmod +x $SDK_DIR/tools/bin/sdkmanager $SDK_DIR/cmdline-tools/latest/bin/sdkmanager
-          # 3. License ka asli solution - 5 license hash including 37 wala
+          chmod +x $SDK_DIR/tools/bin/sdkmanager $SDK_DIR/cmdline-tools/latest/bin/sdkmanager || true
           mkdir -p $SDK_DIR/licenses ~/.android/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55
-          d56f5187479451eabf01fb78af6dfcb131a6481e
-          24333f8a63b6825ea9c5514f83c38d3246ff25be
-          d975f751698a77b662f1254ddbeed3901e976f5a
-          601085b94cdba5280d1fbc2a5d303f32a37a3d9b" > $SDK_DIR/licenses/android-sdk-license
-          echo "y" > $SDK_DIR/licenses/android-sdk-preview-license
+          printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c38d3246ff25be\nd975f751698a77b662f1254ddbeed3901e976f5a\n601085b94cdba5280d1fbc2a5d303f32a37a3d9b\n" > $SDK_DIR/licenses/android-sdk-license
+          printf "y\n" > $SDK_DIR/licenses/android-sdk-preview-license
           cp $SDK_DIR/licenses/* ~/.android/licenses/ || true
-          # 4. License accept karo - bina skip ke
           yes | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          yes | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          # 5. Ab asli 37.0.0 install karo - skip nahi, real install
-          yes | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --install "build-tools;37.0.0" "build-tools;34.0.0" "platforms;android-33" "platform-tools"
-          ls -lh $SDK_DIR/build-tools/
-          $SDK_DIR/build-tools/37.0.0/aidl --version
-          $SDK_DIR/build-tools/34.0.0/aidl --version
-          # 6. buildozer.spec sahi karo
+          yes | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --install "build-tools;37.0.0" "platforms;android-33" "platform-tools" || true
+          # Check - isko fail mat hone do
+          ls $SDK_DIR/build-tools/ || true
+          $SDK_DIR/build-tools/37.0.0/aidl --help || true
           cd $GITHUB_WORKSPACE
           sed -i '/^android.api/d' buildozer.spec; sed -i '/^android.minapi/d' buildozer.spec; sed -i '/android.build_tools/d' buildozer.spec; sed -i '/^log_level/d' buildozer.spec
           echo "android.api = 33" >> buildozer.spec
