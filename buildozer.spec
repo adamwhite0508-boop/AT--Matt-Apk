@@ -7,8 +7,6 @@ source.include_exts = py,png,jpg,kv,atlas
 version = 1.0
 requirements = python3,kivy==2.3.1
 orientation = portrait
-icon.filename = icon.png
-presplash.filename = logo.png
 
 [buildozer]
 log_level = 2
