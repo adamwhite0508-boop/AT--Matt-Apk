@@ -17,38 +17,42 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential libltdl-dev python3-dev libffi-dev libssl-dev
           pip install buildozer Cython==0.29.33
-          mkdir -p ~/.android
-          touch ~/.android/repositories.cfg
-          # Clean duplicate lines
-          sed -i '/^android.api/d' buildozer.spec; sed -i '/^android.minapi/d' buildozer.spec; sed -i '/android.build_tools_version/d' buildozer.spec; sed -i '/^log_level/d' buildozer.spec
+          mkdir -p ~/.android && touch ~/.android/repositories.cfg
+          sed -i '/^android.api/d' buildozer.spec; sed -i '/^android.minapi/d' buildozer.spec; sed -i '/android.build_tools/d' buildozer.spec; sed -i '/^log_level/d' buildozer.spec
           echo "android.api = 33" >> buildozer.spec
           echo "android.minapi = 21" >> buildozer.spec
-          echo "android.build_tools_version = 34.0.0" >> buildozer.spec
+          echo "android.build_tools_version = 37.0.0" >> buildozer.spec
           echo "log_level = 2" >> buildozer.spec
           buildozer android debug || true
           SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
           CMDLINE=$(find $SDK_DIR -name sdkmanager -type f | head -n 1)
-          chmod +x $CMDLINE || true
+          chmod +x $CMDLINE
+          echo "CMDLINE=$CMDLINE"
           mkdir -p $SDK_DIR/licenses
           mkdir -p ~/.android/licenses
-          printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c38d3246ff25be\nd975f751698a77b662f1254ddbeed3901e976f5a\n" > $SDK_DIR/licenses/android-sdk-license
-          printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c38d3246ff25be\nd975f751698a77b662f1254ddbeed3901e976f5a\n" > ~/.android/licenses/android-sdk-license
+          # Create license files with ALL hashes
+          LICENSE_FILE=$SDK_DIR/licenses/android-sdk-license
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $LICENSE_FILE
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $LICENSE_FILE
+          echo "24333f8a63b6825ea9c5514f83c38d3246ff25be" >> $LICENSE_FILE
+          echo "d975f751698a77b662f1254ddbeed3901e976f5a" >> $LICENSE_FILE
+          echo "601085b94cdba5280d1fbc2a5d303f32a37a3d9b" >> $LICENSE_FILE
+          cp $LICENSE_FILE ~/.android/licenses/
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK_DIR/licenses/android-sdk-preview-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK_DIR/licenses/android-sdk-preview-license
+          echo "24333f8a63b6825ea9c5514f83c38d3246ff25be" >> $SDK_DIR/licenses/android-sdk-preview-license
+          echo "d975f751698a77b662f1254ddbeed3901e976f5a" >> $SDK_DIR/licenses/android-sdk-preview-license
+          cp $SDK_DIR/licenses/android-sdk-preview-license ~/.android/licenses/ || true
+          cat $LICENSE_FILE
+          # Accept licenses with YES
           yes | $CMDLINE --licenses || true
-          $CMDLINE "platforms;android-33" "build-tools;34.0.0" "platform-tools" || true
-          # Patch python-for-android to demand 34 instead of 37
-          REC=$(find ~/.buildozer -name recommendations.py 2>/dev/null | head -n 1)
-          if [ -f "$REC" ]; then sed -i "s/37\.0\.0/34.0.0/g" "$REC"; echo "Patched $REC"; cat "$REC" | grep BUILD || true; fi
-          # JUGAAD: Copy 34.0.0 as 37.0.0 so Aidl is found
-          if [ -d "$SDK_DIR/build-tools/34.0.0" ]; then
-            mkdir -p $SDK_DIR/build-tools/37.0.0
-            cp -r $SDK_DIR/build-tools/34.0.0/* $SDK_DIR/build-tools/37.0.0/ || true
-            echo "Copied 34.0.0 -> 37.0.0"
-            ls $SDK_DIR/build-tools/
-            ls $SDK_DIR/build-tools/37.0.0/ | grep aidl || true
-          fi
+          # Force install 37.0.0 with YES piped
+          yes | $CMDLINE --install "build-tools;37.0.0" || true
+          yes | $CMDLINE "build-tools;37.0.0" "platforms;android-33" "platform-tools" || true
+          ls $SDK_DIR/build-tools/
+          find $SDK_DIR/build-tools/ -name aidl -ls
           buildozer android debug
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: AT-World-APK
           path: bin/*.apk
