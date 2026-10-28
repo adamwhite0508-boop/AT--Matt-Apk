@@ -19,27 +19,33 @@ jobs:
           pip install buildozer Cython==0.29.33
           mkdir -p ~/.android
           touch ~/.android/repositories.cfg
-          echo "Cleaning buildozer.spec..."
-          cat buildozer.spec | grep android || true
-          sed -i '/^android.api/d' buildozer.spec
-          sed -i '/^android.minapi/d' buildozer.spec
-          sed -i '/^android.build_tools_version/d' buildozer.spec
-          sed -i '/^log_level/d' buildozer.spec
-          sed -i '/^android\.api/d' buildozer.spec
-          sed -i '/android\.build_tools_version/d' buildozer.spec
+          # Clean duplicate lines
+          sed -i '/^android.api/d' buildozer.spec; sed -i '/^android.minapi/d' buildozer.spec; sed -i '/android.build_tools_version/d' buildozer.spec; sed -i '/^log_level/d' buildozer.spec
           echo "android.api = 33" >> buildozer.spec
           echo "android.minapi = 21" >> buildozer.spec
           echo "android.build_tools_version = 34.0.0" >> buildozer.spec
           echo "log_level = 2" >> buildozer.spec
-          cat buildozer.spec | grep -E "api|build_tools|log_level"
           buildozer android debug || true
           SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
           CMDLINE=$(find $SDK_DIR -name sdkmanager -type f | head -n 1)
           chmod +x $CMDLINE || true
           mkdir -p $SDK_DIR/licenses
+          mkdir -p ~/.android/licenses
           printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c38d3246ff25be\nd975f751698a77b662f1254ddbeed3901e976f5a\n" > $SDK_DIR/licenses/android-sdk-license
+          printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c38d3246ff25be\nd975f751698a77b662f1254ddbeed3901e976f5a\n" > ~/.android/licenses/android-sdk-license
           yes | $CMDLINE --licenses || true
           $CMDLINE "platforms;android-33" "build-tools;34.0.0" "platform-tools" || true
+          # Patch python-for-android to demand 34 instead of 37
+          REC=$(find ~/.buildozer -name recommendations.py 2>/dev/null | head -n 1)
+          if [ -f "$REC" ]; then sed -i "s/37\.0\.0/34.0.0/g" "$REC"; echo "Patched $REC"; cat "$REC" | grep BUILD || true; fi
+          # JUGAAD: Copy 34.0.0 as 37.0.0 so Aidl is found
+          if [ -d "$SDK_DIR/build-tools/34.0.0" ]; then
+            mkdir -p $SDK_DIR/build-tools/37.0.0
+            cp -r $SDK_DIR/build-tools/34.0.0/* $SDK_DIR/build-tools/37.0.0/ || true
+            echo "Copied 34.0.0 -> 37.0.0"
+            ls $SDK_DIR/build-tools/
+            ls $SDK_DIR/build-tools/37.0.0/ | grep aidl || true
+          fi
           buildozer android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
