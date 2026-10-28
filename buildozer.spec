@@ -5,7 +5,7 @@ package.domain = com.atworldmatter.app
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 1.0
-requirements = python3,kivy==2.3.1
+requirements = python3==3.10.18,kivy==2.3.0
 orientation = portrait
 
 [buildozer]
@@ -20,4 +20,4 @@ android.build_tools_version = 33.0.2
 android.archs = arm64-v8a
 android.accept_sdk_license_agreement = True
 android.permissions = INTERNET
-p4a.branch = master
+p4a.branch = develop
