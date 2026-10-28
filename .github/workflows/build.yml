@@ -15,19 +15,17 @@ jobs:
         with:
           python-version: '3.10.14'
 
-      - name: KILL Python 3.14 - FORCE 3.10
+      - name: KILL Python 3.14
         run: |
           sudo rm -rf /opt/hostedtoolcache/Python/3.14* /opt/hostedtoolcache/Python/3.12* /opt/hostedtoolcache/Python/3.11* || true
-          sudo rm -f /usr/bin/python3.14 || true
-          python --version
           sudo ln -sf $(which python) /usr/bin/python3 || true
           python3 --version
 
       - name: Install deps FAST
         run: |
-          sudo apt-get install -y --no-install-recommends zip unzip libffi-dev libssl-dev libbz2-dev libsqlite3-dev libncurses5-dev libltdl-dev libtool automake autoconf pkg-config zlib1g-dev cmake liblzo2-dev || true
+          sudo apt-get install -y zip unzip libffi-dev libssl-dev libbz2-dev libsqlite3-dev libncurses5-dev libtool automake autoconf pkg-config zlib1g-dev cmake || true
 
-      - name: Install buildozer FIXED
+      - name: Install buildozer
         run: |
           python3 -m pip install --upgrade pip==23.3.1
           python3 -m pip install buildozer cython==0.29.36
@@ -38,6 +36,10 @@ jobs:
           rm -rf .buildozer bin
           mkdir -p ~/.android/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.android/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> ~/.android/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c1059b8ea04e4f" >> ~/.android/licenses/android-sdk-license
+          echo "y" > ~/.android/licenses/android-sdk-preview-license || true
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.android/licenses/android-sdk-preview-license
           python3 -m buildozer -v android debug
 
       - uses: actions/upload-artifact@v4
