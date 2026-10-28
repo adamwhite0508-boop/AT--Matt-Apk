@@ -16,43 +16,27 @@ jobs:
           python-version: '3.10'
       - name: Install dependencies
         run: |
-          sudo apt-get update || true
-          sudo apt-get install -y zip unzip libffi-dev libssl-dev libbz2-dev libsqlite3-dev libncurses5-dev libltdl-dev libtool automake autoconf pkg-config zlib1g-dev cmake liblzo2-dev || true
-      - name: Force Python 3.10
+          sudo apt-get update
+          sudo apt-get install -y zip unzip libffi-dev libssl-dev libbz2-dev libsqlite3-dev libncurses5-dev libltdl-dev libtool automake autoconf pkg-config zlib1g-dev cmake liblzo2-dev
+      - name: FORCE Python 3.10
         run: |
           sudo rm -rf /opt/hostedtoolcache/Python/3.14* || true
           python3.10 --version
-          sudo ln -sf /opt/hostedtoolcache/Python/3.10.18/x64/bin/python3.10 /usr/bin/python3 || true
           python3 --version
-          python --version || python3 --version
-      - name: Install buildozer
+      - name: Install buildozer with FIXED p4a
         run: |
-          python3 -m pip install --upgrade pip==24.0
-          python3 -m pip install buildozer cython==0.29.36
-      - name: Build APK - First try to download SDK
+          python3.10 -m pip install --upgrade pip==23.3.1
+          python3.10 -m pip install buildozer cython==0.29.36
+          python3.10 -m pip install --upgrade git+https://github.com/kivy/python-for-android.git@develop
+      - name: Build APK
         run: |
-          rm -rf .buildozer
-          yes | python3 -m buildozer -v android debug || true
-      - name: Accept All Android Licenses
-        run: |
+          rm -rf .buildozer bin
           mkdir -p ~/.android/licenses
-          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.android/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> ~/.android/licenses/android-sdk-license
           echo "24333f8a63b6825ea9c5514f83c1059b8ea04e4f" >> ~/.android/licenses/android-sdk-license
-          echo "y" > ~/.android/licenses/android-sdk-preview-license
-          cp ~/.android/licenses/* ~/.buildozer/android/platform/android-sdk/licenses/ || true
-          ls ~/.buildozer/android/platform/android-sdk/cmdline-tools/ || true
-          find ~/.buildozer -name sdkmanager -type f | head -1
-          SDKM=$(find ~/.buildozer -name sdkmanager -type f | head -1)
-          echo "Found SDKM: $SDKM"
-          yes | $SDKM --licenses || true
-          yes | $SDKM "build-tools;33.0.2" "build-tools;37.0.0" "platform-tools" || true
-      - name: Build APK - Final Build
-        run: |
-          yes | python3 -m buildozer -v android debug
+          yes | python3.10 -m buildozer -v android debug
       - uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: apk
           path: bin/*.apk
