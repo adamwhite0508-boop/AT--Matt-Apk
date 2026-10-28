@@ -15,34 +15,43 @@ jobs:
       - name: Install and Build
         run: |
           sudo apt update
-          sudo apt install -y build-essential libltdl-dev python3-dev libffi-dev libssl-dev
-          pip install buildozer Cython==0.29.33
+          sudo apt install -y build-essential libltdl-dev python3-dev libffi-dev libssl-dev unzip wget
+          pip install Cython==0.29.33
+          pip install python-for-android
+          # ==== PATCH 1: pip wala p4a ====
+          P4A_FILE=$(python3 -c "import pythonforandroid, os; print(os.path.join(os.path.dirname(pythonforandroid.__file__), 'recommendations.py'))")
+          sed -i 's/37\.0\.0/34.0.0/g' "$P4A_FILE"
+          echo "Patched $P4A_FILE"
+          pip install buildozer
+          # ==== MANUAL SDK SETUP - buildozer se pehle ====
+          SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
+          mkdir -p $SDK_DIR
+          cd /tmp
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline.zip
+          rm -rf $SDK_DIR/cmdline-tools && mkdir -p $SDK_DIR/cmdline-tools/latest
+          unzip -q cmdline.zip -d /tmp/cmd
+          mv /tmp/cmd/cmdline-tools/* $SDK_DIR/cmdline-tools/latest/ || mv /tmp/cmd/* $SDK_DIR/cmdline-tools/latest/ || true
           mkdir -p ~/.android && touch ~/.android/repositories.cfg
+          mkdir -p $SDK_DIR/licenses ~/.android/licenses
+          printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c38d3246ff25be\nd975f751698a77b662f1254ddbeed3901e976f5a\n" > $SDK_DIR/licenses/android-sdk-license
+          cp $SDK_DIR/licenses/android-sdk-license ~/.android/licenses/
+          $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --version
+          printf "y\n" | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          printf "y\n" | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --install "build-tools;34.0.0" "platforms;android-33" "platform-tools" || true
+          # ==== FAKE 37 BANA DO ====
+          cp -r $SDK_DIR/build-tools/34.0.0 $SDK_DIR/build-tools/37.0.0 || true
+          ls $SDK_DIR/build-tools/
+          $SDK_DIR/build-tools/34.0.0/aidl --version || true
+          cd $GITHUB_WORKSPACE
+          # ==== CLEAN buildozer.spec ====
           sed -i '/^android.api/d' buildozer.spec; sed -i '/^android.minapi/d' buildozer.spec; sed -i '/android.build_tools/d' buildozer.spec; sed -i '/^log_level/d' buildozer.spec
           echo "android.api = 33" >> buildozer.spec
           echo "android.minapi = 21" >> buildozer.spec
-          echo "android.build_tools_version = 37.0.0" >> buildozer.spec
+          echo "android.build_tools_version = 34.0.0" >> buildozer.spec
           echo "log_level = 2" >> buildozer.spec
-          buildozer android debug || true
-          SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
-          CMDLINE=$SDK_DIR/cmdline-tools/latest/bin/sdkmanager
-          if [ ! -f "$CMDLINE" ]; then CMDLINE=$(find $SDK_DIR -name sdkmanager | head -n 1); fi
-          chmod +x $CMDLINE || true
-          mkdir -p $SDK_DIR/licenses
-          mkdir -p ~/.android/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55
-          d56f5187479451eabf01fb78af6dfcb131a6481e
-          24333f8a63b6825ea9c5514f83c38d3246ff25be
-          d975f751698a77b662f1254ddbeed3901e976f5a" > $SDK_DIR/licenses/android-sdk-license
-          cp $SDK_DIR/licenses/android-sdk-license ~/.android/licenses/ || true
-          echo "y" > /tmp/yes.txt; for i in $(seq 1 100); do echo "y" >> /tmp/yes.txt; done
-          cat /tmp/yes.txt | $CMDLINE --licenses > /dev/null 2>&1 || true
-          cat /tmp/yes.txt | $CMDLINE --install "build-tools;37.0.0" "platforms;android-33" "platform-tools" > /dev/null 2>&1 || true
-          echo "Installed:"
-          ls $SDK_DIR/build-tools/ || echo "No build-tools yet, trying again"
-          cat /tmp/yes.txt | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --install "build-tools;37.0.0" || true
-          ls $SDK_DIR/build-tools/ || true
-          find $SDK_DIR -name aidl || true
+          # ==== PATCH 2: .buildozer wala p4a (agar bana ho to) ====
+          REC2=$(find ~/.buildozer -name recommendations.py 2>/dev/null | head -n 1)
+          if [ -f "$REC2" ]; then sed -i 's/37\.0\.0/34.0.0/g' "$REC2"; echo "Patched $REC2"; fi
           buildozer android debug
       - uses: actions/upload-artifact@v4
         with:
