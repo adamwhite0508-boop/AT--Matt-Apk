@@ -13,10 +13,17 @@ jobs:
         with:
           python-version: '3.10.14'
 
-      - name: Build APK - FINAL 37 FIX
+      - name: Accept Android Licenses & Pre-install Build-Tools 37
         run: |
-          sudo apt-get update
-          sudo apt-get install -y zip unzip libffi-dev libssl-dev
+          mkdir -p $ANDROID_HOME/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $ANDROID_HOME/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $ANDROID_HOME/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c1051b8ea57045" >> $ANDROID_HOME/licenses/android-sdk-license
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;37.0.0" "build-tools;33.0.2" "platforms;android-33" "platform-tools"
+
+      - name: Build APK
+        run: |
           pip install buildozer==1.5.0 cython==0.29.36
           rm -rf .buildozer bin
           buildozer android debug
