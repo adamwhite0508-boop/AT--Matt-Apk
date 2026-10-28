@@ -20,4 +20,5 @@ android.build_tools_version = 33.0.2
 android.archs = arm64-v8a
 android.accept_sdk_license_agreement = True
 android.permissions = INTERNET
-p4a.branch = develop
+p4a.branch = master
+p4a.bootstrap = sdl2
