@@ -7,7 +7,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build APK with Docker
         run: |
-          docker run --rm -v $PWD:/home/user/hostcwd -w /home/user/hostcwd --entrypoint /bin/bash kivy/buildozer:latest -c "yes | sdkmanager --licenses > /dev/null 2>&1; buildozer android debug"
+          docker run --rm -v $PWD:/home/user/hostcwd -w /home/user/hostcwd --entrypoint /bin/bash kivy/buildozer:latest -c "yes | sdkmanager --licenses > /dev/null 2>&1; yes | buildozer android debug"
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
