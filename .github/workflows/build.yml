@@ -1,23 +1,27 @@
 name: build
-on:
-  push:
-    branches: [ main ]
-
+on: [push]
 jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
+      - uses: actions/setup-java@v4
         with:
-          command: buildozer android debug
-          buildozer_version: master
+          distribution: temurin
+          java-version: 17
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10.14'
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Build APK - FINAL 37 FIX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zip unzip libffi-dev libssl-dev
+          pip install buildozer==1.5.0 cython==0.29.36
+          rm -rf .buildozer bin
+          buildozer android debug
+
+      - uses: actions/upload-artifact@v4
         with:
           name: apk
           path: bin/*.apk
