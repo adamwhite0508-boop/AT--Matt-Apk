@@ -11,7 +11,7 @@ KV = '''
     MDFloatLayout:
         md_bg_color: 1,1,1,1
         Image:
-            source: 'logo.png'
+            source: 'icon.png'
             size_hint: .8, .4
             pos_hint: {'center_x':.5,'center_y':.6}
         MDLabel:
