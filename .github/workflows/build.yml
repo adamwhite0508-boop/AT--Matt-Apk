@@ -19,24 +19,27 @@ jobs:
           pip install buildozer Cython==0.29.33
           mkdir -p ~/.android
           touch ~/.android/repositories.cfg
-          echo "log_level = 2" >> buildozer.spec || true
-          echo "android.api = 33" >> buildozer.spec || true
-          echo "android.minapi = 21" >> buildozer.spec || true
-          echo "android.build_tools_version = 34.0.0" >> buildozer.spec || true
+          echo "Cleaning buildozer.spec..."
+          cat buildozer.spec | grep android || true
+          sed -i '/^android.api/d' buildozer.spec
+          sed -i '/^android.minapi/d' buildozer.spec
+          sed -i '/^android.build_tools_version/d' buildozer.spec
+          sed -i '/^log_level/d' buildozer.spec
+          sed -i '/^android\.api/d' buildozer.spec
+          sed -i '/android\.build_tools_version/d' buildozer.spec
+          echo "android.api = 33" >> buildozer.spec
+          echo "android.minapi = 21" >> buildozer.spec
+          echo "android.build_tools_version = 34.0.0" >> buildozer.spec
+          echo "log_level = 2" >> buildozer.spec
+          cat buildozer.spec | grep -E "api|build_tools|log_level"
           buildozer android debug || true
           SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
-          CMDLINE=$SDK_DIR/cmdline-tools/latest/bin/sdkmanager
-          if [ ! -f "$CMDLINE" ]; then
-            CMDLINE=$(find $SDK_DIR -name sdkmanager -type f | head -n 1)
-          fi
+          CMDLINE=$(find $SDK_DIR -name sdkmanager -type f | head -n 1)
           chmod +x $CMDLINE || true
           mkdir -p $SDK_DIR/licenses
           printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c38d3246ff25be\nd975f751698a77b662f1254ddbeed3901e976f5a\n" > $SDK_DIR/licenses/android-sdk-license
           yes | $CMDLINE --licenses || true
-          echo "Installing Android 33 platform..."
-          $CMDLINE "platforms;android-33" "build-tools;33.0.1" "build-tools;34.0.0" "platform-tools" || true
-          ls $SDK_DIR/platforms/ || true
-          ls $SDK_DIR/build-tools/ || true
+          $CMDLINE "platforms;android-33" "build-tools;34.0.0" "platform-tools" || true
           buildozer android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
