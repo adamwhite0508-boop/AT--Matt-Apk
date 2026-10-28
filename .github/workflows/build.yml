@@ -19,22 +19,17 @@ jobs:
           pip install buildozer Cython==0.29.33
           mkdir -p ~/.android
           touch ~/.android/repositories.cfg
-          # First run to download SDK
           buildozer android debug || true
           SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
-          # Force accept all licenses by creating license files
           mkdir -p $SDK_DIR/licenses
           mkdir -p ~/.android/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK_DIR/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK_DIR/licenses/android-sdk-license
-          echo "24333f8a63b6825ea9c5514f83c38d3246ff25be" >> $SDK_DIR/licenses/android-sdk-license
+          printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c38d3246ff25be\n" > $SDK_DIR/licenses/android-sdk-license
           cp $SDK_DIR/licenses/android-sdk-license ~/.android/licenses/ || true
-          # Find NEW sdkmanager (cmdline-tools), not old one
-          NEW_SDKMANAGER=$(find $SDK_DIR -path "*cmdline-tools*bin/sdkmanager" | head -n 1)
-          echo "Using NEW sdkmanager: $NEW_SDKMANAGER"
-          yes | $NEW_SDKMANAGER --licenses || true
-          $NEW_SDKMANAGER "build-tools;37.0.0"
-          # Now real build
+          SDKMANAGER=$(find $SDK_DIR -name sdkmanager -type f | head -n 1)
+          chmod +x $SDKMANAGER
+          echo "sdkmanager at $SDKMANAGER"
+          yes | $SDKMANAGER --licenses || true
+          $SDKMANAGER "build-tools;37.0.0" || true
           buildozer android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
