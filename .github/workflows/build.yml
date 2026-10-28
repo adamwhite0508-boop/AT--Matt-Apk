@@ -6,51 +6,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+        with: {distribution: 'temurin', java-version: '17'}
       - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+        with: {python-version: '3.10'}
       - name: Install and Build
         run: |
           sudo apt update
           sudo apt install -y build-essential libltdl-dev python3-dev libffi-dev libssl-dev unzip wget libsqlite3-dev
           pip install Cython==0.29.33 buildozer
           SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
-          mkdir -p $SDK_DIR
-          cd /tmp
+          mkdir -p $SDK_DIR && cd /tmp
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline.zip
           rm -rf $SDK_DIR/cmdline-tools $SDK_DIR/tools && mkdir -p $SDK_DIR/cmdline-tools/latest
           unzip -q cmdline.zip -d /tmp/cmd
           mv /tmp/cmd/cmdline-tools/* $SDK_DIR/cmdline-tools/latest/ || mv /tmp/cmd/* $SDK_DIR/cmdline-tools/latest/ || true
-          mkdir -p $SDK_DIR/tools/bin
+          mkdir -p $SDK_DIR/tools/bin ~/.android/licenses $SDK_DIR/licenses
           ln -sf $SDK_DIR/cmdline-tools/latest/bin/sdkmanager $SDK_DIR/tools/bin/sdkmanager
           chmod +x $SDK_DIR/tools/bin/sdkmanager $SDK_DIR/cmdline-tools/latest/bin/sdkmanager || true
-          mkdir -p $SDK_DIR/licenses ~/.android/licenses
           printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c38d3246ff25be\nd975f751698a77b662f1254ddbeed3901e976f5a\n601085b94cdba5280d1fbc2a5d303f32a37a3d9b\n" > $SDK_DIR/licenses/android-sdk-license
           printf "y\n" > $SDK_DIR/licenses/android-sdk-preview-license
           cp $SDK_DIR/licenses/* ~/.android/licenses/ || true
           yes | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          yes | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --install "build-tools;37.0.0" "platforms;android-33" "platform-tools" || true
+          yes | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --install "build-tools;34.0.0" "platforms;android-33" "platform-tools" || true
+          rm -rf ~/.buildozer/android/platform/android-ndk-r28c || true
+          mkdir -p ~/.buildozer/android/platform/
+          cd /tmp && wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip && unzip -q ndk.zip -d ~/.buildozer/android/platform/
           cd $GITHUB_WORKSPACE
-          # Clean spec properly
-          sed -i '/^android.api/d' buildozer.spec; sed -i '/^android.minapi/d' buildozer.spec; sed -i '/android.build_tools/d' buildozer.spec; sed -i '/^log_level/d' buildozer.spec; sed -i '/^android.arch/d' buildozer.spec; sed -i '/^p4a.branch/d' buildozer.spec
-          echo "android.api = 33" >> buildozer.spec
-          echo "android.minapi = 21" >> buildozer.spec
-          echo "android.build_tools_version = 37.0.0" >> buildozer.spec
-          echo "android.archs = arm64-v8a" >> buildozer.spec
-          echo "p4a.branch = master" >> buildozer.spec
-          echo "log_level = 2" >> buildozer.spec
-          cat buildozer.spec
-          # Build and save full log
-          buildozer android debug > build.log 2>&1 || (cat build.log | tail -n 500; echo "---FAILED---"; exit 1)
-      - name: Upload Logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs
-          path: |
-            build.log
-            .buildozer/logs/*
-            bin/*.apk
+          buildozer android debug
+      - uses: actions/upload-artifact@v4
+        with: {name: AT-World-APK, path: bin/*.apk}
