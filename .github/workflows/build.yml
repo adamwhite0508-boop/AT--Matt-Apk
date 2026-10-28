@@ -14,30 +14,28 @@ jobs:
           python-version: '3.10'
       - name: Install and Build
         run: |
-          set -x
           sudo apt update
-          sudo apt install -y build-essential libltdl-dev python3-dev libffi-dev libssl-dev
+          sudo apt install -y build-essential libltdl-dev python3-dev libffi-dev libssl-dev wget unzip
           pip install buildozer Cython==0.29.33
           mkdir -p ~/.android
           touch ~/.android/repositories.cfg
-          echo "=== FIRST BUILD (will fail but download SDK) ==="
           buildozer android debug || true
           SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
-          echo "=== Creating licenses ==="
           mkdir -p $SDK_DIR/licenses
           mkdir -p ~/.android/licenses
-          printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c38d3246ff25be\n" > $SDK_DIR/licenses/android-sdk-license
-          cat $SDK_DIR/licenses/android-sdk-license
-          cp $SDK_DIR/licenses/android-sdk-license ~/.android/licenses/ || true
-          echo "=== Finding sdkmanager ==="
+          printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c38d3246ff25be\nd975f751698a77b662f1254ddbeed3901e976f5a\n" > $SDK_DIR/licenses/android-sdk-license
+          cp $SDK_DIR/licenses/android-sdk-license ~/.android/licenses/
+          mkdir -p $SDK_DIR/build-tools
+          cd /tmp
+          wget -q https://dl.google.com/android/repository/build-tools_r37-linux.zip || wget -q https://dl.google.com/android/repository/build-tools_r34-linux.zip -O build-tools_r37-linux.zip
+          unzip -o build-tools_r37-linux.zip -d /tmp/bt || true
+          mkdir -p $SDK_DIR/build-tools/37.0.0
+          cp -r /tmp/bt/*/* $SDK_DIR/build-tools/37.0.0/ 2>/dev/null || cp -r /tmp/bt/android-14/* $SDK_DIR/build-tools/37.0.0/ 2>/dev/null || cp -r /tmp/bt/* $SDK_DIR/build-tools/37.0.0/ 2>/dev/null || true
           SDKMANAGER=$(find $SDK_DIR -name sdkmanager -type f | head -n 1)
           chmod +x $SDKMANAGER || true
-          ls -l $SDKMANAGER
-          echo "=== Accepting licenses and installing build-tools 37 ==="
           yes | $SDKMANAGER --licenses || true
           $SDKMANAGER "build-tools;37.0.0" || true
-          ls $SDK_DIR/build-tools/ || true
-          echo "=== SECOND BUILD (REAL) ==="
+          cd $GITHUB_WORKSPACE
           buildozer android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
