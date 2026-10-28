@@ -2,7 +2,7 @@ name: build
 on: [push]
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -10,26 +10,36 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: 'temurin', java-version: '17' }
 
-      - name: Clean old cache
-        run: rm -rf ~/.buildozer
-
-      - name: Install deps & Fix sdkmanager path
+      - name: Install Buildozer
         run: |
-          pip install --upgrade buildozer cython
+          pip install --upgrade pip
+          pip install buildozer cython
           sudo apt-get update
-          sudo apt-get install -y aidl
-          # Fix: Buildozer looks for old path tools/bin/sdkmanager
-          mkdir -p ~/.buildozer/android/platform/android-sdk/tools/bin
-          # Copy real sdkmanager to that old path
-          cp $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager ~/.buildozer/android/platform/android-sdk/tools/bin/ || cp $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager /home/runner/.buildozer/android/platform/android-sdk/tools/bin/
-          mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
-          cp $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/ || true
-          # Accept licenses
-          yes | sdkmanager --licenses || true
-          yes | ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager --licenses || true
+          sudo apt-get install -y aidl unzip
+
+      - name: Fix SDK licenses for Buildozer path
+        run: |
+          SDK_PATH=$HOME/.buildozer/android/platform/android-sdk
+          mkdir -p $SDK_PATH/licenses
+          mkdir -p $SDK_PATH/tools/bin
+          mkdir -p $SDK_PATH/cmdline-tools/latest/bin
+          # Copy system sdkmanager to both places buildozer looks
+          cp $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager $SDK_PATH/tools/bin/ || true
+          cp $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager $SDK_PATH/cmdline-tools/latest/bin/ || true
+          # Create license files in BOTH sdks
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $ANDROID_HOME/licenses/android-sdk-license || true
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK_PATH/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $ANDROID_HOME/licenses/android-sdk-license || true
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK_PATH/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c1051b8ea0e4e4ee" > $SDK_PATH/licenses/android-sdk-preview-license || true
+          # Accept all
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          yes | $SDK_PATH/tools/bin/sdkmanager --sdk_root=$SDK_PATH --licenses || true
+          # Pre-install platform-tools so buildozer doesn't need to call sdkmanager again
+          $SDK_PATH/tools/bin/sdkmanager --sdk_root=$SDK_PATH "platform-tools" "platforms;android-33" "build-tools;36.0.0" || true
 
       - name: Build APK
-        run: buildozer android debug
+        run: buildozer -v android debug
 
       - uses: actions/upload-artifact@v4
         if: always()
