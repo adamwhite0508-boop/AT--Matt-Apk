@@ -14,6 +14,9 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential libltdl-dev python3-dev libffi-dev libssl-dev unzip wget libsqlite3-dev
           pip install Cython==0.29.33 buildozer
+          rm -rf ~/.buildozer/android/platform/android-ndk-r28c
+          mkdir -p ~/.buildozer/android/platform/
+          cd /tmp && wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip && unzip -q ndk.zip -d ~/.buildozer/android/platform/
           SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
           mkdir -p $SDK_DIR && cd /tmp
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline.zip
@@ -24,13 +27,9 @@ jobs:
           ln -sf $SDK_DIR/cmdline-tools/latest/bin/sdkmanager $SDK_DIR/tools/bin/sdkmanager
           chmod +x $SDK_DIR/tools/bin/sdkmanager $SDK_DIR/cmdline-tools/latest/bin/sdkmanager || true
           printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c38d3246ff25be\nd975f751698a77b662f1254ddbeed3901e976f5a\n601085b94cdba5280d1fbc2a5d303f32a37a3d9b\n" > $SDK_DIR/licenses/android-sdk-license
-          printf "y\n" > $SDK_DIR/licenses/android-sdk-preview-license
           cp $SDK_DIR/licenses/* ~/.android/licenses/ || true
           yes | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --licenses || true
           yes | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --install "build-tools;34.0.0" "platforms;android-33" "platform-tools" || true
-          rm -rf ~/.buildozer/android/platform/android-ndk-r28c || true
-          mkdir -p ~/.buildozer/android/platform/
-          cd /tmp && wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip && unzip -q ndk.zip -d ~/.buildozer/android/platform/
           cd $GITHUB_WORKSPACE
           buildozer android debug
       - uses: actions/upload-artifact@v4
