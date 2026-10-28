@@ -15,43 +15,21 @@ jobs:
         with:
           python-version: '3.10.14'
 
-      - name: KILL Python 3.14
+      - name: Install deps
         run: |
-          sudo rm -rf /opt/hostedtoolcache/Python/3.14* /opt/hostedtoolcache/Python/3.12* /opt/hostedtoolcache/Python/3.11* || true
-          python3 --version
+          sudo apt-get update
+          sudo apt-get install -y zip unzip libffi-dev libssl-dev libbz2-dev libsqlite3-dev
 
-      - name: Install deps FAST
+      - name: Install buildozer + p4a STABLE
         run: |
-          sudo apt-get install -y zip unzip libffi-dev libssl-dev libbz2-dev libsqlite3-dev libncurses5-dev libtool automake autoconf pkg-config zlib1g-dev cmake || true
-
-      - name: Install buildozer
-        run: |
-          python3 -m pip install --upgrade pip==23.3.1
-          python3 -m pip install buildozer cython==0.29.36
-          python3 -m pip install git+https://github.com/kivy/python-for-android.git@develop
+          pip install buildozer cython==0.29.36
+          pip install python-for-android==2024.1.21
 
       - name: Build APK
         run: |
           rm -rf .buildozer bin
-          # 1st attempt - will download SDK and fail at aidl (normal)
-          python3 -m buildozer -v android debug || true
-          
-          # Now accept ALL licenses in BOTH locations
-          SDK=$HOME/.buildozer/android/platform/android-sdk
-          echo "=== Accepting licenses ==="
-          mkdir -p $HOME/.android/licenses
-          mkdir -p $SDK/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.android/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.android/licenses/android-sdk-license
-          echo "24333f8a63b6825ea9c5514f83c1059b8ea04e4f" >> $HOME/.android/licenses/android-sdk-license
-          echo "y" > $HOME/.android/licenses/android-sdk-preview-license
-          cp -r $HOME/.android/licenses/* $SDK/licenses/ || true
-          yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          yes | $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "build-tools;37.0.0" "platforms;android-33" || true
-          ls $SDK/build-tools/ || true
-          
-          # 2nd attempt - REAL build
-          python3 -m buildozer -v android debug
+          yes | sdkmanager --licenses || true
+          buildozer -v android debug
 
       - uses: actions/upload-artifact@v4
         with:
