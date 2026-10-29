@@ -9,36 +9,27 @@ jobs:
         with: {distribution: 'temurin', java-version: '17'}
       - uses: actions/setup-python@v5
         with: {python-version: '3.10'}
+
       - name: Install and Build
         run: |
           set -e
           rm -rf .buildozer bin
+          
+          # Sirf ek arch
           sed -i '/android.archs/d' buildozer.spec
           sed -i '/\[app\]/a android.archs = arm64-v8a' buildozer.spec
-          grep arch buildozer.spec
+          cat buildozer.spec | grep -A2 -B2 arch
+          
           sudo apt update
-          sudo apt install -y build-essential libssl-dev libffi-dev libltdl-dev libbz2-dev libsqlite3-dev libncurses5-dev zlib1g-dev libgdbm-dev liblzma-dev uuid-dev tk-dev libxml2-dev unzip wget
+          sudo apt install -y python3-pip build-essential git python3 python3-dev ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good libltdl-dev libffi-dev libssl-dev libbz2-dev libsqlite3-dev
+          
           pip install --upgrade pip
           pip install Cython==0.29.33 buildozer==1.5.0
-          mkdir -p $HOME/.buildozer/android/platform
-          cd /tmp
-          wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
-          unzip -q ndk.zip
-          rm -rf $HOME/.buildozer/android/platform/android-ndk-r25b $HOME/.buildozer/android/platform/android-ndk-r28c
-          mv android-ndk-r25b $HOME/.buildozer/android/platform/android-ndk-r25b
-          cp -r $HOME/.buildozer/android/platform/android-ndk-r25b $HOME/.buildozer/android/platform/android-ndk-r28c
-          SDK=$HOME/.buildozer/android/platform/android-sdk
-          mkdir -p $SDK/cmdline-tools/latest $SDK/tools/bin $HOME/.android/licenses $SDK/licenses
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmd.zip
-          unzip -q cmd.zip -d /tmp/cmd_tmp
-          mv /tmp/cmd_tmp/cmdline-tools/* $SDK/cmdline-tools/latest/ 2>/dev/null || true
-          ln -sf $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK/licenses/android-sdk-license
-          cp $SDK/licenses/* $HOME/.android/licenses/ 2>/dev/null || true
-          yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          $SDK/cmdline-tools/latest/bin/sdkmanager --install "build-tools;33.0.2" "platforms;android-33" "platform-tools" || true
-          cd $GITHUB_WORKSPACE
+          
+          yes | buildozer android debug || true
+          # Dusri baar me ban jata hai
           buildozer android debug
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
