@@ -11,20 +11,12 @@ jobs:
         with: {python-version: '3.10'}
       - name: Install and Build
         run: |
-          # === PURANA DUAL CACHE DELETE ===
-          rm -rf .buildozer bin
-          rm -rf ~/.buildozer/android/platform/build-*
-          rm -rf ~/.buildozer/android/platform/build
-          rm -rf ~/.buildozer/android/app
-          rm -rf $HOME/.buildozer/android/platform/build-*
-          
+          rm -rf .buildozer bin ~/.buildozer $HOME/.buildozer/android/platform/build-*
           sudo apt update
           sudo apt install -y build-essential libltdl-dev libffi-dev libssl-dev unzip wget
           pip install --upgrade pip
           pip install "setuptools<81" Cython==0.29.36 buildozer
-          
           cat buildozer.spec | grep archs
-          
           PLATFORM=$HOME/.buildozer/android/platform
           mkdir -p $PLATFORM
           cd /tmp
@@ -33,7 +25,6 @@ jobs:
           rm -rf $PLATFORM/android-ndk-r25b $PLATFORM/android-ndk-r28c
           mv android-ndk-r25b $PLATFORM/android-ndk-r25b
           cp -r $PLATFORM/android-ndk-r25b $PLATFORM/android-ndk-r28c
-          
           SDK=$PLATFORM/android-sdk
           mkdir -p $SDK/cmdline-tools/latest $SDK/tools/bin ~/.android/licenses $SDK/licenses
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmd.zip
@@ -46,10 +37,8 @@ jobs:
           cp $SDK/licenses/* ~/.android/licenses/ 2>/dev/null || true
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses || true
           $SDK/cmdline-tools/latest/bin/sdkmanager --install "build-tools;37.0.0" "platforms;android-33" "platform-tools" || true
-          
           cd $GITHUB_WORKSPACE
           buildozer android debug
-          
       - uses: actions/upload-artifact@v4
         if: always()
         with:
