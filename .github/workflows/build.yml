@@ -13,21 +13,40 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install + Patch Buildozer (r28c & sdkmanager Fix)
+      - name: Install + Double Patch
         run: |
           sudo apt-get update
           sudo apt-get install -y aidl build-essential libssl-dev libffi-dev python3-dev autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev cmake libltdl-dev unzip
           pip install Cython==0.29.36 buildozer==1.5.0
           PYTHON_SITE=$(python -c "import site; print(site.getsitepackages()[0])")
-          sed -i 's|tools/bin/sdkmanager|cmdline-tools/latest/bin/sdkmanager|g' $PYTHON_SITE/buildozer/targets/android.py
+          # Dono jagah patch - buildozer + python-for-android
+          echo "Patching all files..."
+          grep -r "tools/bin/sdkmanager" $PYTHON_SITE --include="*.py" -l 2>/dev/null | xargs sed -i 's|tools/bin/sdkmanager|cmdline-tools/latest/bin/sdkmanager|g' || true
+          grep -r "tools/bin/sdkmanager" $PYTHON_SITE --include="*.py" -l 2>/dev/null | xargs sed -i 's|tools/bin/sdkmanager|cmdline-tools/latest/bin/sdkmanager|g' || true
+          echo "Patched"
 
       - name: Build APK
         run: |
-          rm -rf bin buildozer.spec
+          rm -rf bin buildozer.spec .buildozer
+          # License
           mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo "24333f8a63b6825ea9c5514f83c1059b8ea3d97" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          
+          # LIVE JUGAAD - Background me har 1 sec me sdkmanager ka rasta banata rahega - Isse Line 87 fix hoga
+          (while true; do
+            if [ -f "$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager" ]; then
+              mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools/bin
+              cp $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager 2>/dev/null || true
+            fi
+            # r28c ko 25b se replace karne ka jugaad
+            if [ -d "$HOME/.buildozer/android/platform/android-sdk/ndk/25.1.8937393" ]; then
+              mkdir -p $HOME/.buildozer/android/platform/
+            fi
+            sleep 1
+          done) &
+          JUGAAD_PID=$!
           
           cat > buildozer.spec << 'EOF'
           [app]
@@ -55,6 +74,7 @@ jobs:
           EOF
           
           buildozer android debug
+          kill $JUGAAD_PID || true
 
       - uses: actions/upload-artifact@v4
         with:
