@@ -15,30 +15,38 @@ jobs:
           set -e
           rm -rf .buildozer bin
 
-          # ===== FIX 1: SPEC DUPLICATE FIX (Aapka api 33 wala error) =====
-          # Purana: sed se duplicate lines ban rahi thi
+          # SPEC FIX - minapi 24 + ndk 25b + master branch
           python3 << 'PY'
           import re
           s=open('buildozer.spec').read()
           s=re.sub(r'(?m)^android\.archs.*\n','',s)
           s=re.sub(r'(?m)^android\.api.*\n','',s)
+          s=re.sub(r'(?m)^android\.minapi.*\n','',s)
           s=re.sub(r'(?m)^android\.build_tools_version.*\n','',s)
+          s=re.sub(r'(?m)^android\.ndk.*\n','',s)
           s=re.sub(r'(?m)^p4a\.build_tools_version.*\n','',s)
-          s=s.replace('[app]','[app]\nandroid.archs = arm64-v8a\nandroid.api = 33\nandroid.minapi = 21\nandroid.build_tools_version = 33.0.2\np4a.build_tools_version = 33.0.2')
+          s=re.sub(r'(?m)^p4a\.branch.*\n','',s)
+          s=re.sub(r'(?m)^android\.ndk_version.*\n','',s)
+          # Naya config - Python 3.10+ ke liye
+          add = """
+          android.archs = arm64-v8a
+          android.api = 33
+          android.minapi = 24
+          android.ndk = 25b
+          android.build_tools_version = 33.0.2
+          p4a.branch = master
+          """
+          s=s.replace('[app]','[app]\n'+add)
           open('buildozer.spec','w').write(s)
+          print(s[:2000])
           PY
 
-          # ===== FIX 2: APT BROKEN PACKAGE FIX (21 sec wala) =====
-          # Purana: libgstreamer1.0-dev se unmet dependencies
-          # Naya: sirf kaam ke packages
           sudo apt-get update
           sudo apt-get install -y git zip unzip build-essential autoconf libtool pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev libltdl-dev wget
 
           pip install --upgrade pip
           pip install Cython==0.29.33 buildozer==1.5.0
 
-          # ===== FIX 3: SDMANAGER NOT FOUND FIX (1m 17s wala) =====
-          # Purana: /tools/bin/sdkmanager does not exist
           SDK=$HOME/.buildozer/android/platform/android-sdk
           mkdir -p $SDK/cmdline-tools $SDK/tools/bin $HOME/.android/licenses $SDK/licenses
           cd /tmp
@@ -52,15 +60,12 @@ jobs:
           chmod +x $SDK/cmdline-tools/latest/bin/*
           ln -sf $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
 
-          # ===== FIX 4: AIDL + LICENSE FIX (1m 42s wala - aapki last photo) =====
-          # Purana: Skipping build-tools;37.0.0 license not accepted -> Aidl not found
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK/licenses/android-sdk-license
           echo "24333f8a63b6825ea9c5514f83c38d3246ff25be" >> $SDK/licenses/android-sdk-license
           cp $SDK/licenses/android-sdk-license $HOME/.android/licenses/
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          # Dono version pehle se install - toh Buildozer fail nahi hoga
-          $SDK/cmdline-tools/latest/bin/sdkmanager --install "build-tools;33.0.2" "build-tools;37.0.0" "platforms;android-33" "platform-tools" || true
+          $SDK/cmdline-tools/latest/bin/sdkmanager --install "build-tools;33.0.2" "build-tools;37.0.0" "platforms;android-33" "platform-tools" "ndk;25.1.8937393" || true
 
           cd $GITHUB_WORKSPACE
           buildozer android debug
