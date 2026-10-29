@@ -2,115 +2,86 @@ from kivymd.app import MDApp
 from kivy.lang import Builder
 from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.screen import MDScreen
-from kivy.properties import StringProperty
+from kivy.clock import Clock
 from kivy.core.window import Window
 Window.softinput_mode = "below_target"
 
 KV = '''
 <SplashScreen>:
-    MDFloatLayout:
+    MDBoxLayout:
+        orientation: 'vertical'
         md_bg_color: 1,1,1,1
+        Widget:
         MDLabel:
             text: "AT WORLD"
             halign: "center"
             font_style: "H4"
-            pos_hint: {'center_y':.6}
+            bold: True
+        MDLabel:
+            text: "AT World Matter"
+            halign: "center"
+        Widget:
         MDLabel:
             text: "Loading..."
             halign: "center"
-            pos_hint: {'center_y':.35}
             theme_text_color: "Hint"
+        Widget:
 
-<ChatListScreen>:
+<MainScreen>:
     MDBoxLayout:
         orientation: 'vertical'
-        MDTopAppBar:
-            title: "AT World Matter"
-            md_bg_color: 0.06, 0.45, 0.73, 1
+        MDBoxLayout:
+            size_hint_y: None
+            height: "56dp"
+            md_bg_color: 0.02, 0.45, 0.80, 1
+            padding: "10dp"
+            MDLabel:
+                text: "AT World Matter"
+                theme_text_color: "Custom"
+                text_color: 1,1,1,1
+                bold: True
+            MDIconButton:
+                icon: "dots-vertical"
+                theme_text_color: "Custom"
+                text_color: 1,1,1,1
+
         ScrollView:
             MDList:
                 TwoLineAvatarIconListItem:
                     text: "Anuj Tripathi"
-                    secondary_text: "AT World Matter ready hai sir!"
-                    on_release: app.open_chat("Anuj Tripathi")
+                    secondary_text: "Sir AT World Ready Hai!"
+                    on_release: app.show_chat("Anuj Tripathi")
                     IconLeftWidget:
                         icon: "account-circle"
                 TwoLineAvatarIconListItem:
                     text: "AT Group"
                     secondary_text: "Welcome to AT World"
-                    on_release: app.open_chat("AT Group")
+                    on_release: app.show_chat("AT Group")
                     IconLeftWidget:
                         icon: "account-group"
+                TwoLineAvatarIconListItem:
+                    text: "AT Support"
+                    secondary_text: "How can I help you?"
+                    on_release: app.show_chat("AT Support")
+                    IconLeftWidget:
+                        icon: "headset"
 
-<ChatScreen>:
-    MDBoxLayout:
-        orientation: 'vertical'
-        MDTopAppBar:
-            title: root.chat_name
-            md_bg_color: 0.06, 0.45, 0.73, 1
-            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'chats')]]
-        MDLabel:
-            text: "Chat secure"
-            halign: "center"
-            theme_text_color: "Hint"
         MDBoxLayout:
             size_hint_y: None
-            height: "60dp"
-            padding: "10dp"
-            MDTextField:
-                hint_text: "Type message..."
-                mode: "round"
+            height: "56dp"
+            md_bg_color: 0.95,0.95,0.95,1
             MDIconButton:
-                icon: "send"
-
-<CallScreen>:
-    MDBoxLayout:
-        orientation: 'vertical'
-        MDTopAppBar:
-            title: "Calls"
-            left_action_items: [["arrow-left", lambda x: setattr(app.root,'current','chats')]]
-        MDList:
-            TwoLineAvatarIconListItem:
-                text: "Anuj - Outgoing"
-                secondary_text: "Today, 9:30 PM"
-                IconLeftWidget:
-                    icon: "phone-outgoing"
-
-<VideoCallScreen>:
-    MDFloatLayout:
-        md_bg_color: 0,0,0,1
-        MDLabel:
-            text: "Video Calling..."
-            halign: "center"
-            theme_text_color: "Custom"
-            text_color: 1,1,1,1
-            pos_hint: {'center_y':.5}
-        MDFabButton:
-            icon: "phone-hangup"
-            md_bg_color: 1,0,0,1
-            pos_hint: {'center_x':.5,'y':.05}
-            on_release: app.root.current = 'chats'
-
-<ContactScreen>:
-    MDBoxLayout:
-        orientation: 'vertical'
-        MDTopAppBar:
-            title: "Contacts"
-            left_action_items: [["arrow-left", lambda x: setattr(app.root,'current','chats')]]
-        MDList:
-            TwoLineAvatarIconListItem:
-                text: "Invite Friends"
-                IconLeftWidget:
-                    icon: "account-plus"
+                icon: "message-text"
+            Widget:
+            MDIconButton:
+                icon: "phone"
+            Widget:
+            MDIconButton:
+                icon: "account-group"
 '''
 
 class SplashScreen(MDScreen): pass
-class ChatListScreen(MDScreen): pass
-class ChatScreen(MDScreen):
-    chat_name = StringProperty("Chat")
-class CallScreen(MDScreen): pass
-class VideoCallScreen(MDScreen): pass
-class ContactScreen(MDScreen): pass
+class MainScreen(MDScreen): pass
 
 class ATWorldMatterApp(MDApp):
     def build(self):
@@ -118,17 +89,16 @@ class ATWorldMatterApp(MDApp):
         Builder.load_string(KV)
         sm = MDScreenManager()
         sm.add_widget(SplashScreen(name='splash'))
-        sm.add_widget(ChatListScreen(name='chats'))
-        sm.add_widget(ChatScreen(name='chat_view'))
-        sm.add_widget(CallScreen(name='calls'))
-        sm.add_widget(VideoCallScreen(name='video'))
-        sm.add_widget(ContactScreen(name='contacts'))
+        sm.add_widget(MainScreen(name='main'))
         return sm
+
     def on_start(self):
-        from kivy.clock import Clock
-        Clock.schedule_once(lambda x: setattr(self.root, 'current', 'chats'), 2)
-    def open_chat(self, name):
-        self.root.get_screen('chat_view').chat_name = name
-        self.root.current = 'chat_view'
+        Clock.schedule_once(self.go_main, 2)
+
+    def go_main(self, *args):
+        self.root.current = 'main'
+
+    def show_chat(self, name):
+        print(f"Open chat: {name}")
 
 ATWorldMatterApp().run()
