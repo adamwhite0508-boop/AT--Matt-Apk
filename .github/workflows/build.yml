@@ -5,50 +5,68 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      
       - uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          
+        with: {distribution: 'temurin', java-version: '17'}
       - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+        with: {python-version: '3.10'}
 
       - name: Build APK
         run: |
           set -e
-          rm -rf .buildozer bin __pycache__
-          
-          # Fix spec - only 1 arch
-          sed -i '/android.archs/d' buildozer.spec || true
-          sed -i '/android.api/d' buildozer.spec || true
-          sed -i '/android.minapi/d' buildozer.spec || true
-          sed -i '/android.ndk/d' buildozer.spec || true
-          sed -i '/p4a.bootstrap/d' buildozer.spec || true
-          echo "android.archs = arm64-v8a" >> buildozer.spec
-          echo "android.api = 33" >> buildozer.spec
-          echo "android.minapi = 21" >> buildozer.spec
-          echo "p4a.bootstrap = sdl2" >> buildozer.spec
-          grep -E "arch|api|bootstrap" buildozer.spec
+          rm -rf .buildozer bin
 
+          # ===== FIX 1: SPEC DUPLICATE FIX (Aapka api 33 wala error) =====
+          # Purana: sed se duplicate lines ban rahi thi
+          python3 << 'PY'
+          import re
+          s=open('buildozer.spec').read()
+          s=re.sub(r'(?m)^android\.archs.*\n','',s)
+          s=re.sub(r'(?m)^android\.api.*\n','',s)
+          s=re.sub(r'(?m)^android\.build_tools_version.*\n','',s)
+          s=re.sub(r'(?m)^p4a\.build_tools_version.*\n','',s)
+          s=s.replace('[app]','[app]\nandroid.archs = arm64-v8a\nandroid.api = 33\nandroid.minapi = 21\nandroid.build_tools_version = 33.0.2\np4a.build_tools_version = 33.0.2')
+          open('buildozer.spec','w').write(s)
+          PY
+
+          # ===== FIX 2: APT BROKEN PACKAGE FIX (21 sec wala) =====
+          # Purana: libgstreamer1.0-dev se unmet dependencies
+          # Naya: sirf kaam ke packages
           sudo apt-get update
-          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libtinfo6 cmake libffi-dev libssl-dev libltdl-dev libbz2-dev libsqlite3-dev
+          sudo apt-get install -y git zip unzip build-essential autoconf libtool pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev libltdl-dev wget
 
           pip install --upgrade pip
-          pip install --upgrade Cython==0.29.33 buildozer==1.5.0 python-for-android
+          pip install Cython==0.29.33 buildozer==1.5.0
 
-          # LICENSE ACCEPT - AUTO
-          mkdir -p ~/.android/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.android/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> ~/.android/licenses/android-sdk-license
-          echo "24333f8a63b6825ea9c5514f83c38d3246ff25be" >> ~/.android/licenses/android-sdk-license
+          # ===== FIX 3: SDMANAGER NOT FOUND FIX (1m 17s wala) =====
+          # Purana: /tools/bin/sdkmanager does not exist
+          SDK=$HOME/.buildozer/android/platform/android-sdk
+          mkdir -p $SDK/cmdline-tools $SDK/tools/bin $HOME/.android/licenses $SDK/licenses
+          cd /tmp
+          rm -rf cmdline-tools cmd.zip
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmd.zip
+          unzip -q cmd.zip
+          rm -rf $SDK/cmdline-tools/latest
+          mkdir -p $SDK/cmdline-tools/latest
+          cp -r cmdline-tools/* $SDK/cmdline-tools/latest/
+          if [ -d "$SDK/cmdline-tools/latest/cmdline-tools" ]; then cp -r $SDK/cmdline-tools/latest/cmdline-tools/* $SDK/cmdline-tools/latest/; rm -rf $SDK/cmdline-tools/latest/cmdline-tools; fi
+          chmod +x $SDK/cmdline-tools/latest/bin/*
+          ln -sf $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
 
+          # ===== FIX 4: AIDL + LICENSE FIX (1m 42s wala - aapki last photo) =====
+          # Purana: Skipping build-tools;37.0.0 license not accepted -> Aidl not found
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c38d3246ff25be" >> $SDK/licenses/android-sdk-license
+          cp $SDK/licenses/android-sdk-license $HOME/.android/licenses/
+          yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          # Dono version pehle se install - toh Buildozer fail nahi hoga
+          $SDK/cmdline-tools/latest/bin/sdkmanager --install "build-tools;33.0.2" "build-tools;37.0.0" "platforms;android-33" "platform-tools" || true
+
+          cd $GITHUB_WORKSPACE
           buildozer android debug
 
-      - name: Upload APK
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
           name: AT-World-APK
           path: bin/*.apk
