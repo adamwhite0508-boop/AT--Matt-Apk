@@ -17,17 +17,28 @@ jobs:
           pip install --upgrade pip
           pip install "setuptools<81" Cython==0.29.36 buildozer
           
-          # === FORCE SINGLE ARCH ===
-          sed -i '/android.archs/d' buildozer.spec
+          # === DUPLICATE FIX - purane options delete karo ===
+          sed -i '/^android.archs/d' buildozer.spec
+          sed -i '/^android.ndk/d' buildozer.spec
+          sed -i '/^android.sdk/d' buildozer.spec
+          sed -i '/^android.build_tools/d' buildozer.spec
+          sed -i '/^p4a.branch/d' buildozer.spec
+          sed -i '/^android.accept/d' buildozer.spec
+          sed -i '/^log_level/d' buildozer.spec
+          sed -i '/^p4a.bootstrap/d' buildozer.spec
+          
+          # Ab single wala likho
           echo "android.archs = arm64-v8a" >> buildozer.spec
           echo "android.ndk = 25b" >> buildozer.spec
           echo "android.sdk = 33" >> buildozer.spec
           echo "android.build_tools_version = 37.0.0" >> buildozer.spec
           echo "p4a.branch = develop" >> buildozer.spec
+          echo "p4a.bootstrap = sdl2" >> buildozer.spec
           echo "android.accept_sdk_license_agreements = True" >> buildozer.spec
           echo "log_level = 2" >> buildozer.spec
-          echo "--- CHECK ARCH ---"
-          cat buildozer.spec | grep archs
+          
+          echo "--- FINAL SPEC ---"
+          cat buildozer.spec | grep -E "archs|ndk|sdk|build_tools|p4a|accept"
           
           PLATFORM=$HOME/.buildozer/android/platform
           mkdir -p $PLATFORM
