@@ -9,8 +9,8 @@ jobs:
         with: {distribution: temurin, java-version: '17'}
       - uses: actions/setup-python@v5
         with: {python-version: '3.10'}
-        
-      - name: Build
+
+      - name: Build APK
         run: |
           rm -rf .buildozer bin buildozer.spec
           cat > buildozer.spec << 'EOF'
@@ -29,8 +29,10 @@ jobs:
           android.archs = arm64-v8a
           android.api = 33
           android.minapi = 24
-          android.ndk = 28c
+          android.ndk = 25b
+          android.sdk = 33
           android.accept_sdk_license_agreements = True
+          p4a.branch = v2024.01.21
           p4a.bootstrap = sdl2
           EOF
           
@@ -50,13 +52,10 @@ jobs:
           mv cmdline-tools/* $SDK/cmdline-tools/latest/
           chmod +x $SDK/cmdline-tools/latest/bin/*
           
-          # YAHI ASLI FIX - nakli copy nahi, wrapper banao
+          # Wrapper - yahi aapke 28m wale build ko chalaya tha
           echo '#!/bin/bash' > $SDK/tools/bin/sdkmanager
           echo 'exec $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager "$@"' >> $SDK/tools/bin/sdkmanager
           chmod +x $SDK/tools/bin/sdkmanager
-          echo "Wrapper created:"
-          cat $SDK/tools/bin/sdkmanager
-          ls -lh $SDK/tools/bin/sdkmanager
           
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.android/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.android/licenses/android-sdk-license
@@ -67,7 +66,7 @@ jobs:
           
           cd $GITHUB_WORKSPACE
           buildozer android debug
-          
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
