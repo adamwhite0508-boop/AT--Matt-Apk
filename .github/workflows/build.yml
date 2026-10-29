@@ -13,40 +13,46 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install + Double Patch
+      - name: Install Tools
         run: |
           sudo apt-get update
           sudo apt-get install -y aidl build-essential libssl-dev libffi-dev python3-dev autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev cmake libltdl-dev unzip
           pip install Cython==0.29.36 buildozer==1.5.0
-          PYTHON_SITE=$(python -c "import site; print(site.getsitepackages()[0])")
-          # Dono jagah patch - buildozer + python-for-android
-          echo "Patching all files..."
-          grep -r "tools/bin/sdkmanager" $PYTHON_SITE --include="*.py" -l 2>/dev/null | xargs sed -i 's|tools/bin/sdkmanager|cmdline-tools/latest/bin/sdkmanager|g' || true
-          grep -r "tools/bin/sdkmanager" $PYTHON_SITE --include="*.py" -l 2>/dev/null | xargs sed -i 's|tools/bin/sdkmanager|cmdline-tools/latest/bin/sdkmanager|g' || true
-          echo "Patched"
 
       - name: Build APK
         run: |
           rm -rf bin buildozer.spec .buildozer
-          # License
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo "24333f8a63b6825ea9c5514f83c1059b8ea3d97" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           
-          # LIVE JUGAAD - Background me har 1 sec me sdkmanager ka rasta banata rahega - Isse Line 87 fix hoga
-          (while true; do
-            if [ -f "$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager" ]; then
-              mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools/bin
-              cp $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager 2>/dev/null || true
-            fi
-            # r28c ko 25b se replace karne ka jugaad
-            if [ -d "$HOME/.buildozer/android/platform/android-sdk/ndk/25.1.8937393" ]; then
-              mkdir -p $HOME/.buildozer/android/platform/
-            fi
-            sleep 1
-          done) &
-          JUGAAD_PID=$!
+          # 1. Pehle se hi SDK ka pura structure banao - Taki buildozer ko tools/bin dhoondna na pade
+          export SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
+          mkdir -p $SDK_DIR/cmdline-tools/latest/bin
+          mkdir -p $SDK_DIR/tools/bin
+          mkdir -p $SDK_DIR/licenses
+          mkdir -p $SDK_DIR/platform
+          
+          # System wala sdkmanager copy karo
+          cp $ANDROID_HOME/cmdline-tools/latest/bin/* $SDK_DIR/cmdline-tools/latest/bin/ || true
+          cp $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager $SDK_DIR/tools/bin/sdkmanager || true
+          chmod +x $SDK_DIR/cmdline-tools/latest/bin/sdkmanager
+          chmod +x $SDK_DIR/tools/bin/sdkmanager
+          
+          # License
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK_DIR/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK_DIR/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c1059b8ea3d97" >> $SDK_DIR/licenses/android-sdk-license
+          echo "y" > $SDK_DIR/licenses/android-sdk-preview-license
+          
+          # 2. Pehle se hi saare tools install karo - Isse buildozer ko download nahi karna padega
+          yes | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --install "build-tools;33.0.2" "platform-tools" "platforms;android-33" "ndk;25.1.8937393" || true
+          
+          # 3. r28c ka fake folder banao - Jo asli me 25b hai - Taki r28c download skip ho jaye
+          if [ -d "$SDK_DIR/ndk/25.1.8937393" ]; then
+            mkdir -p $HOME/.buildozer/android/platform/
+            cp -r $SDK_DIR/ndk/25.1.8937393 $HOME/.buildozer/android/platform/android-ndk-r28c || true
+            cp -r $SDK_DIR/ndk/25.1.8937393 $HOME/.buildozer/android/platform/android-ndk-r25b || true
+            echo "Fake r28c NDK created from 25b"
+          fi
           
           cat > buildozer.spec << 'EOF'
           [app]
@@ -58,6 +64,8 @@ jobs:
           version = 2.0
           requirements = python3,kivy==2.3.0
           orientation = portrait
+          p4a.branch = v2024.1.21
+          p4a.bootstrap = sdl2
           [buildozer]
           log_level = 2
           [app:android]
@@ -69,12 +77,9 @@ jobs:
           android.archs = arm64-v8a
           android.permissions = INTERNET,CAMERA,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,READ_CONTACTS,CALL_PHONE,RECORD_AUDIO
           android.build_tools_version = 33.0.2
-          p4a.bootstrap = sdl2
-          p4a.branch = v2024.1.21
           EOF
           
           buildozer android debug
-          kill $JUGAAD_PID || true
 
       - uses: actions/upload-artifact@v4
         with:
