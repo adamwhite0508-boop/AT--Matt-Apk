@@ -11,30 +11,46 @@ jobs:
         with: {python-version: '3.10'}
       - name: Install and Build
         run: |
-          set -x
-          rm -rf .buildozer bin ~/.buildozer
+          set -e
+          echo "=== Cleaning old builds ==="
+          rm -rf .buildozer bin __pycache__ ./.buildozer
+          rm -rf ~/.buildozer
+          
+          echo "=== BEFORE fix ==="
+          cat buildozer.spec | grep -i arch || echo "No arch line found"
+          
+          echo "=== FIXING spec ==="
           python3 << 'PY'
-          import re, sys
-          path = "buildozer.spec"
-          text = open(path, encoding="utf-8", errors="ignore").read()
-          text = re.sub(r"(?m)^.*android\.archs.*\n?", "", text)
-          text = text.strip() + "\n\nandroid.archs = arm64-v8a\n"
-          open(path, "w", encoding="utf-8").write(text)
-          # Check
-          data = open(path).read()
-          print("--- FINAL ARCHS CHECK ---")
-          for line in data.splitlines():
-              if "archs" in line.lower():
-                  print(line)
-          if "armeabi-v7a" in data or "arm64-v8a_armeabi" in data:
-              print("ERROR: DUAL ARCH STILL PRESENT!")
-              sys.exit(1)
-          print("OK: ONLY arm64-v8a")
+          import re
+          import pathlib
+          p = pathlib.Path("buildozer.spec")
+          text = p.read_text(encoding="utf-8", errors="ignore")
+          # Remove ALL archs lines, case-insensitive, with spaces
+          lines = []
+          for line in text.splitlines():
+              if "archs" in line.lower() and "android" in line.lower():
+                  continue
+              lines.append(line)
+          text = "\n".join(lines)
+          text = text.strip() + "\n\n# --- FIXED BY WORKFLOW ---\nandroid.archs = arm64-v8a\n"
+          p.write_text(text, encoding="utf-8")
+          print("=== AFTER fix ===")
+          print([l for l in text.splitlines() if "arch" in l.lower()][-5:])
           PY
+
+          echo "=== VERIFY ==="
+          cat buildozer.spec | grep -i arch
+          if grep -q "armeabi-v7a" buildozer.spec; then
+            echo "FAILED: armeabi still present!"
+            exit 1
+          fi
+          echo "SUCCESS: Only arm64-v8a found"
+
           sudo apt update
           sudo apt install -y build-essential libltdl-dev libffi-dev libssl-dev unzip wget
           pip install --upgrade pip
           pip install "setuptools<81" Cython==0.29.36 buildozer
+
           PLATFORM=$HOME/.buildozer/android/platform
           mkdir -p $PLATFORM
           cd /tmp
@@ -43,6 +59,7 @@ jobs:
           rm -rf $PLATFORM/android-ndk-r25b $PLATFORM/android-ndk-r28c
           mv android-ndk-r25b $PLATFORM/android-ndk-r25b
           cp -r $PLATFORM/android-ndk-r25b $PLATFORM/android-ndk-r28c
+          
           SDK=$PLATFORM/android-sdk
           mkdir -p $SDK/cmdline-tools/latest $SDK/tools/bin ~/.android/licenses $SDK/licenses
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmd.zip
@@ -55,8 +72,10 @@ jobs:
           cp $SDK/licenses/* ~/.android/licenses/ 2>/dev/null || true
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses || true
           $SDK/cmdline-tools/latest/bin/sdkmanager --install "build-tools;37.0.0" "platforms;android-33" "platform-tools" || true
+          
           cd $GITHUB_WORKSPACE
           buildozer android debug
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
