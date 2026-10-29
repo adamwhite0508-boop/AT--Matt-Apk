@@ -12,22 +12,14 @@ jobs:
       - name: Install and Build
         run: |
           set -e
-          rm -rf .buildozer bin ~/.buildozer
-          
-          grep -v "android.archs" buildozer.spec | grep -v "android.arch" > /tmp/clean.spec || true
-          mv /tmp/clean.spec buildozer.spec
-          python3 -c "
-          content=open('buildozer.spec').read()
-          content=content.replace('[app]', '[app]\nandroid.archs = arm64-v8a\n')
-          open('buildozer.spec','w').write(content)
-          "
-          cat buildozer.spec | grep arch
-          
+          rm -rf .buildozer bin
+          sed -i '/android.archs/d' buildozer.spec
+          sed -i '/\[app\]/a android.archs = arm64-v8a' buildozer.spec
+          grep arch buildozer.spec
           sudo apt update
-          sudo apt install -y build-essential libltdl-dev libffi-dev libssl-dev unzip wget
+          sudo apt install -y build-essential libssl-dev libffi-dev libltdl-dev libbz2-dev libsqlite3-dev libncurses5-dev zlib1g-dev libgdbm-dev liblzma-dev uuid-dev tk-dev libxml2-dev unzip wget
           pip install --upgrade pip
-          pip install "setuptools<81" Cython==0.29.36 buildozer
-          
+          pip install Cython==0.29.33 buildozer==1.5.0
           mkdir -p $HOME/.buildozer/android/platform
           cd /tmp
           wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
@@ -35,7 +27,6 @@ jobs:
           rm -rf $HOME/.buildozer/android/platform/android-ndk-r25b $HOME/.buildozer/android/platform/android-ndk-r28c
           mv android-ndk-r25b $HOME/.buildozer/android/platform/android-ndk-r25b
           cp -r $HOME/.buildozer/android/platform/android-ndk-r25b $HOME/.buildozer/android/platform/android-ndk-r28c
-          
           SDK=$HOME/.buildozer/android/platform/android-sdk
           mkdir -p $SDK/cmdline-tools/latest $SDK/tools/bin $HOME/.android/licenses $SDK/licenses
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmd.zip
@@ -43,15 +34,11 @@ jobs:
           mv /tmp/cmd_tmp/cmdline-tools/* $SDK/cmdline-tools/latest/ 2>/dev/null || true
           ln -sf $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK/licenses/android-sdk-license
-          echo "24333f8a63b6825ea9c5514f83c38d3246ff25be" >> $SDK/licenses/android-sdk-license
           cp $SDK/licenses/* $HOME/.android/licenses/ 2>/dev/null || true
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          $SDK/cmdline-tools/latest/bin/sdkmanager --install "build-tools;37.0.0" "platforms;android-33" "platform-tools" || true
-          
+          $SDK/cmdline-tools/latest/bin/sdkmanager --install "build-tools;33.0.2" "platforms;android-33" "platform-tools" || true
           cd $GITHUB_WORKSPACE
           buildozer android debug
-
       - uses: actions/upload-artifact@v4
         if: always()
         with:
