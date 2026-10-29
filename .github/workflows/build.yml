@@ -13,17 +13,17 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Dependencies
+      - name: Install + Patch Buildozer (r28c & sdkmanager Fix)
         run: |
           sudo apt-get update
-          sudo apt-get install -y aidl build-essential libssl-dev libffi-dev python3-dev autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev cmake libltdl-dev unzip libbz2-dev libreadline-dev libsqlite3-dev
-          pip install --upgrade pip
+          sudo apt-get install -y aidl build-essential libssl-dev libffi-dev python3-dev autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev cmake libltdl-dev unzip
           pip install Cython==0.29.36 buildozer==1.5.0
+          PYTHON_SITE=$(python -c "import site; print(site.getsitepackages()[0])")
+          sed -i 's|tools/bin/sdkmanager|cmdline-tools/latest/bin/sdkmanager|g' $PYTHON_SITE/buildozer/targets/android.py
 
       - name: Build APK
         run: |
-          rm -rf bin buildozer.spec .buildozer/logs
-          # License - Pehle se
+          rm -rf bin buildozer.spec
           mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
@@ -54,14 +54,9 @@ jobs:
           p4a.branch = v2024.1.21
           EOF
           
-          # Build karo - Fail hua to pura log dikhao
-          buildozer android debug || (echo "=== FULL LOG ===" && cat .buildozer/logs/buildozer.log && exit 1)
+          buildozer android debug
 
-      - name: Upload APK
-        if: always()
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: AT-World-Matter-APK
-          path: |
-            bin/*.apk
-            .buildozer/logs/*
+          path: bin/*.apk
