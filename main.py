@@ -1,35 +1,134 @@
-from kivy.app import App
-from kivy.uix.label import Label
+from kivymd.app import MDApp
+from kivy.lang import Builder
+from kivymd.uix.screenmanager import MDScreenManager
+from kivymd.uix.screen import MDScreen
+from kivy.properties import StringProperty
+from kivy.core.window import Window
+Window.softinput_mode = "below_target"
 
-class ATWorldApp(App):
+KV = '''
+<SplashScreen>:
+    MDFloatLayout:
+        md_bg_color: 1,1,1,1
+        MDLabel:
+            text: "AT WORLD"
+            halign: "center"
+            font_style: "H4"
+            pos_hint: {'center_y':.6}
+        MDLabel:
+            text: "Loading..."
+            halign: "center"
+            pos_hint: {'center_y':.35}
+            theme_text_color: "Hint"
+
+<ChatListScreen>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        MDTopAppBar:
+            title: "AT World Matter"
+            md_bg_color: 0.06, 0.45, 0.73, 1
+        ScrollView:
+            MDList:
+                TwoLineAvatarIconListItem:
+                    text: "Anuj Tripathi"
+                    secondary_text: "AT World Matter ready hai sir!"
+                    on_release: app.open_chat("Anuj Tripathi")
+                    IconLeftWidget:
+                        icon: "account-circle"
+                TwoLineAvatarIconListItem:
+                    text: "AT Group"
+                    secondary_text: "Welcome to AT World"
+                    on_release: app.open_chat("AT Group")
+                    IconLeftWidget:
+                        icon: "account-group"
+
+<ChatScreen>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        MDTopAppBar:
+            title: root.chat_name
+            md_bg_color: 0.06, 0.45, 0.73, 1
+            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'chats')]]
+        MDLabel:
+            text: "Chat secure"
+            halign: "center"
+            theme_text_color: "Hint"
+        MDBoxLayout:
+            size_hint_y: None
+            height: "60dp"
+            padding: "10dp"
+            MDTextField:
+                hint_text: "Type message..."
+                mode: "round"
+            MDIconButton:
+                icon: "send"
+
+<CallScreen>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        MDTopAppBar:
+            title: "Calls"
+            left_action_items: [["arrow-left", lambda x: setattr(app.root,'current','chats')]]
+        MDList:
+            TwoLineAvatarIconListItem:
+                text: "Anuj - Outgoing"
+                secondary_text: "Today, 9:30 PM"
+                IconLeftWidget:
+                    icon: "phone-outgoing"
+
+<VideoCallScreen>:
+    MDFloatLayout:
+        md_bg_color: 0,0,0,1
+        MDLabel:
+            text: "Video Calling..."
+            halign: "center"
+            theme_text_color: "Custom"
+            text_color: 1,1,1,1
+            pos_hint: {'center_y':.5}
+        MDFabButton:
+            icon: "phone-hangup"
+            md_bg_color: 1,0,0,1
+            pos_hint: {'center_x':.5,'y':.05}
+            on_release: app.root.current = 'chats'
+
+<ContactScreen>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        MDTopAppBar:
+            title: "Contacts"
+            left_action_items: [["arrow-left", lambda x: setattr(app.root,'current','chats')]]
+        MDList:
+            TwoLineAvatarIconListItem:
+                text: "Invite Friends"
+                IconLeftWidget:
+                    icon: "account-plus"
+'''
+
+class SplashScreen(MDScreen): pass
+class ChatListScreen(MDScreen): pass
+class ChatScreen(MDScreen):
+    chat_name = StringProperty("Chat")
+class CallScreen(MDScreen): pass
+class VideoCallScreen(MDScreen): pass
+class ContactScreen(MDScreen): pass
+
+class ATWorldMatterApp(MDApp):
     def build(self):
-        # Simple WebView wrapper - index.html ko load karega
-        try:
-            from jnius import autoclass
-            from android.runnable import run_on_ui_thread
-            from kivy.clock import Clock
-            
-            WebView = autoclass('android.webkit.WebView')
-            WebViewClient = autoclass('android.webkit.WebViewClient')
-            activity = autoclass('org.kivy.android.PythonActivity').mActivity
+        self.theme_cls.primary_palette = "Blue"
+        Builder.load_string(KV)
+        sm = MDScreenManager()
+        sm.add_widget(SplashScreen(name='splash'))
+        sm.add_widget(ChatListScreen(name='chats'))
+        sm.add_widget(ChatScreen(name='chat_view'))
+        sm.add_widget(CallScreen(name='calls'))
+        sm.add_widget(VideoCallScreen(name='video'))
+        sm.add_widget(ContactScreen(name='contacts'))
+        return sm
+    def on_start(self):
+        from kivy.clock import Clock
+        Clock.schedule_once(lambda x: setattr(self.root, 'current', 'chats'), 2)
+    def open_chat(self, name):
+        self.root.get_screen('chat_view').chat_name = name
+        self.root.current = 'chat_view'
 
-            @run_on_ui_thread
-            def create_webview():
-                webview = WebView(activity)
-                webview.getSettings().setJavaScriptEnabled(True)
-                webview.getSettings().setDomStorageEnabled(True)
-                webview.setWebViewClient(WebViewClient())
-                # index.html same folder me hai
-                webview.loadUrl('file:///android_asset/index.html')
-                activity.setContentView(webview)
-
-            Clock.schedule_once(lambda dt: create_webview(), 0)
-            
-        except Exception as e:
-            print(f"WebView Error: {e}")
-            return Label(text=f"AT WORLD Loading...\n{e}")
-
-        from kivy.uix.boxlayout import BoxLayout
-        return BoxLayout()
-
-ATWorldApp().run()
+ATWorldMatterApp().run()
