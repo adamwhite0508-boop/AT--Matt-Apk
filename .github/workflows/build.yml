@@ -21,16 +21,28 @@ jobs:
           c.read('buildozer.spec')
           if 'app' not in c: c['app'] = {}
           c['app']['android.archs'] = 'arm64-v8a'
+          # Force NDK 25b
+          c['app']['android.ndk'] = '25b'
+          c['app']['android.api'] = '33'
+          c['app']['android.minapi'] = '24'
           with open('buildozer.spec','w') as f:
               c.write(f)
-          print("FIXED")
           PY
-          grep -n "arch" buildozer.spec
+          grep arch buildozer.spec
           
           sudo apt update
-          sudo apt install -y build-essential libltdl-dev libffi-dev libssl-dev unzip wget
+          sudo apt install -y build-essential libltdl-dev libffi-dev libssl-dev unzip wget libfreetype6-dev libpng-dev
           pip install --upgrade pip
           pip install "setuptools<81" Cython==0.29.36 buildozer
+          
+          python3 << 'PY'
+          import pathlib, re, buildozer.targets.android as m
+          p = pathlib.Path(m.__file__)
+          code = p.read_text()
+          code = re.sub(r"getlist\(.*android\.archs.*?\)", "['arm64-v8a']", code)
+          code = re.sub(r"self\._archs\s*=\s*.*", "self._archs = ['arm64-v8a']", code)
+          p.write_text(code)
+          PY
           
           PLATFORM=$HOME/.buildozer/android/platform
           mkdir -p $PLATFORM
@@ -45,7 +57,7 @@ jobs:
           mkdir -p $SDK/cmdline-tools/latest $SDK/tools/bin ~/.android/licenses $SDK/licenses
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmd.zip
           unzip -q cmd.zip -d /tmp/cmd_tmp
-          mv /tmp/cmd_tmp/cmdline-tools/* $SDK/cmdline-tools/latest/ 2>/dev/null || mv /tmp/cmd_tmp/* $SDK/cmdline-tools/latest/ 2>/dev/null || true
+          mv /tmp/cmd_tmp/cmdline-tools/* $SDK/cmdline-tools/latest/ 2>/dev/null || true
           ln -sf $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK/licenses/android-sdk-license
