@@ -5,47 +5,36 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up Java 17
-        uses: actions/setup-java@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
-      
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install Aidl + Dependencies
+      - name: Install Aidl + Buildozer
         run: |
           sudo apt-get update
           sudo apt-get install -y aidl build-essential libssl-dev libffi-dev python3-dev autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev cmake libltdl-dev unzip
-          aidl --version || echo "aidl installed"
-          pip install --upgrade pip
           pip install Cython==0.29.36 buildozer==1.5.0
-
-      - name: Accept ALL Android Licenses (Fix for 37)
-        run: |
-          # Main SDK licenses
-          mkdir -p $ANDROID_HOME/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $ANDROID_HOME/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $ANDROID_HOME/licenses/android-sdk-license
-          echo "24333f8a63b6825ea9c5514f83c1059b8ea3d97" >> $ANDROID_HOME/licenses/android-sdk-license
-          echo "y" > $ANDROID_HOME/licenses/android-sdk-preview-license
-          echo "y" > $ANDROID_HOME/licenses/android-ndk-license
-          # Buildozer's SDK licenses (yeh sabse important hai)
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
-          cp $ANDROID_HOME/licenses/* $HOME/.buildozer/android/platform/android-sdk/licenses/ || true
-          # Accept all
-          yes | sdkmanager --licenses || true
-          yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          # Install Build-Tools 37 + 33 dono
-          sdkmanager "build-tools;37.0.0" "build-tools;33.0.2" "platform-tools" "platforms;android-33" "platforms;android-34" || true
 
       - name: Build APK
         run: |
-          rm -rf bin .buildozer buildozer.spec
+          rm -rf bin buildozer.spec
+          # License fix - dono jagah
+          mkdir -p $ANDROID_HOME/licenses
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $ANDROID_HOME/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $ANDROID_HOME/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c1059b8ea3d97" >> $ANDROID_HOME/licenses/android-sdk-license
+          cp $ANDROID_HOME/licenses/* $HOME/.buildozer/android/platform/android-sdk/licenses/ || true
+          yes | sdkmanager --licenses || true
+          # sdkmanager old path fix - iski wajah se Line 81 error aaya tha
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools/bin
+          cp $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager $HOME/.buildozer/android/platform/android-sdk/tools/bin/ || true
+          sdkmanager "build-tools;37.0.0" "build-tools;33.0.2" "platform-tools" "platforms;android-33" || true
+          
           cat > buildozer.spec << 'EOF'
           [app]
           title = AT World Matter
@@ -68,12 +57,10 @@ jobs:
           android.permissions = INTERNET,CAMERA,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,READ_CONTACTS,CALL_PHONE,RECORD_AUDIO
           android.build_tools_version = 37.0.0
           p4a.bootstrap = sdl2
-          p4a.branch = master
           EOF
           buildozer android debug
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: AT-World-Matter-APK
           path: bin/*.apk
