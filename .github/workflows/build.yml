@@ -13,25 +13,24 @@ jobs:
         run: |
           set -e
           rm -rf .buildozer bin ~/.buildozer
-          sed -i '/android.archs/d' buildozer.spec || true
-          echo "android.archs = arm64-v8a" >> buildozer.spec
-          echo "=== SPEC ===" && grep -i arch buildozer.spec
+          
+          python3 << 'PY'
+          import configparser
+          c = configparser.RawConfigParser()
+          c.optionxform = str
+          c.read('buildozer.spec')
+          if 'app' not in c: c['app'] = {}
+          c['app']['android.archs'] = 'arm64-v8a'
+          with open('buildozer.spec','w') as f:
+              c.write(f)
+          print("FIXED")
+          PY
+          grep -n "arch" buildozer.spec
           
           sudo apt update
           sudo apt install -y build-essential libltdl-dev libffi-dev libssl-dev unzip wget
           pip install --upgrade pip
           pip install "setuptools<81" Cython==0.29.36 buildozer
-          
-          # ==== PATCH BUILDOZER CODE TO FORCE SINGLE ARCH ====
-          python3 << 'PY'
-          import pathlib, buildozer.targets.android as m
-          p = pathlib.Path(m.__file__)
-          t = p.read_text()
-          # Force archs to only arm64-v8a
-          t = t.replace("self._archs = self.buildozer.config.getlist('app', 'android.archs'", "self._archs = ['arm64-v8a']  # FORCED SINGLE\n        # ORIGINAL_LINE_DISABLED self._archs = self.buildozer.config.getlist('app', 'android.archs'")
-          p.write_text(t)
-          print(f"Patched {p}")
-          PY
           
           PLATFORM=$HOME/.buildozer/android/platform
           mkdir -p $PLATFORM
