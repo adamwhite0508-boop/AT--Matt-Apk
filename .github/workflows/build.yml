@@ -15,17 +15,30 @@ jobs:
           set -e
           rm -rf .buildozer bin
           
+          # 1. Arch single
           sed -i '/android.archs/d' buildozer.spec
-          sed -i '/\[app\]/a android.archs = arm64-v8a' buildozer.spec
-          echo "=== ARCH ===" 
-          grep arch buildozer.spec
+          sed -i '/android.build_tools_version/d' buildozer.spec
+          sed -i '/android.api/d' buildozer.spec
+          sed -i '/\[app\]/a android.archs = arm64-v8a\nandroid.api = 33\nandroid.build_tools_version = 33.0.2' buildozer.spec
+          echo "=== SPEC ==="
+          grep -E "arch|api|build_tools" buildozer.spec
           
+          # 2. Basic packages only (no gstreamer)
           sudo apt update
-          sudo apt install -y git zip unzip build-essential autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev libltdl-dev
+          sudo apt install -y git zip unzip build-essential autoconf libtool pkg-config zlib1g-dev libncurses5-dev libtinfo6 cmake libffi-dev libssl-dev libltdl-dev
           
           pip install --upgrade pip
           pip install Cython==0.29.33 buildozer==1.5.0
           
+          # 3. FIX LICENSE + AIDL
+          mkdir -p $HOME/.android $HOME/.android/licenses
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.android/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.android/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c38d3246ff25be" >> $HOME/.android/licenses/android-sdk-license
+          cp $HOME/.android/licenses/* $HOME/.buildozer/android/platform/android-sdk/licenses/ 2>/dev/null || true
+          
+          # 4. Build - ab Aidl error nahi ayega
           buildozer android debug
 
       - uses: actions/upload-artifact@v4
