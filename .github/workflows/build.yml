@@ -16,18 +16,29 @@ jobs:
           sudo apt install -y build-essential libltdl-dev libffi-dev libssl-dev
           pip install Cython==0.29.36 buildozer
           
+          # Fix spec
           sed -i '/^android.archs.*/d' buildozer.spec
           sed -i '/^android.ndk.*/d' buildozer.spec
           sed -i '/^android.sdk.*/d' buildozer.spec
           sed -i '/^android.build_tools.*/d' buildozer.spec
           sed -i '/^p4a.branch.*/d' buildozer.spec
+          sed -i '/^android.accept.*/d' buildozer.spec
           echo "android.archs = arm64-v8a" >> buildozer.spec
           echo "android.ndk = 25b" >> buildozer.spec
           echo "android.sdk = 33" >> buildozer.spec
           echo "android.build_tools_version = 34.0.0" >> buildozer.spec
           echo "p4a.branch = develop" >> buildozer.spec
+          echo "android.accept_sdk_license_agreements = True" >> buildozer.spec
           
-          cat buildozer.spec | grep -E "archs|ndk|p4a|build_tools"
+          # FIX LICENSE - ye line bahut zaroori hai
+          mkdir -p ~/.android/licenses ~/.buildozer/android/platform/android-sdk/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.android/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> ~/.android/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c38d3246ff25be" >> ~/.android/licenses/android-sdk-license
+          echo "y" > ~/.android/licenses/android-sdk-preview-license
+          cp ~/.android/licenses/* ~/.buildozer/android/platform/android-sdk/licenses/ || true
+          
+          cat buildozer.spec | grep -E "archs|ndk|build_tools|accept"
           
           buildozer android debug
           
