@@ -6,43 +6,54 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
+        with: {distribution: temurin, java-version: '17'}
       - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Build APK
+        with: {python-version: '3.10'}
+      - name: Build
         run: |
-          rm -rf .buildozer bin
-          sudo apt-get update
-          sudo apt-get install -y git zip unzip build-essential autoconf libtool pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev libltdl-dev libbz2-dev wget
+          sudo rm -rf /usr/local/lib/android/sdk/ndk/*
+          rm -rf .buildozer bin buildozer.spec
+          cat > buildozer.spec << 'EOF'
+          [app]
+          title = AT World
+          package.name = atworld
+          package.domain = com.atworld.app
+          source.dir = .
+          source.include_exts = py,png,jpg,kv,atlas
+          version = 0.1
+          requirements = python3,kivy
+          orientation = portrait
+          [buildozer]
+          log_level = 2
+          [app:android]
+          android.archs = arm64-v8a
+          android.api = 33
+          android.minapi = 24
+          android.ndk = 25b
+          android.accept_sdk_license_agreements = True
+          p4a.bootstrap = sdl2
+          EOF
+          sudo apt-get update -y
+          sudo apt-get install -y git zip unzip build-essential libssl-dev libffi-dev python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev cmake libbz2-dev libltdl-dev
           pip install Cython==0.29.36 buildozer==1.5.0
-          
           SDK=$HOME/.buildozer/android/platform/android-sdk
-          mkdir -p $SDK/cmdline-tools $SDK/tools/bin $HOME/.android/licenses $SDK/licenses
+          mkdir -p $SDK/cmdline-tools $HOME/.android/licenses $SDK/licenses
           cd /tmp
-          rm -rf cmdline-tools cmd.zip
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmd.zip
           unzip -q cmd.zip
           rm -rf $SDK/cmdline-tools/latest
           mkdir -p $SDK/cmdline-tools/latest
-          cp -r cmdline-tools/* $SDK/cmdline-tools/latest/
-          if [ -d $SDK/cmdline-tools/latest/cmdline-tools ]; then cp -r $SDK/cmdline-tools/latest/cmdline-tools/* $SDK/cmdline-tools/latest/; rm -rf $SDK/cmdline-tools/latest/cmdline-tools; fi
+          mv cmdline-tools/* $SDK/cmdline-tools/latest/
           chmod +x $SDK/cmdline-tools/latest/bin/*
-          ln -sf $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK/licenses/android-sdk-license
-          echo "24333f8a63b6825ea9c5514f83c38d3246ff25be" >> $SDK/licenses/android-sdk-license
-          cp $SDK/licenses/android-sdk-license $HOME/.android/licenses/
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.android/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.android/licenses/android-sdk-license
+          cp $HOME/.android/licenses/android-sdk-license $SDK/licenses/
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          $SDK/cmdline-tools/latest/bin/sdkmanager --install "build-tools;33.0.2" "build-tools;37.0.0" "platforms;android-33" "platform-tools" "ndk;25.1.8937393" || true
+          $SDK/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;33.0.2" "ndk;25.1.8937393" "platform-tools" || true
           cd $GITHUB_WORKSPACE
-          buildozer android debug
-
+          buildozer android debug --verbose | tee full_log.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: AT-World-APK
-          path: bin/*.apk
+          name: full-log
+          path: full_log.txt
