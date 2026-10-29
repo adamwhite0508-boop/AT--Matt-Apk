@@ -11,25 +11,28 @@ jobs:
         with: {python-version: '3.10'}
       - name: Install and Build
         run: |
-          rm -rf .buildozer bin ~/.buildozer
+          rm -rf .buildozer bin
           sudo apt update
           sudo apt install -y build-essential libltdl-dev libffi-dev libssl-dev unzip wget
-          pip install Cython==0.29.36 buildozer
+          pip install --upgrade pip
+          pip install "setuptools<81" Cython==0.29.36 buildozer
           
-          sed -i '/^android.archs.*/d' buildozer.spec
+          # Direct fix spec - permanent
+          sed -i 's/^android.archs.*/android.archs = arm64-v8a/' buildozer.spec
           sed -i '/^android.ndk.*/d' buildozer.spec
           sed -i '/^android.sdk.*/d' buildozer.spec
           sed -i '/^android.build_tools.*/d' buildozer.spec
           sed -i '/^p4a.branch.*/d' buildozer.spec
           sed -i '/^android.accept.*/d' buildozer.spec
-          echo "android.archs = arm64-v8a" >> buildozer.spec
+          sed -i '/^log_level.*/d' buildozer.spec
           echo "android.ndk = 25b" >> buildozer.spec
           echo "android.sdk = 33" >> buildozer.spec
           echo "android.build_tools_version = 34.0.0" >> buildozer.spec
           echo "p4a.branch = develop" >> buildozer.spec
           echo "android.accept_sdk_license_agreements = True" >> buildozer.spec
+          echo "log_level = 2" >> buildozer.spec
+          cat buildozer.spec | grep archs
           
-          # === JADU YAHAN HAI SIR ===
           PLATFORM=$HOME/.buildozer/android/platform
           mkdir -p $PLATFORM
           cd /tmp
@@ -38,24 +41,18 @@ jobs:
           rm -rf $PLATFORM/android-ndk-r25b $PLATFORM/android-ndk-r28c
           mv android-ndk-r25b $PLATFORM/android-ndk-r25b
           cp -r $PLATFORM/android-ndk-r25b $PLATFORM/android-ndk-r28c
-          echo "NDK r25b installed as r28c - p4a will be fooled!"
           
-          # SDK fix - sdkmanager ka rasta banate hain
           SDK=$PLATFORM/android-sdk
-          mkdir -p $SDK/cmdline-tools/latest
+          mkdir -p $SDK/cmdline-tools/latest $SDK/tools/bin
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmd.zip
           unzip -q cmd.zip -d /tmp/cmd_tmp
           mv /tmp/cmd_tmp/cmdline-tools/* $SDK/cmdline-tools/latest/ 2>/dev/null || mv /tmp/cmd_tmp/* $SDK/cmdline-tools/latest/ 2>/dev/null || true
-          mkdir -p $SDK/tools/bin
           ln -sf $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
-          
           mkdir -p ~/.android/licenses $SDK/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK/licenses/android-sdk-license
           echo "24333f8a63b6825ea9c5514f83c38d3246ff25be" >> $SDK/licenses/android-sdk-license
           cp $SDK/licenses/* ~/.android/licenses/ 2>/dev/null || true
-          yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null 2>&1 || true
-          yes | $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" "platforms;android-33" "platform-tools" >/dev/null 2>&1 || true
           
           cd $GITHUB_WORKSPACE
           buildozer android debug
