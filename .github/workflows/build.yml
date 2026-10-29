@@ -24,7 +24,7 @@ jobs:
           package.name = atworldmatter
           package.domain = com.atworldmatter.app
           source.dir = .
-          source.include_exts = py,png,jpg,kv,atlas,json
+          source.include_exts = py,png,jpg,kv,atlas,json,html
           version = 2.0
           requirements = python3,kivy==2.3.0,kivymd==1.1.1,pillow,materialyoucolor,plyer,android,pyjnius
           orientation = portrait
