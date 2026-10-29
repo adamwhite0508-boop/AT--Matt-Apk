@@ -16,19 +16,8 @@ jobs:
       - name: Build APK
         run: |
           rm -rf .buildozer bin
-          # Spec fix - simple sed, no python
-          sed -i '/android.archs/d' buildozer.spec
-          sed -i '/android.api/d' buildozer.spec
-          sed -i '/android.minapi/d' buildozer.spec
-          sed -i '/android.ndk/d' buildozer.spec
-          sed -i '/build_tools_version/d' buildozer.spec
-          sed -i '/p4a.branch/d' buildozer.spec
-          sed -i '/requirements =/d' buildozer.spec
-          printf "\nandroid.archs = arm64-v8a\nandroid.api = 33\nandroid.minapi = 24\nandroid.ndk = 25b\nandroid.build_tools_version = 33.0.2\np4a.branch = master\nrequirements = python3==3.11.6,kivy\n" >> buildozer.spec
-          
           sudo apt-get update
           sudo apt-get install -y git zip unzip build-essential autoconf libtool pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev libltdl-dev libbz2-dev wget
-          pip install --upgrade pip
           pip install Cython==0.29.36 buildozer==1.5.0
           
           SDK=$HOME/.buildozer/android/platform/android-sdk
