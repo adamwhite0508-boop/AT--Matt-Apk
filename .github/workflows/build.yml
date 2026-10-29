@@ -23,15 +23,16 @@ jobs:
         run: |
           rm -rf bin buildozer.spec
           
-          # FIX: sdkmanager ka dono rasta + r28c rokna (Aapke Line 81 + 103)
+          # FIX 1: sdkmanager ka rasta (Line 103 wala)
           SDK=$HOME/.buildozer/android/platform/android-sdk
           mkdir -p $SDK/tools/bin $SDK/cmdline-tools/latest/bin $SDK/licenses
           cp $ANDROID_HOME/cmdline-tools/latest/bin/* $SDK/cmdline-tools/latest/bin/ 2>/dev/null || true
-          printf '#!/bin/bash\n%s "$@"\n' "$SDK/cmdline-tools/latest/bin/sdkmanager" > $SDK/tools/bin/sdkmanager
+          echo "#!/bin/bash
+          $SDK/cmdline-tools/latest/bin/sdkmanager \"\$@\"" > $SDK/tools/bin/sdkmanager
           chmod +x $SDK/tools/bin/sdkmanager $SDK/cmdline-tools/latest/bin/sdkmanager
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55
-          d56f5187479451eabf01fb78af6dfcb131a6481e
-          24333f8a63b6825ea9c5514f83c1059b8ea3d97" > $SDK/licenses/android-sdk-license
+          
+          # FIX 2: License
+          printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c1059b8ea3d97\n" > $SDK/licenses/android-sdk-license
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
           $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "platform-tools" "platforms;android-33" "ndk;25.1.8937393" > /dev/null 2>&1 || true
           
@@ -41,12 +42,9 @@ jobs:
           package.name = atworldmatter
           package.domain = com.atworldmatter.app
           source.dir = .
-          # Aapki Requirement: Saare files include
           source.include_exts = py,png,jpg,jpeg,kv,atlas,json,html,js,css,ttf,mp4,mp3,wav
           source.exclude_exts = spec,md,yml,yaml
           version = 2.0
-          version.regex = __version__ = ['"]([^'"]+)['"]
-          # Aapki Requirement: Kivy + Pillow
           requirements = python3,kivy==2.3.0,Pillow
           orientation = portrait
           fullscreen = 0
@@ -54,25 +52,20 @@ jobs:
           log_level = 2
           warn_on_root = 0
           [app:android]
-          # Aapki Requirement: API 33, min 21, NDK 25b, SDK 33, build-tools 33.0.2
           android.api = 33
           android.minapi = 21
           android.ndk = 25b
           android.sdk = 33
           android.accept_sdk_license_agreement = True
-          # Aapki Requirement: Dono ARCH - arm64 + arm
           android.archs = arm64-v8a, armeabi-v7a
-          # Aapki Requirement: Puri permission list
           android.permissions = INTERNET,CAMERA,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,READ_CONTACTS,CALL_PHONE,RECORD_AUDIO,ACCESS_FINE_LOCATION,ACCESS_COARSE_LOCATION,VIBRATE,WAKE_LOCK
           android.build_tools_version = 33.0.2
           android.allow_backup = True
           p4a.bootstrap = sdl2
           p4a.branch = v2024.1.21
-          # Aapki Requirement: Icon agar ho to
-          # android.icon = icon.png
-          # android.presplash_color = #0d47a1
           ENDSPEC
           
+          cat buildozer.spec
           buildozer android debug
 
       - uses: actions/upload-artifact@v4
