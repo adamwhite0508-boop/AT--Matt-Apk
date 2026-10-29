@@ -1,29 +1,33 @@
-      - name: Install and Build
+name: build
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clean old build
         run: |
-          set -e
           rm -rf .buildozer bin
           sed -i '/android.archs/d' buildozer.spec
-          sed -i '/\[app\]/a android.archs = arm64-v8a' buildozer.spec
-          
-          sudo apt update
-          sudo apt install -y git zip unzip build-essential autoconf libtool pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev libltdl-dev wget
-          pip install Cython==0.29.33 buildozer==1.5.0
-          
-          # SDK fix
-          SDK=$HOME/.buildozer/android/platform/android-sdk
-          mkdir -p $SDK/cmdline-tools
-          cd /tmp
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmd.zip
-          unzip -q cmd.zip
-          rm -rf $SDK/cmdline-tools/latest
-          mkdir -p $SDK/cmdline-tools/latest
-          mv cmdline-tools/* $SDK/cmdline-tools/latest/ 2>/dev/null || mv cmdline-tools/bin $SDK/cmdline-tools/latest/ && mv cmdline-tools/lib $SDK/cmdline-tools/latest/ 2>/dev/null || true
-          mkdir -p $SDK/tools/bin
-          ln -sf $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
-          mkdir -p $HOME/.android/licenses $SDK/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK/licenses/android-sdk-license
-          cp $SDK/licenses/* $HOME/.android/licenses/ 2>/dev/null || true
-          yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          
-          cd $GITHUB_WORKSPACE
-          buildozer android debug
+          sed -i '/android.api/d' buildozer.spec
+          sed -i '/android.build_tools_version/d' buildozer.spec
+          sed -i '/android.allow_backup/d' buildozer.spec
+          echo "android.archs = arm64-v8a" >> buildozer.spec
+          echo "android.api = 33" >> buildozer.spec
+          echo "android.build_tools_version = 33.0.2" >> buildozer.spec
+          grep -E "arch|api|build_tools" buildozer.spec
+
+      - name: Build APK
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
+        with:
+          command: buildozer android debug
+          buildozer_version: stable
+          workdir: .
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AT-World-APK
+          path: bin/*.apk
