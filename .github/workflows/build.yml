@@ -11,12 +11,17 @@ jobs:
         with: {python-version: '3.10'}
       - name: Install and Build
         run: |
-          rm -rf .buildozer bin ~/.buildozer $HOME/.buildozer/android/platform/build-*
+          rm -rf .buildozer bin ~/.buildozer $HOME/.buildozer
+          rm -rf $HOME/.buildozer/android/platform/build-* /home/runner/work/*/AT--Matt-Apk/.buildozer
+          # YE LINE SABSE IMPORTANT HAI - FORCE arm64-v8a ONLY
+          sed -i 's/^android.archs.*/android.archs = arm64-v8a/' buildozer.spec
+          sed -i '/^android.archs/d' buildozer.spec
+          echo "android.archs = arm64-v8a" >> buildozer.spec
+          cat buildozer.spec | grep archs
           sudo apt update
           sudo apt install -y build-essential libltdl-dev libffi-dev libssl-dev unzip wget
           pip install --upgrade pip
           pip install "setuptools<81" Cython==0.29.36 buildozer
-          cat buildozer.spec | grep archs
           PLATFORM=$HOME/.buildozer/android/platform
           mkdir -p $PLATFORM
           cd /tmp
