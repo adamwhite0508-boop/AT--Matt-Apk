@@ -6,47 +6,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: {distribution: 'temurin', java-version: '17'}
+        with:
+          distribution: temurin
+          java-version: '17'
       - uses: actions/setup-python@v5
-        with: {python-version: '3.10'}
+        with:
+          python-version: '3.10'
 
       - name: Build APK
         run: |
-          set -e
           rm -rf .buildozer bin
-
-          # SPEC FIX - minapi 24 + ndk 25b + master branch
-          python3 << 'PY'
-          import re
-          s=open('buildozer.spec').read()
-          s=re.sub(r'(?m)^android\.archs.*\n','',s)
-          s=re.sub(r'(?m)^android\.api.*\n','',s)
-          s=re.sub(r'(?m)^android\.minapi.*\n','',s)
-          s=re.sub(r'(?m)^android\.build_tools_version.*\n','',s)
-          s=re.sub(r'(?m)^android\.ndk.*\n','',s)
-          s=re.sub(r'(?m)^p4a\.build_tools_version.*\n','',s)
-          s=re.sub(r'(?m)^p4a\.branch.*\n','',s)
-          s=re.sub(r'(?m)^android\.ndk_version.*\n','',s)
-          # Naya config - Python 3.10+ ke liye
-          add = """
-          android.archs = arm64-v8a
-          android.api = 33
-          android.minapi = 24
-          android.ndk = 25b
-          android.build_tools_version = 33.0.2
-          p4a.branch = master
-          """
-          s=s.replace('[app]','[app]\n'+add)
-          open('buildozer.spec','w').write(s)
-          print(s[:2000])
-          PY
-
+          # Spec fix - simple sed, no python
+          sed -i '/android.archs/d' buildozer.spec
+          sed -i '/android.api/d' buildozer.spec
+          sed -i '/android.minapi/d' buildozer.spec
+          sed -i '/android.ndk/d' buildozer.spec
+          sed -i '/build_tools_version/d' buildozer.spec
+          sed -i '/p4a.branch/d' buildozer.spec
+          sed -i '/requirements =/d' buildozer.spec
+          printf "\nandroid.archs = arm64-v8a\nandroid.api = 33\nandroid.minapi = 24\nandroid.ndk = 25b\nandroid.build_tools_version = 33.0.2\np4a.branch = master\nrequirements = python3==3.11.6,kivy\n" >> buildozer.spec
+          
           sudo apt-get update
-          sudo apt-get install -y git zip unzip build-essential autoconf libtool pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev libltdl-dev wget
-
+          sudo apt-get install -y git zip unzip build-essential autoconf libtool pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev libltdl-dev libbz2-dev wget
           pip install --upgrade pip
-          pip install Cython==0.29.33 buildozer==1.5.0
-
+          pip install Cython==0.29.36 buildozer==1.5.0
+          
           SDK=$HOME/.buildozer/android/platform/android-sdk
           mkdir -p $SDK/cmdline-tools $SDK/tools/bin $HOME/.android/licenses $SDK/licenses
           cd /tmp
@@ -56,17 +40,15 @@ jobs:
           rm -rf $SDK/cmdline-tools/latest
           mkdir -p $SDK/cmdline-tools/latest
           cp -r cmdline-tools/* $SDK/cmdline-tools/latest/
-          if [ -d "$SDK/cmdline-tools/latest/cmdline-tools" ]; then cp -r $SDK/cmdline-tools/latest/cmdline-tools/* $SDK/cmdline-tools/latest/; rm -rf $SDK/cmdline-tools/latest/cmdline-tools; fi
+          if [ -d $SDK/cmdline-tools/latest/cmdline-tools ]; then cp -r $SDK/cmdline-tools/latest/cmdline-tools/* $SDK/cmdline-tools/latest/; rm -rf $SDK/cmdline-tools/latest/cmdline-tools; fi
           chmod +x $SDK/cmdline-tools/latest/bin/*
           ln -sf $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
-
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK/licenses/android-sdk-license
           echo "24333f8a63b6825ea9c5514f83c38d3246ff25be" >> $SDK/licenses/android-sdk-license
           cp $SDK/licenses/android-sdk-license $HOME/.android/licenses/
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses || true
           $SDK/cmdline-tools/latest/bin/sdkmanager --install "build-tools;33.0.2" "build-tools;37.0.0" "platforms;android-33" "platform-tools" "ndk;25.1.8937393" || true
-
           cd $GITHUB_WORKSPACE
           buildozer android debug
 
