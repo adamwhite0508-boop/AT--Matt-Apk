@@ -13,8 +13,11 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Clean
-        run: rm -rf bin .buildozer
+      - name: Force Clean Old Spec
+        run: |
+          rm -rf bin .buildozer buildozer.spec
+          ls -la
+          echo "Old spec deleted!"
 
       - name: Install Tools
         run: |
@@ -22,7 +25,7 @@ jobs:
           sudo apt-get install -y aidl build-essential libssl-dev libffi-dev python3-dev zlib1g-dev unzip wget
           pip install Cython==0.29.36 buildozer==1.5.0
 
-      - name: Build APK
+      - name: Build APK - Single Arch Only
         run: |
           SDK=$HOME/.buildozer/android/platform/android-sdk
           mkdir -p $SDK/licenses
@@ -46,18 +49,19 @@ jobs:
           WRAP
           chmod +x $SDK/tools/bin/sdkmanager
           cd $GITHUB_WORKSPACE
+          
           cat > buildozer.spec << 'ENDSPEC'
           [app]
           title = AT World Matter
           package.name = atworldmatter
           package.domain = com.atworldmatter.app
           source.dir = .
-          source.include_exts = py,png,jpg,kv,json,ttf
+          source.include_exts = py,png,jpg,kv,json
           version = 2.0
           requirements = python3,kivy,Pillow
           orientation = portrait
           [buildozer]
-          log_level = 2
+          log_level = 1
           [app:android]
           android.api = 33
           android.minapi = 21
@@ -69,6 +73,8 @@ jobs:
           android.build_tools_version = 33.0.2
           p4a.bootstrap = sdl2
           ENDSPEC
+          
+          cat buildozer.spec | grep archs
           buildozer android debug
 
       - uses: actions/upload-artifact@v4
@@ -76,11 +82,3 @@ jobs:
         with:
           name: AT-World-Matter-APK
           path: bin/*.apk
-          if-no-files-found: warn
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: logs
-          path: .buildozer/logs/
-          if-no-files-found: warn
