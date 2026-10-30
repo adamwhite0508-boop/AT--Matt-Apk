@@ -4,16 +4,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-      - run: |
+      - name: Install dependencies
+        run: |
           pip install buildozer cython
           sudo apt update
-          sudo apt install -y openjdk-17-jdk zip unzip
+          sudo apt install -y openjdk-17-jdk zip unzip python3-pip libffi-dev libssl-dev
+          sudo apt install -y libbz2-dev libreadline-dev libsqlite3-dev
+      - name: Build APK
+        run: |
           buildozer android debug
-      - uses: actions/upload-artifact@v3
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: AT-World-Mater-APK
           path: bin/*.apk
