@@ -3,12 +3,16 @@ title = AT World Mater
 package.name = atworldmater
 package.domain = com.atworld.mater
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,json,db
+source.include_exts = py,png,jpg,kv,atlas
 version = 1.0
-requirements = python3,kivy,requests,androidstorage4kivy
+requirements = python3,kivy==2.3.0,requests,androidstorage4kivy
 orientation = portrait
-android.permissions = INTERNET,CAMERA,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,READ_CONTACTS,RECORD_AUDIO
+android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
 android.api = 33
+android.minapi = 21
+android.ndk = 25b
+android.accept_sdk_license_agreements = True
+
 [buildozer]
 log_level = 2
 warn_on_root = 1
