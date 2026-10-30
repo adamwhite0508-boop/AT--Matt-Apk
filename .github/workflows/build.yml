@@ -16,25 +16,25 @@ jobs:
       - name: Install Aidl + All Tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y aidl build-essential libssl-dev libffi-dev python3-dev libbz2-dev zlib1g-dev
+          sudo apt-get install -y aidl build-essential libssl-dev libffi-dev python3-dev zlib1g-dev
           pip install Cython==0.29.36 buildozer==1.5.0
 
       - name: Build APK - Aapki Saari Requirement
         run: |
           rm -rf bin buildozer.spec
           
-          # FIX 1: sdkmanager ka rasta (Line 103 wala)
           SDK=$HOME/.buildozer/android/platform/android-sdk
-          mkdir -p $SDK/tools/bin $SDK/cmdline-tools/latest/bin $SDK/licenses
+          mkdir -p $SDK/tools/bin $SDK/cmdline-tools/latest/bin $SDK/licenses $SDK/platform-tools $SDK/platforms
           cp $ANDROID_HOME/cmdline-tools/latest/bin/* $SDK/cmdline-tools/latest/bin/ 2>/dev/null || true
-          echo "#!/bin/bash
-          $SDK/cmdline-tools/latest/bin/sdkmanager \"\$@\"" > $SDK/tools/bin/sdkmanager
+          # Real file copy - Wrapper nahi - Real copy
+          cp $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
           chmod +x $SDK/tools/bin/sdkmanager $SDK/cmdline-tools/latest/bin/sdkmanager
-          
-          # FIX 2: License
+          # License
           printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c1059b8ea3d97\n" > $SDK/licenses/android-sdk-license
-          yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
-          $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "platform-tools" "platforms;android-33" "ndk;25.1.8937393" > /dev/null 2>&1 || true
+          # Pehle se platform-tools + platforms bana do - Taki buildozer install skip kare
+          $SDK/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || echo y | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+          $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "platform-tools" "platforms;android-33" "ndk;25.1.8937393" || true
+          ls $SDK/platform-tools/
           
           cat > buildozer.spec << 'ENDSPEC'
           [app]
@@ -43,7 +43,6 @@ jobs:
           package.domain = com.atworldmatter.app
           source.dir = .
           source.include_exts = py,png,jpg,jpeg,kv,atlas,json,html,js,css,ttf,mp4,mp3,wav
-          source.exclude_exts = spec,md,yml,yaml
           version = 2.0
           requirements = python3,kivy==2.3.0,Pillow
           orientation = portrait
@@ -58,14 +57,13 @@ jobs:
           android.sdk = 33
           android.accept_sdk_license_agreement = True
           android.archs = arm64-v8a, armeabi-v7a
-          android.permissions = INTERNET,CAMERA,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,READ_CONTACTS,CALL_PHONE,RECORD_AUDIO,ACCESS_FINE_LOCATION,ACCESS_COARSE_LOCATION,VIBRATE,WAKE_LOCK
+          android.permissions = INTERNET,CAMERA,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,READ_CONTACTS,CALL_PHONE,RECORD_AUDIO,ACCESS_FINE_LOCATION,VIBRATE,WAKE_LOCK
           android.build_tools_version = 33.0.2
           android.allow_backup = True
           p4a.bootstrap = sdl2
-          p4a.branch = v2024.1.21
+          p4a.branch = develop
           ENDSPEC
           
-          cat buildozer.spec
           buildozer android debug
 
       - uses: actions/upload-artifact@v4
