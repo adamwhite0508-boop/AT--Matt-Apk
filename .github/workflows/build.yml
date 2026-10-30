@@ -14,21 +14,17 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-
       - name: Install dependencies
         run: |
           pip install buildozer cython==0.29.33
           sudo apt update
           sudo apt install -y libffi-dev libssl-dev
-
-      - name: Accept Licenses & Fix Aidl Error
+      - name: Accept Licenses
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;34.0.0" "platforms;android-33" "platform-tools"
-
       - name: Build AAB
         run: buildozer android appbundle
-
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
