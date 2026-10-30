@@ -16,3 +16,6 @@ android.accept_sdk_license_agreements = True
 [buildozer]
 log_level = 2
 warn_on_root = 0
+android.arch = armeabi-v7a
+android.allow_backup = False
+p4a.bootstrap = sdl2
