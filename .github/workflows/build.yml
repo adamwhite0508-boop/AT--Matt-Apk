@@ -16,13 +16,12 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install buildozer cython==0.29.33
-          sudo apt update && sudo apt install -y zip unzip
+          sudo apt update && sudo apt install -y zip unzip libffi-dev libssl-dev
           sudo rm -rf /usr/local/lib/android/sdk/ndk
       - name: Build APK
         run: |
           unset ANDROID_NDK_ROOT
           unset ANDROID_NDK_HOME
-          export ANDROID_NDK_ROOT=""
           rm -rf ~/.buildozer
           SDK=$HOME/.buildozer/android/platform/android-sdk
           mkdir -p $SDK/cmdline-tools
@@ -43,9 +42,7 @@ jobs:
           cp -r $SDK/build-tools/33.0.2/* $SDK/build-tools/37.0.0/
           cd $GITHUB_WORKSPACE
           buildozer android debug
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: AT-World-Mater-APK
           path: bin/*.apk
-          if-no-files-found: error
