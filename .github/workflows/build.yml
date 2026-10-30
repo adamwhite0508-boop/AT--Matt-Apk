@@ -19,7 +19,7 @@ jobs:
           sudo apt-get install -y aidl build-essential libssl-dev libffi-dev python3-dev zlib1g-dev unzip wget
           pip install Cython==0.29.36 buildozer==1.5.0
 
-      - name: Build APK - No Truncate
+      - name: Build APK
         run: |
           rm -rf bin buildozer.spec .buildozer
           SDK=$HOME/.buildozer/android/platform/android-sdk
@@ -46,6 +46,10 @@ jobs:
           chmod +x $SDK/tools/bin/sdkmanager
           cd $GITHUB_WORKSPACE
           
+          # Check main.py exists - Yahi sabse common fail hai
+          ls -lh
+          if [ ! -f main.py ]; then echo "ERROR: main.py nahi mila!"; exit 1; fi
+          
           cat > buildozer.spec << 'ENDSPEC'
           [app]
           title = AT World Matter
@@ -57,7 +61,7 @@ jobs:
           requirements = python3,kivy==2.3.0
           orientation = portrait
           [buildozer]
-          log_level = 0
+          log_level = 1
           [app:android]
           android.api = 33
           android.minapi = 21
@@ -72,7 +76,16 @@ jobs:
           
           buildozer android debug
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload APK
+        if: success()
+        uses: actions/upload-artifact@v4
         with:
           name: AT-World-Matter-APK
           path: bin/*.apk
+
+      - name: Upload Logs on Fail
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: .buildozer/logs/
