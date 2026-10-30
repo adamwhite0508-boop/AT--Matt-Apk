@@ -14,23 +14,30 @@ jobs:
       - name: Install Deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk zip unzip
+          sudo apt-get install -y openjdk-17-jdk zip unzip python3-pip
           pip install buildozer cython==0.29.33
-      
-      - name: Fix Buildozer Spec & Licenses
+          pip install --upgrade buildozer
+
+      - name: Accept Licenses
         run: |
-          sed -i "s/^android.api.*/android.api = 33/" buildozer.spec || true
-          sed -i "s/^android.build_tools_version.*/android.build_tools_version = 33.0.2/" buildozer.spec || true
-          echo "android.accept_sdk_license_agreements = True" >> buildozer.spec
           mkdir -p ~/.android
-          echo "count=0" > ~/.android/repositories.cfg
-          yes | sdkmanager --licenses || true
-      
+          touch ~/.android/repositories.cfg
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "platforms;android-33" || true
+
       - name: Build AAB
-        run: buildozer android debug
-      
+        run: |
+          # Fix buildozer.spec automatically
+          sed -i "s/^android.api.*/android.api = 33/" buildozer.spec || true
+          sed -i "s/^#*android.api.*/android.api = 33/" buildozer.spec || true
+          sed -i "s/^android.build_tools_version.*/android.build_tools_version = 33.0.2/" buildozer.spec || true
+          sed -i "s/^#*android.build_tools_version.*/android.build_tools_version = 33.0.2/" buildozer.spec || true
+          grep -q "accept_sdk_license" buildozer.spec || echo "android.accept_sdk_license_agreements = True" >> buildozer.spec
+          buildozer android debug
+
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: AT-World-Mater-AAB
           path: bin/*.aab
+          if-no-files-found: error
