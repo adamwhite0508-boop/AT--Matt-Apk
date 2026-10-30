@@ -378,13 +378,6 @@ MDScreenManager:
                     max: 80
                     value: 50
                     on_value: app.adjust_icon_size(*args)
-                MDLabel:
-                    text: "App Info"
-                    bold: True
-                MDLabel:
-                    text: "Version 5.0 Simple - Local Demo\\nWorks Offline - No Firebase Needed\\nNext: Real Firebase + FCM + Agora"
-                    font_size: "12sp"
-                    text_color: 0.5,0.5,0.5,1
                 MDRaisedButton:
                     text: "Test Notification 🔔"
                     md_bg_color: 0.06,0.45,0.73,1
