@@ -1,49 +1,21 @@
 name: Build APK
 on: [push]
 concurrency:
-  group: build-apk
+  group: apk
   cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
+      
+      - name: Build with Buildozer Action
+        uses: ArtemSBulgakov/buildozer-action@v1
         with:
-          python-version: '3.10'
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: Install Buildozer
-        run: |
-          sudo apt update
-          sudo apt install -y python3-pip zip unzip ant wget
-          pip install --upgrade pip
-          pip install buildozer cython==0.29.33
-      - name: Fix sdkmanager path (MAIN FIX)
-        run: |
-          SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
-          mkdir -p $SDK_DIR/cmdline-tools
-          cd $SDK_DIR/cmdline-tools
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
-          unzip -q tools.zip
-          rm -rf latest
-          mkdir -p latest
-          mv cmdline-tools/* latest/
-          rm -rf cmdline-tools tools.zip
-          mkdir -p $SDK_DIR/tools/bin
-          ln -sf $SDK_DIR/cmdline-tools/latest/bin/sdkmanager $SDK_DIR/tools/bin/sdkmanager
-          ln -sf $SDK_DIR/cmdline-tools/latest/bin/avdmanager $SDK_DIR/tools/bin/avdmanager || true
-          mkdir -p $SDK_DIR/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK_DIR/licenses/android-sdk-license
-          echo "d56f101e5f7b998d5c1e3f5e3b0be3d8b9b7f7b7e" > $SDK_DIR/licenses/android-sdk-preview-license
-          mkdir -p ~/.android && touch ~/.android/repositories.cfg
-          echo "SDKMANAGER FIXED"
-      - name: Build APK
-        run: buildozer android debug
+          command: buildozer android debug
+          buildozer_version: master
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
