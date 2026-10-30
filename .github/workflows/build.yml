@@ -5,11 +5,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
@@ -24,17 +24,13 @@ jobs:
           rm -rf bin buildozer.spec
           
           SDK=$HOME/.buildozer/android/platform/android-sdk
-          mkdir -p $SDK/tools/bin $SDK/cmdline-tools/latest/bin $SDK/licenses $SDK/platform-tools $SDK/platforms
+          mkdir -p $SDK/tools/bin $SDK/cmdline-tools/latest/bin $SDK/licenses $SDK/platform-tools
           cp $ANDROID_HOME/cmdline-tools/latest/bin/* $SDK/cmdline-tools/latest/bin/ 2>/dev/null || true
-          # Real file copy - Wrapper nahi - Real copy
           cp $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
           chmod +x $SDK/tools/bin/sdkmanager $SDK/cmdline-tools/latest/bin/sdkmanager
-          # License
           printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c1059b8ea3d97\n" > $SDK/licenses/android-sdk-license
-          # Pehle se platform-tools + platforms bana do - Taki buildozer install skip kare
           $SDK/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || echo y | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
           $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "platform-tools" "platforms;android-33" "ndk;25.1.8937393" || true
-          ls $SDK/platform-tools/
           
           cat > buildozer.spec << 'ENDSPEC'
           [app]
@@ -46,10 +42,8 @@ jobs:
           version = 2.0
           requirements = python3,kivy==2.3.0,Pillow
           orientation = portrait
-          fullscreen = 0
           [buildozer]
           log_level = 2
-          warn_on_root = 0
           [app:android]
           android.api = 33
           android.minapi = 21
@@ -69,4 +63,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: AT-World-Matter-APK
-          path: bin/*.apk
+          path: bin/*.apk 
