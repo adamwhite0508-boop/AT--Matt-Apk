@@ -1,11 +1,11 @@
 [app]
-title = AT World Mater
+title = AT World Matter
 package.name = atworldmatter
 package.domain = com.atworldmatter.app
 source.dir = .
 source.include_exts = py,png,jpg,kv,json
 version = 5.0
-requirements = python3,kivy==2.3.0,kivymd,pillow,plyer
+requirements = python3,kivy==2.3.0,kivymd,pillow,plyer,android,jnius
 orientation = portrait
 icon.filename = %(source.dir)s/icon.png
 presplash.filename = %(source.dir)s/banner.png
@@ -19,8 +19,8 @@ android.minapi = 21
 android.ndk = 25b
 android.build_tools_version = 34.0.0
 android.accept_sdk_license_agreements = True
-android.archs = arm64-v8a, armeabi-v7a
-android.permissions = INTERNET,RECORD_AUDIO,CAMERA
+android.archs = arm64-v8a
+android.permissions = INTERNET,RECORD_AUDIO,CAMERA,READ_CONTACTS,CALL_PHONE,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 android.release_artifact = aab
 p4a.bootstrap = sdl2
 p4a.branch = master
