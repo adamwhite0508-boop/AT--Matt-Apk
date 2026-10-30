@@ -17,6 +17,15 @@ jobs:
           sudo apt-get install -y openjdk-17-jdk zip unzip
           pip install buildozer cython==0.29.33
       
+      - name: Fix Buildozer Spec & Licenses
+        run: |
+          sed -i "s/^android.api.*/android.api = 33/" buildozer.spec || true
+          sed -i "s/^android.build_tools_version.*/android.build_tools_version = 33.0.2/" buildozer.spec || true
+          echo "android.accept_sdk_license_agreements = True" >> buildozer.spec
+          mkdir -p ~/.android
+          echo "count=0" > ~/.android/repositories.cfg
+          yes | sdkmanager --licenses || true
+      
       - name: Build AAB
         run: buildozer android debug
       
