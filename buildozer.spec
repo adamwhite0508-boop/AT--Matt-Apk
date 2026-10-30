@@ -15,4 +15,4 @@ android.accept_sdk_license_agreements = True
 
 [buildozer]
 log_level = 2
-warn_on_root = 0 
+warn_on_root = 0
