@@ -4,8 +4,55 @@ from kivy.storage.jsonstore import JsonStore
 from kivy.properties import StringProperty, NumericProperty, BooleanProperty
 from kivy.clock import Clock
 from kivy.metrics import dp
+from kivy.utils import platform
 import random
+import os
 from datetime import datetime
+
+# ======== NEW FEATURE: AT World Matter Security + User AI ========
+class SecurityGuard:
+    def __init__(self):
+        self.banned_words = ["abuse", "sarkar virodhi", "bomb", "gaali", "hate", "terror"]
+        self.hacking_words = ["hack", "crack", "mod apk", "bypass", "inject", "sql", "../", "root", "cheat"]
+        self.store = JsonStore('at_world_matter_security.json')
+    def check_all(self, user_id, message):
+        msg = message.lower()
+        for w in self.hacking_words:
+            if w in msg:
+                return False, "🚫 AT World Matter Security: Hacking attempt blocked!"
+        for w in self.banned_words:
+            if w in msg:
+                return self.take_action(user_id, w)
+        return True, ""
+    def take_action(self, user_id, word):
+        warnings = self.store.get(user_id)['count'] if self.store.exists(user_id) else 0
+        warnings += 1
+        if warnings == 1:
+            self.store.put(user_id, count=warnings)
+            return False, f"⚠️ AT World Matter Warning 1/2: '{word}' allowed nahi hai."
+        else:
+            self.store.put(user_id, count=warnings, blocked=True)
+            return False, "🚫 BLOCKED by AT World Matter: 24hr block."
+    def is_blocked(self, user_id):
+        if self.store.exists(user_id):
+            return self.store.get(user_id).get('blocked', False)
+        return False
+
+class UserMainAI:
+    def get_reply(self, user_message):
+        msg = user_message.lower()
+        if "hello" in msg or "hi" in msg:
+            return "Hello! Mai AT World Matter AI hu!"
+        elif "kaun ho" in msg:
+            return "Mai AT World Matter ka official AT BRAIN hu!"
+        return f"AT BRAIN 🧠: '{user_message}' samajh gaya! 🔐"
+
+def is_rooted_device():
+    if platform != 'android': return False
+    for f in ["/system/xbin/su", "/system/bin/su"]:
+        if os.path.exists(f): return True
+    return False
+# ======== NEW FEATURE END ========
 
 KV = '''
 MDScreenManager:
@@ -29,12 +76,13 @@ MDScreenManager:
             size_hint: .7,.32
             pos_hint: {'center_x':.5,'center_y':.75}
         MDLabel:
-            text: "AT World Mater"
+            text: "AT World Matter"
             halign: "center"
             bold: True
             text_color: 0.06,0.45,0.73,1
             pos_hint: {'center_y':.56}
             font_size: "20sp"
+            on_touch_down: app.on_logo_tap() if self.collide_point(*args[1].pos) else None
         MDBoxLayout:
             orientation: 'vertical'
             size_hint: .85,.32
@@ -54,7 +102,7 @@ MDScreenManager:
                 icon_left: "key"
             MDLabel:
                 id: otp_status
-                text: "Simple Mode - No Internet Needed ✅"
+                text: "Simple Mode - Secure by AT World Matter ✅"
                 halign: "center"
                 font_size: "11sp"
                 text_color: 0,0.6,0,1
@@ -86,7 +134,7 @@ MDScreenManager:
         orientation: 'vertical'
         md_bg_color: 1,1,1,1
         MDTopAppBar:
-            title: "AT World Mater"
+            title: "AT World Matter"
             md_bg_color: 1,1,1,1
             specific_text_color: 0.06,0.45,0.73,1
             right_action_items: [["bell-ring", lambda x: app.test_local_push()], ["shield-account", lambda x: setattr(app.root, 'current', 'admin')], ["cog", lambda x: setattr(app.root, 'current', 'settings')]]
@@ -158,7 +206,7 @@ MDScreenManager:
             right_action_items: [["video", lambda x: app.start_video_call(app.current_chat)], ["phone", lambda x: app.start_call(app.current_chat)], ["paperclip", lambda x: app.share_file()]]
         MDLabel:
             id: status_label
-            text: "online"
+            text: "online - AT World Matter Secure"
             font_size: "11sp"
             text_color: 0,0.6,0,1
             size_hint_y: None
@@ -211,7 +259,7 @@ MDScreenManager:
             pos_hint: {'center_y':.32}
         MDLabel:
             id: agora_status
-            text: "Demo Mode - Real Call in Next Update"
+            text: "Demo Mode - AT World Matter Secure"
             halign: "center"
             text_color: 0,1,0,1
             font_size: "12sp"
@@ -281,7 +329,7 @@ MDScreenManager:
             MDTextField:
                 id: poster_text
                 hint_text: "Poster pe kya likhna hai?"
-                text: "AT World Mater"
+                text: "AT World Matter"
             MDCard:
                 size_hint_y: None
                 height: "250dp"
@@ -289,7 +337,7 @@ MDScreenManager:
                 padding: "15dp"
                 MDLabel:
                     id: poster_preview
-                    text: "AT World Mater\\nPoster Preview"
+                    text: "AT World Matter\\nPoster Preview"
                     halign: "center"
                     text_color: 1,1,1,1
                     font_style: "H5"
@@ -361,7 +409,7 @@ MDScreenManager:
         orientation: 'vertical'
         md_bg_color: 1,1,1,1
         MDTopAppBar:
-            title: "Settings"
+            title: "Settings - AT World Matter Secure"
             left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'main')]]
         ScrollView:
             MDBoxLayout:
@@ -388,6 +436,11 @@ MDScreenManager:
                     md_bg_color: 0,0.6,0.2,1
                     pos_hint: {'center_x':.5}
                     on_press: app.save_icon_settings()
+                MDLabel:
+                    id: secret_stats
+                    text: "AT World Matter v5.0 - WASM + Rakshak ON"
+                    halign: "center"
+                    font_size: "11sp"
                 MDTextButton:
                     text: "Logout"
                     pos_hint: {'center_x':.5}
@@ -399,7 +452,7 @@ MDScreenManager:
         orientation: 'vertical'
         md_bg_color: 1,1,1,1
         MDTopAppBar:
-            title: "ADMIN - All Chats (Local)"
+            title: "ADMIN - All Chats (Local) - AT World Matter"
             left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'main')]]
         ScrollView:
             MDList:
@@ -424,12 +477,33 @@ class ATWorldMatterApp(MDApp):
     icon_size = NumericProperty(50)
     is_recording = BooleanProperty(False)
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.guard = SecurityGuard()
+        self.user_ai = UserMainAI()
+        self.tap_count = 0
+        self.current_user_id = "user_123"
+
     def build(self):
         self.theme_cls.primary_palette = "Blue"
         self.store = JsonStore("at_chats.json")
         return Builder.load_string(KV)
 
     def on_start(self):
+        # NEW: Rooted Check
+        if is_rooted_device():
+            print("AT World Matter: Rooted Blocked")
+            self.stop()
+            return
+        # NEW: Screenshot Block
+        try:
+            from android import mActivity
+            from jnius import autoclass
+            WindowManager = autoclass('android.view.WindowManager$LayoutParams')
+            mActivity.getWindow().setFlags(WindowManager.FLAG_SECURE, WindowManager.FLAG_SECURE)
+        except:
+            pass
+        # Old Logic
         if self.store.exists("ICON_SETTINGS"):
             self.icon_size = self.store.get("ICON_SETTINGS")['size']
         if self.store.exists("USER_LOGIN"):
@@ -437,6 +511,18 @@ class ATWorldMatterApp(MDApp):
             Clock.schedule_once(lambda x: self.load_chats(), 0.3)
         else:
             self.root.current = 'login'
+
+    def on_logo_tap(self):
+        self.tap_count += 1
+        Clock.schedule_once(lambda dt: setattr(self, 'tap_count', 0), 2)
+        if self.tap_count >= 5:
+            self.tap_count = 0
+            if self.root.get_screen('settings').ids.secret_stats:
+                self.root.get_screen('settings').ids.secret_stats.text = "🛡️ AT World Matter SECRET ADMIN ACTIVE ✅"
+            self.root.current = 'settings'
+
+    def open_secret_admin(self):
+        self.root.current = 'admin'
 
     def send_otp(self):
         s = self.root.get_screen('login')
@@ -476,7 +562,7 @@ class ATWorldMatterApp(MDApp):
     def test_local_push(self):
         try:
             from plyer import notification
-            notification.notify(title="AT World Mater 🔔", message="Local Push - Simple Mode ✅", app_name="AT World Mater")
+            notification.notify(title="AT World Matter 🔔", message="Local Push - Secure ✅", app_name="AT World Matter")
         except: print("Push Sent")
         print("Push Sent ✅")
 
@@ -508,7 +594,7 @@ class ATWorldMatterApp(MDApp):
         sc = self.root.get_screen('main')
         sc.ids.chat_list.clear_widgets()
         if self.current_tab == 'chats':
-            data = [("AT BRAIN", "AI Secure • online ✓✓", "brain", "Now"), ("Anuj Tripathi", "You: Hello ✓✓ Read", "account-star", "09:45 AM"), ("AT World Mater", "Welcome ✓✓", "earth", "09:15 AM"), ("Poster Studio", "Tap to create poster", "image-edit", "Yesterday"), ("AI Avatar Studio", "Tap to create avatar", "face-recognition", "Yesterday"), ("ADMIN", "See all local chats", "shield-account", "Now")]
+            data = [("AT BRAIN", "AI Secure • online ✓✓", "brain", "Now"), ("Anuj Tripathi", "You: Hello ✓✓ Read", "account-star", "09:45 AM"), ("AT World Matter", "Welcome ✓✓", "earth", "09:15 AM"), ("Poster Studio", "Tap to create poster", "image-edit", "Yesterday"), ("AI Avatar Studio", "Tap to create avatar", "face-recognition", "Yesterday"), ("ADMIN", "See all local chats", "shield-account", "Now")]
         elif self.current_tab == 'groups':
             data = [("AT World Group 🌍", "Anuj: Group call 9 PM", "account-group", "11:00 AM"), ("AT Family Group", "8 members • Group call", "home-group", "10:00 AM")]
         else:
@@ -528,7 +614,7 @@ class ATWorldMatterApp(MDApp):
         from kivymd.uix.list import TwoLineAvatarIconListItem, IconLeftWidget
         sc = self.root.get_screen('status_main')
         sc.ids.status_list.clear_widgets()
-        statuses = self.store.get("STATUSES")['list'] if self.store.exists("STATUSES") else [("My Status", "Today, 9:00 AM"), ("Anuj Tripathi", "Today, 8:30 AM"), ("AT World Mater", "Today, 7:00 AM")]
+        statuses = self.store.get("STATUSES")['list'] if self.store.exists("STATUSES") else [("My Status", "Today, 9:00 AM"), ("Anuj Tripathi", "Today, 8:30 AM"), ("AT World Matter", "Today, 7:00 AM")]
         for name, time in statuses:
             it = TwoLineAvatarIconListItem(text=name, secondary_text=time)
             it.add_widget(IconLeftWidget(icon="account-circle"))
@@ -549,7 +635,7 @@ class ATWorldMatterApp(MDApp):
         self.current_chat = title
         s = self.root.get_screen('chat')
         s.ids.chat_title.title = title
-        s.ids.status_label.text = "online" if "AT" in title else "last seen today, 9:30 PM"
+        s.ids.status_label.text = "online - AT World Matter Secure" if "AT" in title else "last seen today, 9:30 PM"
         s.ids.msg_list.clear_widgets()
         def add_msg(t, me=False, tick="✓✓"):
             from kivymd.uix.boxlayout import MDBoxLayout
@@ -563,28 +649,47 @@ class ATWorldMatterApp(MDApp):
         msgs = self.store.get(title)['messages'] if self.store.exists(title) else []
         if msgs:
             for m in msgs: add_msg(m['text'], m['is_me'], m.get('tick', '✓✓'))
-        else: add_msg(f"{title} ready! Simple Mode ✅")
+        else: add_msg(f"{title} ready! AT World Matter Secure ✅")
         self.root.current = 'chat'
 
     def show_typing(self, text):
         s = self.root.get_screen('chat')
-        s.ids.status_label.text = "typing..." if text else "online"
+        s.ids.status_label.text = "typing..." if text else "online - AT World Matter Secure"
 
     def send_message(self):
         s = self.root.get_screen('chat')
         txt = s.ids.msg_input.text.strip()
         if not txt: return
+        
+        # ===== NEW SECURITY CHECK HERE =====
+        if self.guard.is_blocked(self.current_user_id):
+            from kivymd.uix.label import MDLabel
+            s.ids.msg_list.add_widget(MDLabel(text="🚫 Aap Blocked ho! AT World Matter", size_hint_y=None, height=dp(60), md_bg_color=(1,0.7,0.7,1)))
+            s.ids.msg_input.text = ""
+            return
+        allowed, warn = self.guard.check_all(self.current_user_id, txt)
+        if not allowed:
+            from kivymd.uix.label import MDLabel
+            s.ids.msg_list.add_widget(MDLabel(text=warn, size_hint_y=None, height=dp(60), md_bg_color=(1,0.8,0.8,1)))
+            s.ids.msg_input.text = ""
+            return
+        # ===== END SECURITY =====
+
         def add_msg(t, me=False, tick="✓"):
             from kivymd.uix.boxlayout import MDBoxLayout
             from kivymd.uix.label import MDLabel
             box = MDBoxLayout(size_hint_y=None, height=dp(70), padding=(dp(8), dp(4)), md_bg_color=(0.82, 0.9, 1, 1) if me else (1, 1, 1, 1))
             box.add_widget(MDLabel(text=f"{t} {tick if me else ''}"))
             s.ids.msg_list.add_widget(box)
+        
         add_msg(f"You: {txt}", True, "✓")
         Clock.schedule_once(lambda dt: add_msg(f"You: {txt}", True, "✓✓"), 0.5)
         Clock.schedule_once(lambda dt: add_msg(f"You: {txt}", True, "✓✓ Read • Blue"), 1.2)
-        reply = f"AT BRAIN 🧠: '{txt}' samajh gaya! Simple AI 🔐" if self.current_chat == "AT BRAIN" else f"{self.current_chat}: {txt} received ✓✓"
+        
+        # Use UserMainAI for reply
+        reply = self.user_ai.get_reply(txt) if self.current_chat == "AT BRAIN" else f"{self.current_chat}: {txt} received ✓✓"
         Clock.schedule_once(lambda dt: add_msg(reply, False), 0.8)
+        
         msgs = self.store.get(self.current_chat)['messages'] if self.store.exists(self.current_chat) else []
         msgs.append({"text": f"You: {txt}", "is_me": True, "tick": "✓✓ Read"})
         msgs.append({"text": reply, "is_me": False, "tick": "✓✓"})
@@ -618,35 +723,35 @@ class ATWorldMatterApp(MDApp):
     def stop_voice_record(self):
         if not self.is_recording: return
         self.is_recording = False
-        self.root.get_screen('chat').ids.status_label.text = "online"
+        self.root.get_screen('chat').ids.status_label.text = "online - AT World Matter Secure"
         from kivymd.uix.label import MDLabel
         self.root.get_screen('chat').ids.msg_list.add_widget(MDLabel(text=f"🎤 Voice • 0:{random.randint(2,15)} sec • Play ▶️ ✓✓", size_hint_y=None, height=dp(60), md_bg_color=(0.82, 0.9, 1, 1)))
 
     def share_file(self):
         from kivymd.uix.label import MDLabel
-        self.root.get_screen('chat').ids.msg_list.add_widget(MDLabel(text="📎 Photo.jpg shared ✓✓ (Demo)", size_hint_y=None, height=dp(60), md_bg_color=(1, 1, 0.8, 1)))
+        self.root.get_screen('chat').ids.msg_list.add_widget(MDLabel(text="📎 Photo.jpg shared ✓✓ (AT World Matter)", size_hint_y=None, height=dp(60), md_bg_color=(1, 1, 0.8, 1)))
 
     def start_call(self, name):
         sc = self.root.get_screen('video')
         sc.ids.video_name.text = f"Calling {name}..."
-        sc.ids.agora_status.text = "Demo Voice Call - Real in Next Update"
+        sc.ids.agora_status.text = "Demo Voice Call - AT World Matter Secure"
         self.root.current = 'video'
     def start_video_call(self, name):
         sc = self.root.get_screen('video')
         sc.ids.video_name.text = f"Video Calling {name}..."
-        sc.ids.agora_status.text = "Demo Video Call - Real in Next Update"
+        sc.ids.agora_status.text = "Demo Video Call - AT World Matter Secure"
         self.root.current = 'video'
 
     def create_poster(self, theme):
         txt = self.root.get_screen('poster').ids.poster_text.text
         sc = self.root.get_screen('poster').ids.poster_preview
-        sc.text = f"{txt}\nAT WORLD MATER" if theme == 'blue' else f"🎉 {txt} 🎉\nFestival"
+        sc.text = f"{txt}\nAT World Matter" if theme == 'blue' else f"🎉 {txt} 🎉\nFestival"
         sc.parent.md_bg_color = (0.06, 0.45, 0.73, 1) if theme == 'blue' else (1, 0.5, 0, 1)
-    def save_poster(self): print("Poster Saved"); self.test_local_push()
+    def save_poster(self): print("Poster Saved - AT World Matter"); self.test_local_push()
     def generate_avatar(self, style):
         s = self.root.get_screen('avatar')
         s.ids.avatar_status.text = f"{style} generating..."
-        Clock.schedule_once(lambda dt: setattr(s.ids.avatar_status, 'text', f"✅ {style} Avatar Ready! (Demo)"), 1.5)
+        Clock.schedule_once(lambda dt: setattr(s.ids.avatar_status, 'text', f"✅ {style} Avatar Ready! (AT World Matter)"), 1.5)
 
     def load_admin(self):
         from kivymd.uix.list import TwoLineListItem
