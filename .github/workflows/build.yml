@@ -5,6 +5,14 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Android SDK - SdkManagerCli Fix
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 33
+          build-tools: 33.0.2
+          ndk-version: 25b
+
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -16,19 +24,18 @@ jobs:
       - name: Install Tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y aidl build-essential libssl-dev libffi-dev python3-dev zlib1g-dev
+          sudo apt-get install -y aidl build-essential libssl-dev libffi-dev python3-dev
           pip install Cython==0.29.36 buildozer==1.5.0
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "platform-tools" "platforms;android-33" || true
 
       - name: Build APK
         run: |
-          rm -rf bin buildozer.spec .buildozer
-          SDK=$HOME/.buildozer/android/platform/android-sdk
-          mkdir -p $SDK/tools/bin $SDK/cmdline-tools/latest/bin $SDK/licenses
-          cp $ANDROID_HOME/cmdline-tools/latest/bin/* $SDK/cmdline-tools/latest/bin/ 2>/dev/null || true
-          cp $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
-          chmod +x $SDK/tools/bin/sdkmanager $SDK/cmdline-tools/latest/bin/sdkmanager
-          printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c1059b8ea3d97\n" > $SDK/licenses/android-sdk-license
-          yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+          rm -rf bin buildozer.spec
+          # Buildozer ko bolo SDK pehle se hai - Tools wala bug skip
+          mkdir -p ~/.buildozer/android/platform/android-sdk
+          ln -sf $ANDROID_SDK_ROOT/* ~/.buildozer/android/platform/android-sdk/ 2>/dev/null || true
+          cp -r $ANDROID_SDK_ROOT/* ~/.buildozer/android/platform/android-sdk/ 2>/dev/null || true
           
           cat > buildozer.spec << 'ENDSPEC'
           [app]
@@ -36,7 +43,7 @@ jobs:
           package.name = atworldmatter
           package.domain = com.atworldmatter.app
           source.dir = .
-          source.include_exts = py,png,jpg,jpeg,kv,atlas,json,html,js,css
+          source.include_exts = py,png,jpg,kv,json,html,js,css
           version = 2.0
           requirements = python3,kivy==2.3.0,Pillow
           orientation = portrait
@@ -49,24 +56,15 @@ jobs:
           android.sdk = 33
           android.accept_sdk_license_agreement = True
           android.archs = arm64-v8a,armeabi-v7a
-          android.permissions = INTERNET,CAMERA,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,READ_CONTACTS,CALL_PHONE,RECORD_AUDIO
+          android.permissions = INTERNET,CAMERA,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
           android.build_tools_version = 33.0.2
           p4a.bootstrap = sdl2
           p4a.branch = develop
           ENDSPEC
           
-          buildozer android debug || (echo "====== REAL ERROR UPAR HAI ======" && tail -n 600 .buildozer/logs/buildozer.log && exit 1)
+          buildozer android debug
 
-      - name: Upload Log - Hidden error dekhne ke liye
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: .buildozer/logs/
-
-      - name: Upload APK
-        if: success()
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: AT-World-Matter-APK
           path: bin/*.apk
