@@ -5,7 +5,7 @@ package.domain = com.atworldmatter.app
 source.dir = .
 source.include_exts = py,png,jpg,kv,json
 version = 5.0
-requirements = python3,kivy==2.3.0,kivymd==1.1.1,pillow,plyer,android,jnius
+requirements = python3,kivy==2.3.0,kivymd==1.1.1,pillow,plyer
 orientation = portrait
 icon.filename = %(source.dir)s/icon.png
 presplash.filename = %(source.dir)s/banner.png
