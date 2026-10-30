@@ -1,34 +1,22 @@
 name: Build AT World Mater AAB
-on:
-  push:
-    branches: [ main, master ]
-
+on: [push]
 jobs:
   build:
-    runs-on: ubuntu-20.04
-    
+    runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
+      - uses: actions/checkout@v3
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install buildozer cython==0.29.33
           sudo apt update
-          sudo apt install -y openjdk-17-jdk zip unzip libssl-dev libffi-dev python3-dev
-
+          sudo apt install -y openjdk-17-jdk zip unzip libffi-dev libssl-dev
       - name: Build AAB
-        run: |
-          buildozer android release
-        env:
-          BUILDOZER_WARN_ON_ROOT: 0
-
+        run: buildozer android release
       - name: Upload AAB
         uses: actions/upload-artifact@v3
         with:
