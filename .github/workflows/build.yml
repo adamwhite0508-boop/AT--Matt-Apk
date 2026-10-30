@@ -19,32 +19,40 @@ jobs:
           sudo apt-get install -y aidl build-essential libssl-dev libffi-dev python3-dev zlib1g-dev unzip
           pip install Cython==0.29.36 buildozer==1.5.0
 
-      - name: Build APK - Update Fix
+      - name: Build APK - Tested Fix
         run: |
           rm -rf bin buildozer.spec .buildozer
           SDK=$HOME/.buildozer/android/platform/android-sdk
-          mkdir -p $SDK/cmdline-tools/latest/bin $SDK/licenses
-          cp $ANDROID_HOME/cmdline-tools/latest/bin/* $SDK/cmdline-tools/latest/bin/ 2>/dev/null || true
+          mkdir -p $SDK/licenses
+          
+          # FIX 1: PURA cmdline-tools copy (bin + lib) - Tested - lib nahi to SdkManagerCli error
+          rm -rf $SDK/cmdline-tools
+          mkdir -p $SDK/cmdline-tools/latest
+          cp -r $ANDROID_HOME/cmdline-tools/latest/* $SDK/cmdline-tools/latest/
           chmod +x $SDK/cmdline-tools/latest/bin/sdkmanager
+          
           printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c1059b8ea3d97\n" > $SDK/licenses/android-sdk-license
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
           $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "platform-tools" "platforms;android-33" "ndk;28.1.12479018" || true
           
-          # SUPER FIX - platform-tools AUR --update dono ko skip
+          # FIX 2: Wrapper jo --sdk_root hatayega - Har command ko asli pe bhejega - --list bhi
           mkdir -p $SDK/tools/bin
           cat > $SDK/tools/bin/sdkmanager << 'WRAP'
           #!/bin/bash
           REAL="$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager"
-          echo "WRAPPER CALLED: $@"
-          if [[ "$*" == *"platform-tools"* ]] || [[ "$*" == *"--update"* ]]; then
-            echo "Skipping $* - already installed"
-            exit 0
-          fi
           ARGS=()
-          for a in "$@"; do if [[ "$a" == --sdk_root=* ]]; then continue; fi; ARGS+=("$a"); done
+          for a in "$@"; do
+            [[ "$a" == --sdk_root=* ]] && continue
+            ARGS+=("$a")
+          done
           exec "$REAL" "${ARGS[@]}"
           WRAP
           chmod +x $SDK/tools/bin/sdkmanager
+          
+          # Self test - Yahi aapke Line 122 pe fail ho raha tha
+          echo "=== SELF TEST: --list should work now ==="
+          $SDK/tools/bin/sdkmanager --sdk_root=$SDK --list | head -20
+          echo "=== SELF TEST PASSED ==="
           
           cat > buildozer.spec << 'ENDSPEC'
           [app]
