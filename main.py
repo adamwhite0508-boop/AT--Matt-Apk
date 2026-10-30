@@ -11,20 +11,27 @@ from kivy.core.window import Window
 from kivy.metrics import dp
 from kivy.utils import get_color_from_hex, platform
 from kivy.graphics import Color, Rectangle, Ellipse, RoundedRectangle
-import sqlite3, os, json, datetime, threading, requests
+import sqlite3, os, json, datetime
+
 Window.clearcolor = get_color_from_hex("#FFFFFF")
 SERVER_URL = ""
 USER_ID = "Anuj_Tripathi_001"
+
 if platform == 'android':
-    from android.storage import app_storage_path
-    DB_PATH = os.path.join(app_storage_path(), "at_world_mater.db")
+    try:
+        from android.storage import app_storage_path
+        DB_PATH = os.path.join(app_storage_path(), "at_world_mater.db")
+    except:
+        DB_PATH = "/data/data/com.atworld.mater/files/at_world_mater.db"
 else:
     DB_PATH = "at_world_mater.db"
+
 class FullDB:
     def __init__(self):
         self.conn = sqlite3.connect(DB_PATH, check_same_thread=False)
         self.conn.execute("CREATE TABLE IF NOT EXISTS chats (id INTEGER PRIMARY KEY, user_id TEXT, name TEXT, message TEXT, is_me INTEGER, time TEXT)")
         self.conn.execute("CREATE TABLE IF NOT EXISTS actions (id INTEGER PRIMARY KEY, user_id TEXT, action TEXT, data TEXT, time TEXT)")
+        self.conn.commit()
     def save_chat(self, name, msg, is_me):
         self.conn.execute("INSERT INTO chats (user_id,name,message,is_me,time) VALUES (?,?,?,?,?)", (USER_ID, name, msg, 1 if is_me else 0, str(datetime.datetime.now())[:19])); self.conn.commit()
     def get_chats(self, name):
@@ -32,14 +39,19 @@ class FullDB:
     def log_action(self, action, data):
         self.conn.execute("INSERT INTO actions (user_id,action,data,time) VALUES (?,?,?,?)", (USER_ID, action, json.dumps(data), str(datetime.datetime.now())[:19])); self.conn.commit()
     def backup_to_server(self):
-        if not SERVER_URL: return "✅ Phone me save"
-        return "Backup"
+        return "✅ Phone me save"
+
 DB = FullDB()
+
 class RakshakAI:
     def nazar_rakho(self, a, d): return None
-    def online_reply(self, msg): return f"🧠 AT BRAIN (Phone Test OK): {msg}"
+    def online_reply(self, msg): return f"🧠 AT BRAIN: {msg}"
+
 RAKSHAK = RakshakAI()
-def show_warning(text): Popup(title='AT RAKSHAK', content=Label(text=text, text_size=(dp(280),None)), size_hint=(0.85,0.35)).open()
+
+def show_warning(text): 
+    Popup(title='AT RAKSHAK', content=Label(text=text), size_hint=(0.85,0.35)).open()
+
 class ChatRow(BoxLayout):
     def __init__(self, icon, name, msg, time, unread=0, on_press=None, **kw):
         super().__init__(orientation='horizontal', size_hint_y=None, height=dp(72), padding=[dp(12),dp(6)], spacing=dp(12), **kw); self.on_press = on_press
@@ -52,6 +64,7 @@ class ChatRow(BoxLayout):
     def on_touch_down(self, touch):
         if self.collide_point(*touch.pos) and self.on_press: self.on_press(); return True
         return super().on_touch_down(touch)
+
 class MainScreen(Screen):
     def __init__(self, sm, **kw):
         super().__init__(**kw); self.sm = sm; root = BoxLayout(orientation='vertical')
@@ -70,6 +83,7 @@ class MainScreen(Screen):
         scroll.add_widget(box); root.add_widget(scroll); self.add_widget(root)
     def open_chat(self, name):
         s = self.sm.get_screen('chat'); s.set_chat(name); self.sm.current = 'chat'
+
 class ChatScreen(Screen):
     def set_chat(self, name):
         self.chat_name = name; self.clear_widgets(); root = BoxLayout(orientation='vertical')
@@ -89,4 +103,35 @@ class ChatScreen(Screen):
         self.ti = TextInput(hint_text="Message", background_normal='', background_color=(0,0,0,0), multiline=False, on_text_validate=self.send_msg); ti_box.add_widget(self.ti); bottom.add_widget(ti_box)
         send = Button(text="➤", size_hint_x=None, width=dp(48), background_normal='', background_color=get_color_from_hex("#25D366"), color=(1,1,1,1), on_press=self.send_msg); bottom.add_widget(send); root.add_widget(bottom); self.add_widget(root)
     def add_bubble(self, text, is_me):
-        bubble = BoxLayout(size_hint_y=None, height=dp(60), size_hint_x=None, width=dp(
+        row = BoxLayout(size_hint_y=None, height=dp(45), orientation='horizontal', padding=[dp(5),0])
+        bubble_color = get_color_from_hex("#DCF8C6") if is_me else get_color_from_hex("#FFFFFF")
+        b = BoxLayout(size_hint_x=None, width=dp(260), padding=dp(8))
+        with b.canvas.before:
+            Color(rgba=bubble_color); RoundedRectangle(pos=b.pos, size=b.size, radius=[dp(8)])
+        b.bind(pos=lambda i,v: setattr(i.canvas.before.children[-1], 'pos', v), size=lambda i,v: setattr(i.canvas.before.children[-1], 'size', v))
+        b.add_widget(Label(text=text, color=(0,0,0,1), text_size=(dp(240),None), halign='left'))
+        if is_me:
+            row.add_widget(BoxLayout()); row.add_widget(b)
+        else:
+            row.add_widget(b); row.add_widget(BoxLayout())
+        self.msg_box.add_widget(row)
+        self.msg_box.height += dp(50)
+    def send_msg(self, *args):
+        txt = self.ti.text.strip()
+        if not txt: return
+        DB.save_chat(self.chat_name, txt, True)
+        self.add_bubble(txt, True)
+        DB.log_action("chat_send", {"to": self.chat_name, "msg": txt})
+        reply = RAKSHAK.online_reply(txt)
+        DB.save_chat(self.chat_name, reply, False)
+        self.add_bubble(reply, False)
+        self.ti.text = ""
+
+class ATWorldMaterApp(App):
+    def build(self):
+        sm = ScreenManager()
+        sm.add_widget(MainScreen(sm, name='main'))
+        sm.add_widget(ChatScreen(name='chat'))
+        return sm
+
+ATWorldMaterApp().run()
