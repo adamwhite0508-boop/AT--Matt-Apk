@@ -11,11 +11,10 @@ android.permissions = INTERNET
 android.api = 33
 android.minapi = 21
 android.ndk = 25b
+android.arch = armeabi-v7a
 android.accept_sdk_license_agreements = True
+p4a.bootstrap = sdl2
 
 [buildozer]
-log_level = 2
+log_level = 1
 warn_on_root = 0
-android.arch = armeabi-v7a
-android.allow_backup = False
-p4a.bootstrap = sdl2
