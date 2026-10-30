@@ -9,40 +9,43 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Clean old cache + Install Deps
+      - name: Install Deps
         run: |
-          rm -rf ~/.buildozer
-          rm -rf .buildozer
           sudo apt update
           sudo apt install -y openjdk-17-jdk zip unzip
           pip install buildozer cython==0.29.33
 
-      - name: Fix - Install BOTH 33 and 37 Build-Tools
+      - name: Fix SDK Path - sdkmanager not found
         run: |
-          mkdir -p ~/.android
-          echo "count=0" > ~/.android/repositories.cfg
           SM=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
-          yes | $SM --licenses || true
-          # Dono install karo taaki Aidl mil jaye, chahe 33 maange ya 37
-          yes | $SM "build-tools;33.0.2" "build-tools;37.0.0" "platforms;android-33" "platforms;android-34" "platform-tools" || true
+          echo "System SDK at: $ANDROID_HOME"
+          ls $ANDROID_HOME/cmdline-tools/latest/bin/
           
-          # Buildozer ka fake sdkmanager fix
+          # 1. Buildozer ka SDK folder banao - SAHI JAGAH PE
+          mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
           mkdir -p ~/.buildozer/android/platform/android-sdk/tools/bin
-          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
-          mkdir -p ~/.buildozer/android/platform/android-sdk/build-tools
-          ln -sf $SM ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+          mkdir -p ~/.buildozer/android/platform/android-sdk/platform-tools
           
-          # License force
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo "y" > /tmp/l && cp /tmp/l ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license || true
+          # 2. System wale binaries ko Buildozer wale me copy/link karo
+          ln -sf $SM ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager
+          ln -sf $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/avdmanager
+          ln -sf $ANDROID_HOME/platform-tools/adb ~/.buildozer/android/platform/android-sdk/platform-tools/adb || true
           
-          # Aidl ke liye copy - Yahi se error aa raha tha
-          cp -r $ANDROID_HOME/build-tools/33.0.2 ~/.buildozer/android/platform/android-sdk/build-tools/ || true
-          cp -r $ANDROID_HOME/build-tools/37.0.0 ~/.buildozer/android/platform/android-sdk/build-tools/ || true
-          ls ~/.buildozer/android/platform/android-sdk/build-tools/
-          ls ~/.buildozer/android/platform/android-sdk/build-tools/33.0.2/aidl
-          ls ~/.buildozer/android/platform/android-sdk/build-tools/37.0.0/aidl || true
+          # 3. Purana wala tools/bin bhi banao (p4a purana path bhi check karta hai)
+          echo "#!/bin/bash" > ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+          echo "exec $SM \"\$@\"" >> ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+          chmod +x ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+          
+          touch ~/.buildozer/android/platform/android-sdk/tools/bin/android
+          chmod +x ~/.buildozer/android/platform/android-sdk/tools/bin/android
+          
+          # 4. License accept
+          yes | $SM --licenses || true
+          yes | $SM "build-tools;33.0.2" "platforms;android-33" || true
+          
+          # 5. Verify
+          ls -l ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager
+          ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --version
 
       - name: Build AAB
         run: buildozer android debug
