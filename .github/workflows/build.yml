@@ -13,6 +13,11 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Clean Everything
+        run: |
+          rm -rf bin buildozer.spec .buildozer __pycache__ .gradle
+          ls -lh
+
       - name: Install Tools
         run: |
           sudo apt-get update
@@ -21,7 +26,6 @@ jobs:
 
       - name: Build APK
         run: |
-          rm -rf bin buildozer.spec .buildozer
           SDK=$HOME/.buildozer/android/platform/android-sdk
           mkdir -p $SDK/licenses
           cd /tmp
@@ -33,7 +37,7 @@ jobs:
           chmod +x $SDK/cmdline-tools/latest/bin/sdkmanager
           printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c1059b8ea3d97\n" > $SDK/licenses/android-sdk-license
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
-          $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "platform-tools" "platforms;android-33" "ndk;28.1.12479018" > /dev/null 2>&1 || true
+          $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "platform-tools" "platforms;android-33" "ndk;25.1.8937393" > /dev/null 2>&1 || true
           
           mkdir -p $SDK/tools/bin
           cat > $SDK/tools/bin/sdkmanager << 'WRAP'
@@ -46,10 +50,6 @@ jobs:
           chmod +x $SDK/tools/bin/sdkmanager
           cd $GITHUB_WORKSPACE
           
-          # Check main.py exists - Yahi sabse common fail hai
-          ls -lh
-          if [ ! -f main.py ]; then echo "ERROR: main.py nahi mila!"; exit 1; fi
-          
           cat > buildozer.spec << 'ENDSPEC'
           [app]
           title = AT World Matter
@@ -58,14 +58,15 @@ jobs:
           source.dir = .
           source.include_exts = py,png,jpg,kv,json
           version = 2.0
-          requirements = python3,kivy==2.3.0
+          requirements = python3,kivy
           orientation = portrait
           [buildozer]
-          log_level = 1
+          log_level = 2
+          warn_on_root = 0
           [app:android]
           android.api = 33
           android.minapi = 21
-          android.ndk = 28c
+          android.ndk = 25b
           android.sdk = 33
           android.accept_sdk_license_agreement = True
           android.archs = arm64-v8a
@@ -74,18 +75,13 @@ jobs:
           p4a.bootstrap = sdl2
           ENDSPEC
           
+          cat buildozer.spec
           buildozer android debug
 
-      - name: Upload APK
-        if: success()
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: AT-World-Matter-APK
-          path: bin/*.apk
-
-      - name: Upload Logs on Fail
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs
-          path: .buildozer/logs/
+          path: |
+            bin/*.apk
+            .buildozer/logs/
