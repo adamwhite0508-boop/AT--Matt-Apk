@@ -14,25 +14,23 @@ jobs:
       - name: Install Deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk zip unzip python3-pip
+          sudo apt-get install -y openjdk-17-jdk zip unzip
           pip install buildozer cython==0.29.33
-          pip install --upgrade buildozer
 
-      - name: Accept Licenses
+      - name: Accept All Android Licenses (FIX for Build-Tools 37)
         run: |
           mkdir -p ~/.android
           touch ~/.android/repositories.cfg
+          mkdir -p /home/runner/.buildozer/android/platform/android-sdk/licenses
+          mkdir -p $ANDROID_HOME/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c1059b8ea4b044" >> /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          cp /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license $ANDROID_HOME/licenses/ || true
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "platforms;android-33" || true
 
       - name: Build AAB
         run: |
-          # Fix buildozer.spec automatically
-          sed -i "s/^android.api.*/android.api = 33/" buildozer.spec || true
-          sed -i "s/^#*android.api.*/android.api = 33/" buildozer.spec || true
-          sed -i "s/^android.build_tools_version.*/android.build_tools_version = 33.0.2/" buildozer.spec || true
-          sed -i "s/^#*android.build_tools_version.*/android.build_tools_version = 33.0.2/" buildozer.spec || true
-          grep -q "accept_sdk_license" buildozer.spec || echo "android.accept_sdk_license_agreements = True" >> buildozer.spec
           buildozer android debug
 
       - name: Upload AAB
@@ -40,4 +38,3 @@ jobs:
         with:
           name: AT-World-Mater-AAB
           path: bin/*.aab
-          if-no-files-found: error
