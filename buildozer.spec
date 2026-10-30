@@ -11,7 +11,7 @@ android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 android.api = 33
 android.minapi = 21
 android.ndk = 25b
-android.arch = armeabi-v7a
+android.arch = arm64-v8a
 android.accept_sdk_license_agreements = True
 p4a.bootstrap = sdl2
 
