@@ -14,11 +14,14 @@ presplash.filename = %(source.dir)s/banner.png
 log_level = 2
 
 [app:android]
-android.api = 34
-android.minapi = 23
+android.api = 33
+android.minapi = 21
 android.ndk = 25b
-android.accept_sdk_license_agreement = True
+android.build_tools_version = 33.0.2
+android.accept_sdk_license_agreements = True
 android.archs = arm64-v8a, armeabi-v7a
-android.permissions = INTERNET,RECORD_AUDIO,CAMERA,READ_CONTACTS,CALL_PHONE,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,VIBRATE,POST_NOTIFICATIONS
+android.permissions = INTERNET,RECORD_AUDIO,CAMERA,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 android.release_artifact = aab
 p4a.bootstrap = sdl2
+p4a.branch = master
+android.allow_backup = False
