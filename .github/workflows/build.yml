@@ -16,30 +16,31 @@ jobs:
       - name: Install Tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y aidl build-essential libssl-dev libffi-dev python3-dev zlib1g-dev
+          sudo apt-get install -y aidl build-essential libssl-dev libffi-dev python3-dev zlib1g-dev unzip
           pip install Cython==0.29.36 buildozer==1.5.0
 
-      - name: Build APK - tools/bin Fix
+      - name: Build APK - NDK 28c Fix
         run: |
           rm -rf bin buildozer.spec .buildozer
           SDK=$HOME/.buildozer/android/platform/android-sdk
-          mkdir -p $SDK/cmdline-tools/latest/bin $SDK/licenses $SDK/platform-tools $SDK/platforms
+          mkdir -p $SDK/cmdline-tools/latest/bin $SDK/licenses
           cp $ANDROID_HOME/cmdline-tools/latest/bin/* $SDK/cmdline-tools/latest/bin/ 2>/dev/null || true
           chmod +x $SDK/cmdline-tools/latest/bin/sdkmanager
           printf "8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c1059b8ea3d97\n" > $SDK/licenses/android-sdk-license
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
-          $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "platform-tools" "platforms;android-33" "ndk;25.1.8937393" > /dev/null 2>&1 || true
+          # Pehle se build-tools, platform-tools, NDK 28c install - Ab download nahi hoga
+          $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "platform-tools" "platforms;android-33" "ndk;28.1.12479018" || true
           
-          # FINAL FIX - tools/bin/sdkmanager ko dummy banao - Jo hamesha success de - Isi se Line 106 wala Command failed khatam
           mkdir -p $SDK/tools/bin
           cat > $SDK/tools/bin/sdkmanager << 'WRAP'
           #!/bin/bash
-          echo "Dummy sdkmanager - skipping $@ - already installed"
-          exit 0
+          REAL="$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager"
+          if [[ "$*" == *"platform-tools"* ]]; then echo "platform-tools already installed"; exit 0; fi
+          ARGS=()
+          for a in "$@"; do if [[ "$a" == --sdk_root=* ]]; then continue; fi; ARGS+=("$a"); done
+          exec "$REAL" "${ARGS[@]}"
           WRAP
           chmod +x $SDK/tools/bin/sdkmanager
-          ls -l $SDK/tools/bin/sdkmanager
-          $SDK/tools/bin/sdkmanager --help || true
           
           cat > buildozer.spec << 'ENDSPEC'
           [app]
@@ -56,7 +57,7 @@ jobs:
           [app:android]
           android.api = 33
           android.minapi = 21
-          android.ndk = 25b
+          android.ndk = 28c
           android.sdk = 33
           android.accept_sdk_license_agreement = True
           android.archs = arm64-v8a,armeabi-v7a
