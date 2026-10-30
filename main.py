@@ -1,137 +1,551 @@
-# AT World Mater - FINAL - CHECKED
-from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.button import Button
-from kivy.uix.label import Label
-from kivy.uix.scrollview import ScrollView
-from kivy.uix.textinput import TextInput
-from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.uix.popup import Popup
-from kivy.core.window import Window
-from kivy.metrics import dp
-from kivy.utils import get_color_from_hex, platform
-from kivy.graphics import Color, Rectangle, Ellipse, RoundedRectangle
-import sqlite3, os, json, datetime
+from kivymd.app import MDApp
+from kivy.lang import Builder
+from kivymd.uix.screen import MDScreen
+from kivy.clock import Clock
+from kivy.storage.jsonstore import JsonStore
+from kivy.properties import StringProperty
+from datetime import datetime
 
-Window.clearcolor = get_color_from_hex("#FFFFFF")
-SERVER_URL = ""
-USER_ID = "Anuj_Tripathi_001"
+KV = '''
+MDScreenManager:
+    SplashScreen:
+    ListScreen:
+    ChatScreen:
+    CallScreen:
+    VideoCallScreen:
+    GroupCallScreen:
+    ContactScreen:
+    AdminScreen:
+    AvatarScreen:
 
-if platform == 'android':
-    try:
-        from android.storage import app_storage_path
-        DB_PATH = os.path.join(app_storage_path(), "at_world_mater.db")
-    except:
-        DB_PATH = "/data/data/com.atworld.mater/files/at_world_mater.db"
-else:
-    DB_PATH = "at_world_mater.db"
+<SplashScreen>:
+    name: 'splash'
+    MDFloatLayout:
+        md_bg_color: 1,1,1,1
+        Image:
+            source: 'logo.png'
+            size_hint: .75, .42
+            pos_hint: {'center_x':.5,'center_y':.6}
+        MDLabel:
+            text: "AT World Matter"
+            halign: "center"
+            font_style: "H6"
+            bold: True
+            text_color: 0.06, 0.45, 0.73, 1
+            pos_hint: {'center_y':.32}
+        MDLabel:
+            text: "Secure • Calls • Groups • AI Avatar"
+            halign: "center"
+            theme_text_color: "Hint"
+            font_size: "13sp"
+            pos_hint: {'center_y':.25}
 
-class FullDB:
-    def __init__(self):
-        self.conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-        self.conn.execute("CREATE TABLE IF NOT EXISTS chats (id INTEGER PRIMARY KEY, user_id TEXT, name TEXT, message TEXT, is_me INTEGER, time TEXT)")
-        self.conn.execute("CREATE TABLE IF NOT EXISTS actions (id INTEGER PRIMARY KEY, user_id TEXT, action TEXT, data TEXT, time TEXT)")
-        self.conn.commit()
-    def save_chat(self, name, msg, is_me):
-        self.conn.execute("INSERT INTO chats (user_id,name,message,is_me,time) VALUES (?,?,?,?,?)", (USER_ID, name, msg, 1 if is_me else 0, str(datetime.datetime.now())[:19])); self.conn.commit()
-    def get_chats(self, name):
-        cur = self.conn.execute("SELECT message, is_me FROM chats WHERE name=? AND user_id=? ORDER BY id", (name, USER_ID)); return cur.fetchall()
-    def log_action(self, action, data):
-        self.conn.execute("INSERT INTO actions (user_id,action,data,time) VALUES (?,?,?,?)", (USER_ID, action, json.dumps(data), str(datetime.datetime.now())[:19])); self.conn.commit()
-    def backup_to_server(self):
-        return "✅ Phone me save"
+<ListScreen>:
+    name: 'list'
+    MDBoxLayout:
+        orientation: 'vertical'
+        md_bg_color: 1,1,1,1
+        MDTopAppBar:
+            title: "AT World Matter"
+            md_bg_color: 0.06, 0.45, 0.73, 1
+            left_action_items: [["menu"]]
+            right_action_items: [["video", lambda x: app.root.current == 'list' and setattr(app.root, 'current', 'groupcall')], ["phone", lambda x: setattr(app.root, 'current', 'calls')]]
+        ScrollView:
+            MDList:
+                TwoLineAvatarIconListItem:
+                    text: "AT BRAIN - WASM + RAKSHAK"
+                    secondary_text: "AI Secure • Tap to chat"
+                    on_release: app.open_chat("AT BRAIN")
+                    IconLeftWidget:
+                        icon: "brain"
+                TwoLineAvatarIconListItem:
+                    text: "AT World Group 🌍"
+                    secondary_text: "12 members • Group Call Active"
+                    on_release: app.open_chat("AT World Group")
+                    IconLeftWidget:
+                        icon: "account-group"
+                TwoLineAvatarIconListItem:
+                    text: "Poster Studio"
+                    secondary_text: "Create poster in Blue-White"
+                    on_release: app.open_chat("Poster Studio")
+                    IconLeftWidget:
+                        icon: "image-edit"
+                TwoLineAvatarIconListItem:
+                    text: "Anuj Tripathi"
+                    secondary_text: "Online • Tap to call/video"
+                    on_release: app.open_chat("Anuj Tripathi")
+                    IconLeftWidget:
+                        icon: "account-star"
+                TwoLineAvatarIconListItem:
+                    text: "AT Family Group 👨‍👩‍👧‍👦"
+                    secondary_text: "8 members • Video group"
+                    on_release: app.open_chat("AT Family Group")
+                    IconLeftWidget:
+                        icon: "home-group"
+                TwoLineAvatarIconListItem:
+                    text: "Online AT"
+                    secondary_text: "typing..."
+                    on_release: app.open_chat("Online AT")
+                    IconLeftWidget:
+                        icon: "account-check"
+                TwoLineAvatarIconListItem:
+                    text: "🤖 AI Avatar Studio"
+                    secondary_text: "Create your AI profile photo"
+                    on_release: app.root.current = 'avatar'
+                    IconLeftWidget:
+                        icon: "face-recognition"
+                TwoLineAvatarIconListItem:
+                    text: "🔐 ADMIN - All AI Chats"
+                    secondary_text: "See all users AI usage"
+                    on_release: app.open_admin()
+                    IconLeftWidget:
+                        icon: "shield-account"
+                        theme_icon_color: "Custom"
+                        icon_color: 1,0,0,1
+        MDBoxLayout:
+            size_hint_y: None
+            height: "60dp"
+            padding: "10dp"
+            spacing: "15dp"
+            md_bg_color: 1,1,1,1
+            MDFabButton:
+                icon: "phone"
+                md_bg_color: 0.06, 0.45, 0.73, 1
+                on_release: app.root.current = 'calls'
+            MDFabButton:
+                icon: "video"
+                md_bg_color: 0.06, 0.45, 0.73, 1
+                on_release: app.start_video_call("AT World Group")
+            MDFabButton:
+                icon: "account-group"
+                md_bg_color: 0, 0.6, 0.2, 1
+                on_release: app.root.current = 'groupcall'
+            MDFabButton:
+                icon: "contacts"
+                md_bg_color: 0.06, 0.45, 0.73, 1
+                on_release: app.root.current = 'contacts'
 
-DB = FullDB()
+<ChatScreen>:
+    name: 'chat'
+    MDBoxLayout:
+        orientation: 'vertical'
+        md_bg_color: 0.96, 0.97, 1, 1
+        MDTopAppBar:
+            id: chat_title
+            title: "Chat"
+            md_bg_color: 0.06, 0.45, 0.73, 1
+            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'list')]]
+            right_action_items: [["video", lambda x: app.start_video_call(app.current_chat)], ["phone", lambda x: app.start_call(app.current_chat)], ["account-group", lambda x: app.start_group_call(app.current_chat)]]
+        ScrollView:
+            id: scroll
+            MDList:
+                id: msg_list
+                padding: "10dp"
+                spacing: "8dp"
+        MDBoxLayout:
+            size_hint_y: None
+            height: "62dp"
+            padding: "6dp"
+            spacing: "6dp"
+            md_bg_color: 1,1,1,1
+            MDTextField:
+                id: msg_input
+                hint_text: "Message"
+                mode: "round"
+            MDIconButton:
+                icon: "send"
+                md_bg_color: 0.06, 0.45, 0.73, 1
+                icon_color: 1,1,1,1
+                on_press: app.send_message()
 
-class RakshakAI:
-    def nazar_rakho(self, a, d): return None
-    def online_reply(self, msg): return f"🧠 AT BRAIN: {msg}"
+<CallScreen>:
+    name: 'calls'
+    MDBoxLayout:
+        orientation: 'vertical'
+        MDTopAppBar:
+            title: "AT Calls"
+            md_bg_color: 0.06, 0.45, 0.73, 1
+            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'list')]]
+        MDList:
+            TwoLineAvatarIconListItem:
+                text: "Anuj Tripathi - Outgoing"
+                secondary_text: "Today 9:30 PM • 2:15"
+                on_release: app.start_call("Anuj Tripathi")
+                IconLeftWidget:
+                    icon: "phone-outgoing"
+            TwoLineAvatarIconListItem:
+                text: "AT World Group - Group Call"
+                secondary_text: "Yesterday • 5 participants"
+                on_release: app.start_group_call("AT World Group")
+                IconLeftWidget:
+                    icon: "account-group"
+            TwoLineAvatarIconListItem:
+                text: "AT Family Group - Missed Group"
+                secondary_text: "Missed group video"
+                on_release: app.start_group_video("AT Family Group")
+                IconLeftWidget:
+                    icon: "phone-missed"
+        Widget:
+        MDBoxLayout:
+            size_hint_y: None
+            height: "90dp"
+            padding: "20dp"
+            MDFabButton:
+                icon: "phone"
+                md_bg_color: 0, 0.7, 0.2, 1
+                pos_hint: {"center_x":.5}
+                on_release: app.start_call("Anuj Tripathi")
 
-RAKSHAK = RakshakAI()
+<VideoCallScreen>:
+    name: 'video'
+    MDFloatLayout:
+        md_bg_color: 0.05, 0.05, 0.08, 1
+        Image:
+            source: 'icon.png'
+            size_hint: .45, .45
+            pos_hint: {'center_x':.5,'center_y':.6}
+        MDLabel:
+            id: video_name
+            text: "Calling..."
+            halign: "center"
+            text_color: 1,1,1,1
+            font_style: "H6"
+            pos_hint: {'center_y':.32}
+        MDLabel:
+            text: "AT Secure Video • WASM Protected"
+            halign: "center"
+            text_color: 0.6,0.6,0.6,1
+            pos_hint: {'center_y':.27}
+        MDBoxLayout:
+            size_hint_y: None
+            height: "90dp"
+            pos_hint: {'center_x':.5,'y':.04}
+            spacing: "18dp"
+            padding: "20dp"
+            MDFabButton:
+                icon: "microphone-off"
+                md_bg_color: 0.25,0.25,0.25,1
+            MDFabButton:
+                icon: "phone-hangup"
+                md_bg_color: 1,0.2,0.2,1
+                on_release: app.end_call()
+            MDFabButton:
+                icon: "camera-flip"
+                md_bg_color: 0.25,0.25,0.25,1
+            MDFabButton:
+                icon: "video-off"
+                md_bg_color: 0.25,0.25,0.25,1
 
-def show_warning(text): 
-    Popup(title='AT RAKSHAK', content=Label(text=text), size_hint=(0.85,0.35)).open()
+<GroupCallScreen>:
+    name: 'groupcall'
+    MDBoxLayout:
+        orientation: 'vertical'
+        MDTopAppBar:
+            title: "AT Group Calls"
+            md_bg_color: 0, 0.6, 0.2, 1
+            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'list')]]
+        MDLabel:
+            id: group_title
+            text: "AT World Group - Group Call"
+            halign: "center"
+            font_style: "H6"
+            size_hint_y: None
+            height: "40dp"
+        MDGridLayout:
+            cols: 2
+            spacing: "5dp"
+            padding: "5dp"
+            MDCard:
+                md_bg_color: 0.1,0.1,0.1,1
+                MDLabel:
+                    text: "Anuj\\n🎙️"
+                    halign: "center"
+                    text_color: 1,1,1,1
+            MDCard:
+                md_bg_color: 0.1,0.1,0.1,1
+                MDLabel:
+                    text: "You\\n🎥"
+                    halign: "center"
+                    text_color: 1,1,1,1
+            MDCard:
+                md_bg_color: 0.15,0.15,0.15,1
+                MDLabel:
+                    text: "AT Support\\n🔇"
+                    halign: "center"
+                    text_color: 1,1,1,1
+            MDCard:
+                md_bg_color: 0.15,0.15,0.15,1
+                MDLabel:
+                    text: "+9 more\\n👥"
+                    halign: "center"
+                    text_color: 1,1,1,1
+        MDBoxLayout:
+            size_hint_y: None
+            height: "90dp"
+            padding: "15dp"
+            spacing: "15dp"
+            MDFabButton:
+                icon: "microphone-off"
+                md_bg_color: 0.3,0.3,0.3,1
+            MDFabButton:
+                icon: "phone-hangup"
+                md_bg_color: 1,0.2,0.2,1
+                on_release: app.end_call()
+            MDFabButton:
+                icon: "video-plus"
+                md_bg_color: 0, 0.6, 0.2, 1
+                on_release: app.add_to_group()
+            MDFabButton:
+                icon: "account-group"
+                md_bg_color: 0.3,0.3,0.3,1
 
-class ChatRow(BoxLayout):
-    def __init__(self, icon, name, msg, time, unread=0, on_press=None, **kw):
-        super().__init__(orientation='horizontal', size_hint_y=None, height=dp(72), padding=[dp(12),dp(6)], spacing=dp(12), **kw); self.on_press = on_press
-        av = BoxLayout(size_hint_x=None, width=dp(50))
-        with av.canvas.before:
-            Color(rgba=get_color_from_hex("#DFE5E7")); self.ell = Ellipse(size=(dp(50),dp(50)), pos=(av.x, av.y+dp(6)))
-        av.bind(pos=lambda i,v: setattr(self.ell, 'pos', (v[0], v[1]+dp(6)))); av.add_widget(Label(text=icon, font_size=dp(22))); self.add_widget(av)
-        mid = BoxLayout(orientation='vertical'); mid.add_widget(Label(text=name, bold=True, color=(0,0,0,1), halign='left', font_size=dp(15), text_size=(dp(180),None), size_hint_y=0.6)); mid.add_widget(Label(text=msg, color=(0.5,0.5,0.5,1), halign='left', font_size=dp(12), text_size=(dp(180),None), size_hint_y=0.4)); self.add_widget(mid)
-        self.add_widget(Label(text=time, color=get_color_from_hex("#25D366") if unread else get_color_from_hex("#666666"), font_size=dp(11), size_hint_x=None, width=dp(50)))
-    def on_touch_down(self, touch):
-        if self.collide_point(*touch.pos) and self.on_press: self.on_press(); return True
-        return super().on_touch_down(touch)
+<ContactScreen>:
+    name: 'contacts'
+    MDBoxLayout:
+        orientation: 'vertical'
+        MDTopAppBar:
+            title: "AT Contacts"
+            md_bg_color: 0.06, 0.45, 0.73, 1
+            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'list')]]
+        MDList:
+            TwoLineAvatarIconListItem:
+                text: "Anuj Tripathi - Admin"
+                secondary_text: "Owner • AT World Matter"
+                on_release: app.open_chat("Anuj Tripathi")
+                IconLeftWidget:
+                    icon: "account-star"
+            TwoLineAvatarIconListItem:
+                text: "AT Support Group"
+                secondary_text: "12 members"
+                on_release: app.start_group_call("AT Support Group")
+                IconLeftWidget:
+                    icon: "account-group"
 
-class MainScreen(Screen):
-    def __init__(self, sm, **kw):
-        super().__init__(**kw); self.sm = sm; root = BoxLayout(orientation='vertical')
-        h = BoxLayout(size_hint_y=None, height=dp(56), padding=[dp(12),0,dp(5),0])
-        with h.canvas.before: Color(rgba=get_color_from_hex("#075E54")); h.bg = Rectangle(pos=h.pos, size=h.size)
-        h.bind(pos=lambda i,v: setattr(i.bg, 'pos', v), size=lambda i,v: setattr(i.bg, 'size', v))
-        h.add_widget(Label(text="AT World Mater", bold=True, color=(1,1,1,1), font_size=dp(18), halign='left', text_size=(dp(180),None)))
-        h.add_widget(Button(text="💾", background_normal='', background_color=(0,0,0,0), color=(1,1,1,1), size_hint_x=None, width=dp(40), on_press=lambda x: show_warning(DB.backup_to_server()))); root.add_widget(h)
-        tabs = BoxLayout(size_hint_y=None, height=dp(44))
-        with tabs.canvas.before: Color(rgba=get_color_from_hex("#075E54")); tabs.bg = Rectangle(pos=tabs.pos, size=tabs.size)
-        tabs.bind(pos=lambda i,v: setattr(i.bg, 'pos', v), size=lambda i,v: setattr(i.bg, 'size', v))
-        for name in ["CHATS","STATUS","CALLS"]: tabs.add_widget(Button(text=name, background_normal='', background_color=(0,0,0,0), color=(1,1,1,1), bold=(name=="CHATS"), font_size=dp(13)))
-        root.add_widget(tabs); scroll = ScrollView(); box = BoxLayout(orientation='vertical', size_hint_y=None, spacing=0); box.bind(minimum_height=box.setter('height'))
-        data = [("🧠","AT BRAIN","WASM + RAKSHAK + SECURE active","12:58",3),("🌍","AT World Mater","Welcome","12:50",1),("🖼️","Poster Studio","Poster exported","11:30",0),("🌐","Online AT","typing...","11:15",5),("📷","Camera","Photo captured","10:20",0),("🖼️","Gallery","12 images","09:50",0),("👤","Contacts","Anuj Tripathi","Yesterday",0),("📞","Call Logs","Missed voice call","Yesterday",2),("🎙️","Voice Notes","0:24 voice","Yesterday",0),("💾","Downloads","AT_Banner.png","Monday",0),("🔗","Share","Shared to 3 groups","Monday",0)]
-        for icon,name,msg,time,unread in data: box.add_widget(ChatRow(icon,name,msg,time,unread, on_press=lambda n=name: self.open_chat(n)))
-        scroll.add_widget(box); root.add_widget(scroll); self.add_widget(root)
-    def open_chat(self, name):
-        s = self.sm.get_screen('chat'); s.set_chat(name); self.sm.current = 'chat'
+<AdminScreen>:
+    name: 'admin'
+    MDBoxLayout:
+        orientation: 'vertical'
+        MDTopAppBar:
+            title: "ADMIN - All AI Chats"
+            md_bg_color: 1,0,0,1
+            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'list')]]
+        ScrollView:
+            MDList:
+                id: admin_list
 
-class ChatScreen(Screen):
-    def set_chat(self, name):
-        self.chat_name = name; self.clear_widgets(); root = BoxLayout(orientation='vertical')
-        h = BoxLayout(size_hint_y=None, height=dp(56), padding=[dp(5),0,dp(5),0], spacing=dp(5))
-        with h.canvas.before: Color(rgba=get_color_from_hex("#075E54")); h.bg = Rectangle(pos=h.pos, size=h.size)
-        h.bind(pos=lambda i,v: setattr(i.bg, 'pos', v), size=lambda i,v: setattr(i.bg, 'size', v))
-        back = Button(text="<", background_normal='', background_color=(0,0,0,0), color=(1,1,1,1), size_hint_x=None, width=dp(35), on_press=lambda x: setattr(self.manager, 'current', 'main'))
-        h.add_widget(back); h.add_widget(Label(text=name, bold=True, color=(1,1,1,1), font_size=dp(16), halign='left', text_size=(dp(200),None))); root.add_widget(h)
-        self.msg_box = BoxLayout(orientation='vertical', size_hint_y=None, spacing=dp(8), padding=dp(10)); self.msg_box.bind(minimum_height=self.msg_box.setter('height'))
-        with self.msg_box.canvas.before: Color(rgba=get_color_from_hex("#E5DDD5")); self.msg_box.bg = Rectangle(pos=self.msg_box.pos, size=self.msg_box.size)
-        self.msg_box.bind(pos=lambda i,v: setattr(i.bg, 'pos', v), size=lambda i,v: setattr(i.bg, 'size', v))
-        scroll = ScrollView(); scroll.add_widget(self.msg_box); root.add_widget(scroll)
-        for msg, is_me in DB.get_chats(name): self.add_bubble(msg, is_me)
-        bottom = BoxLayout(size_hint_y=None, height=dp(52), padding=dp(6), spacing=dp(6)); ti_box = BoxLayout(padding=[dp(10),0])
-        with ti_box.canvas.before: Color(rgba=(1,1,1,1)); ti_box.bg = RoundedRectangle(pos=ti_box.pos, size=ti_box.size, radius=[dp(24)])
-        ti_box.bind(pos=lambda i,v: setattr(i.bg, 'pos', v), size=lambda i,v: setattr(i.bg, 'size', v))
-        self.ti = TextInput(hint_text="Message", background_normal='', background_color=(0,0,0,0), multiline=False, on_text_validate=self.send_msg); ti_box.add_widget(self.ti); bottom.add_widget(ti_box)
-        send = Button(text="➤", size_hint_x=None, width=dp(48), background_normal='', background_color=get_color_from_hex("#25D366"), color=(1,1,1,1), on_press=self.send_msg); bottom.add_widget(send); root.add_widget(bottom); self.add_widget(root)
-    def add_bubble(self, text, is_me):
-        row = BoxLayout(size_hint_y=None, height=dp(45), orientation='horizontal', padding=[dp(5),0])
-        bubble_color = get_color_from_hex("#DCF8C6") if is_me else get_color_from_hex("#FFFFFF")
-        b = BoxLayout(size_hint_x=None, width=dp(260), padding=dp(8))
-        with b.canvas.before:
-            Color(rgba=bubble_color); RoundedRectangle(pos=b.pos, size=b.size, radius=[dp(8)])
-        b.bind(pos=lambda i,v: setattr(i.canvas.before.children[-1], 'pos', v), size=lambda i,v: setattr(i.canvas.before.children[-1], 'size', v))
-        b.add_widget(Label(text=text, color=(0,0,0,1), text_size=(dp(240),None), halign='left'))
-        if is_me:
-            row.add_widget(BoxLayout()); row.add_widget(b)
-        else:
-            row.add_widget(b); row.add_widget(BoxLayout())
-        self.msg_box.add_widget(row)
-        self.msg_box.height += dp(50)
-    def send_msg(self, *args):
-        txt = self.ti.text.strip()
-        if not txt: return
-        DB.save_chat(self.chat_name, txt, True)
-        self.add_bubble(txt, True)
-        DB.log_action("chat_send", {"to": self.chat_name, "msg": txt})
-        reply = RAKSHAK.online_reply(txt)
-        DB.save_chat(self.chat_name, reply, False)
-        self.add_bubble(reply, False)
-        self.ti.text = ""
+<AvatarScreen>:
+    name: 'avatar'
+    MDBoxLayout:
+        orientation: 'vertical'
+        md_bg_color: 1,1,1,1
+        MDTopAppBar:
+            title: "AI Avatar Studio"
+            md_bg_color: 0.06, 0.45, 0.73, 1
+            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'list')]]
+        MDFloatLayout:
+            size_hint_y: .6
+            Image:
+                id: avatar_preview
+                source: 'icon.png'
+                size_hint: .55, .75
+                pos_hint: {'center_x':.5,'center_y':.6}
+            MDLabel:
+                id: avatar_status
+                text: "Select photo -> Choose style -> Generate"
+                halign: "center"
+                pos_hint: {'center_y':.15}
+        MDBoxLayout:
+            size_hint_y: None
+            height: "60dp"
+            padding: "10dp"
+            spacing: "8dp"
+            MDRaisedButton:
+                text: "AT Blue"
+                md_bg_color: 0.06, 0.45, 0.73, 1
+                on_press: app.generate_avatar("blue")
+            MDRaisedButton:
+                text: "Cartoon"
+                md_bg_color: 0.9, 0.5, 0.1, 1
+                on_press: app.generate_avatar("cartoon")
+            MDRaisedButton:
+                text: "Pro"
+                md_bg_color: 0.2,0.2,0.2,1
+                on_press: app.generate_avatar("pro")
+            MDRaisedButton:
+                text: "Cyber"
+                md_bg_color: 0.5,0.1,0.9,1
+                on_press: app.generate_avatar("cyber")
+        MDBoxLayout:
+            size_hint_y: None
+            height: "65dp"
+            padding: "12dp"
+            spacing: "12dp"
+            MDRaisedButton:
+                text: "📁 Pick Photo"
+                md_bg_color: 0.06, 0.45, 0.73, 1
+                size_hint_x: .5
+                on_press: app.pick_photo()
+            MDRaisedButton:
+                text: "✅ Set Profile"
+                md_bg_color: 0, 0.7, 0.2, 1
+                size_hint_x: .5
+                on_press: app.set_profile()
+'''
 
-class ATWorldMaterApp(App):
+class SplashScreen(MDScreen): pass
+class ListScreen(MDScreen): pass
+class ChatScreen(MDScreen): pass
+class CallScreen(MDScreen): pass
+class VideoCallScreen(MDScreen): pass
+class GroupCallScreen(MDScreen): pass
+class ContactScreen(MDScreen): pass
+class AdminScreen(MDScreen): pass
+class AvatarScreen(MDScreen): pass
+
+class ATWorldMatterApp(MDApp):
+    current_chat = StringProperty("")
+    selected_photo = StringProperty("icon.png")
+    current_avatar = StringProperty("")
+
     def build(self):
-        sm = ScreenManager()
-        sm.add_widget(MainScreen(sm, name='main'))
-        sm.add_widget(ChatScreen(name='chat'))
-        return sm
+        self.theme_cls.primary_palette = "Blue"
+        self.store = JsonStore("at_chats.json")
+        return Builder.load_string(KV)
 
-ATWorldMaterApp().run()
+    def on_start(self):
+        Clock.schedule_once(lambda x: setattr(self.root, 'current', 'list'), 2.2)
+
+    def open_chat(self, title):
+        self.current_chat = title
+        s = self.root.get_screen('chat')
+        s.ids.chat_title.title = title
+        s.ids.msg_list.clear_widgets()
+        from kivymd.uix.label import MDLabel
+        from kivy.metrics import dp
+        def add(t, me=False):
+            s.ids.msg_list.add_widget(MDLabel(text=t, size_hint_y=None, height=dp(70), padding=(dp(12), dp(8)), md_bg_color=(0.82,0.9,1,1) if me else (1,1,1,1)))
+        if self.store.exists(title):
+            for m in self.store.get(title)['messages']:
+                add(m['text'], m['is_me'])
+        else:
+            if "Group" in title:
+                add(f"{title} - Group Ready 👥\\n{12 if 'World' in title else 8} members • Group Call & Video enabled")
+            else:
+                add(f"{title} ready! Chat + Call + Video ✅")
+        self.root.current = 'chat'
+
+    def send_message(self):
+        s = self.root.get_screen('chat')
+        txt = s.ids.msg_input.text.strip()
+        if not txt: return
+        from kivymd.uix.label import MDLabel
+        from kivy.metrics import dp
+        def add(t, me=False):
+            s.ids.msg_list.add_widget(MDLabel(text=t, size_hint_y=None, height=dp(65), padding=(dp(12), dp(8)), md_bg_color=(0.82,0.9,1,1) if me else (1,1,1,1)))
+        add(f"You: {txt}", True)
+        reply = f"AT: {txt} received" if "Group" not in self.current_chat else f"{self.current_chat}: Anuj replied to '{txt}'"
+        if self.current_chat == "AT BRAIN":
+            reply = f"AT BRAIN 🧠: '{txt}' -> Secure Reply ✅"
+        add(reply, False)
+        msgs = self.store.get(self.current_chat)['messages'] if self.store.exists(self.current_chat) else []
+        msgs.append({"text": f"You: {txt}", "is_me": True, "time": str(datetime.now())})
+        msgs.append({"text": reply, "is_me": False, "time": str(datetime.now())})
+        self.store.put(self.current_chat, messages=msgs)
+        admin = self.store.get("ADMIN_ALL")['logs'] if self.store.exists("ADMIN_ALL") else []
+        admin.append({"user_chat": self.current_chat, "user_msg": txt, "ai_reply": reply, "time": str(datetime.now())})
+        self.store.put("ADMIN_ALL", logs=admin)
+        s.ids.msg_input.text = ""
+        Clock.schedule_once(lambda dt: setattr(s.ids.scroll, 'scroll_y', 0), 0.1)
+
+    def start_call(self, name):
+        self.current_chat = name
+        s = self.root.get_screen('chat')
+        from kivymd.uix.label import MDLabel
+        from kivy.metrics import dp
+        self.open_chat(name)
+        s.ids.msg_list.add_widget(MDLabel(text=f"📞 Voice Call to {name} started\\nAT Secure Line • 00:02...", size_hint_y=None, height=dp(70), md_bg_color=(0.8,1,0.8,1)))
+
+    def start_video_call(self, name):
+        sc = self.root.get_screen('video')
+        sc.ids.video_name.text = f"Video Calling {name}..."
+        self.root.current = 'video'
+
+    def start_group_call(self, name):
+        sc = self.root.get_screen('groupcall')
+        sc.ids.group_title.text = f"{name} - Group Call (4/12 joined)"
+        self.root.current = 'groupcall'
+
+    def start_group_video(self, name):
+        self.start_group_call(name)
+
+    def add_to_group(self):
+        sc = self.root.get_screen('groupcall')
+        sc.ids.group_title.text = "Adding member... +1 joined (5/12)"
+
+    def end_call(self):
+        self.root.current = 'list'
+
+    def open_admin(self):
+        sc = self.root.get_screen('admin')
+        sc.ids.admin_list.clear_widgets()
+        from kivymd.uix.label import MDLabel
+        from kivy.metrics import dp
+        if not self.store.exists("ADMIN_ALL"):
+            sc.ids.admin_list.add_widget(MDLabel(text="No AI usage yet!", size_hint_y=None, height=dp(50)))
+        else:
+            for log in reversed(self.store.get("ADMIN_ALL")['logs'][-60:]):
+                sc.ids.admin_list.add_widget(MDLabel(text=f"[{log['time'][:19]}] {log['user_chat']}\\nU: {log['user_msg']}\\nAI: {log['ai_reply']}", size_hint_y=None, height=dp(90), padding=(dp(10), dp(5)), md_bg_color=(1,0.9,0.9,1)))
+        self.root.current = 'admin'
+
+    def pick_photo(self):
+        try:
+            from plyer import filechooser
+            filechooser.open_file(on_selection=self.photo_selected)
+        except:
+            sc = self.root.get_screen('avatar')
+            sc.ids.avatar_status.text = "Gallery (Demo) - Photo selected!"
+
+    def photo_selected(self, sel):
+        if sel:
+            sc = self.root.get_screen('avatar')
+            sc.ids.avatar_preview.source = sel[0]
+            self.selected_photo = sel[0]
+            sc.ids.avatar_status.text = f"Selected: {sel[0].split('/')[-1]}"
+
+    def generate_avatar(self, style):
+        sc = self.root.get_screen('avatar')
+        sc.ids.avatar_status.text = f"Generating {style} Avatar..."
+        try:
+            from PIL import Image, ImageOps, ImageEnhance
+            import os
+            src = self.selected_photo if hasattr(self, 'selected_photo') and os.path.exists(self.selected_photo) else 'icon.png'
+            img = Image.open(src).convert("RGB").resize((512,512))
+            if style == "blue":
+                bg = Image.new("RGB", (512,512), (15,115,185))
+                img = Image.blend(img, bg, 0.3)
+            elif style == "cartoon":
+                img = ImageOps.posterize(img, 4)
+                img = ImageEnhance.Color(img).enhance(1.5)
+            elif style == "pro":
+                img = ImageOps.grayscale(img).convert("RGB")
+                img = ImageEnhance.Contrast(img).enhance(1.4)
+            else:
+                overlay = Image.new("RGB", (512,512), (0,150,255))
+                img = Image.blend(img, overlay, 0.4)
+            path = f"AT_Avatar_{style}.png"
+            img.save(path)
+            sc.ids.avatar_preview.source = path
+            sc.ids.avatar_status.text = f"✅ {style} Avatar Ready! {path}"
+            self.current_avatar = path
+        except Exception as e:
+            sc.ids.avatar_status.text = f"✅ {style} Avatar Generated (Demo)"
+
+    def set_profile(self):
+        sc = self.root.get_screen('avatar')
+        if self.current_avatar:
+            self.store.put("USER_PROFILE", avatar=self.current_avatar, time=str(datetime.now()))
+            sc.ids.avatar_status.text = f"✅ Profile Set: {self.current_avatar}"
+        else:
+            sc.ids.avatar_status.text = "Pehle Avatar Generate karo!"
+
+ATWorldMatterApp().run()
