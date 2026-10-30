@@ -1,8 +1,5 @@
 name: Build APK
 on: [push]
-concurrency:
-  group: apk
-  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -15,14 +12,18 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Install Deps
+      - name: Setup Buildozer
         run: |
-          sudo apt update
-          sudo apt install -y zip unzip ant wget
           pip install --upgrade pip
           pip install buildozer cython==0.29.33
+          sudo apt update && sudo apt install -y zip unzip
+          sudo rm -rf /usr/local/lib/android/sdk/ndk
       - name: Build APK
         run: |
+          unset ANDROID_NDK_ROOT
+          unset ANDROID_NDK_HOME
+          export ANDROID_NDK_ROOT=""
+          rm -rf ~/.buildozer
           SDK=$HOME/.buildozer/android/platform/android-sdk
           mkdir -p $SDK/cmdline-tools
           cd $SDK/cmdline-tools
@@ -34,17 +35,12 @@ jobs:
           mkdir -p ~/.android && touch ~/.android/repositories.cfg
           mkdir -p $SDK/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK/licenses/android-sdk-license
-          echo "d56f101e5f7b998d5c1e3f5e3b0be3d8b9b7f7b7e" > $SDK/licenses/android-sdk-preview-license
           echo "24333f8a63b6825ea9c5514f83c1051b8f1594b0" >> $SDK/licenses/android-sdk-license
+          echo "d56f101e5f7b998d5c1e3f5e3b0be3d8b9b7f7b7e" > $SDK/licenses/android-sdk-preview-license
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "build-tools;37.0.0" "platforms;android-33" "platform-tools"
-          # Hack: agar 37 me aidl nahi to 33 se copy
-          ls $SDK/build-tools/
-          if [ ! -f $SDK/build-tools/37.0.0/aidl ]; then
-            mkdir -p $SDK/build-tools/37.0.0
-            cp -r $SDK/build-tools/33.0.2/* $SDK/build-tools/37.0.0/ || true
-          fi
-          $SDK/build-tools/37.0.0/aidl --version || $SDK/build-tools/33.0.2/aidl --version || true
+          $SDK/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "platforms;android-33" "platform-tools"
+          mkdir -p $SDK/build-tools/37.0.0
+          cp -r $SDK/build-tools/33.0.2/* $SDK/build-tools/37.0.0/
           cd $GITHUB_WORKSPACE
           buildozer android debug
       - name: Upload APK
@@ -52,3 +48,4 @@ jobs:
         with:
           name: AT-World-Mater-APK
           path: bin/*.apk
+          if-no-files-found: error
