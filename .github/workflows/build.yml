@@ -16,13 +16,14 @@ jobs:
           java-version: '17'
       - name: Install deps
         run: |
+          pip install --upgrade pip
           pip install buildozer cython==0.29.33
           sudo apt-get update && sudo apt-get install -y libffi-dev libssl-dev
-      - name: Build AAB
+      - name: Build AAB - AT World Matter
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          buildozer android appbundle
-      - name: Upload
+          buildozer android release
+      - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: AT-World-Matter-AAB
