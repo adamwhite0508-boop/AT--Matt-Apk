@@ -20,6 +20,19 @@ jobs:
       - name: Build APK
         run: |
           rm -rf .buildozer bin
+          # Pehli baar chalao - SDK download hoga, fail bhi ho sakta hai
+          buildozer android debug || true
+          # License accept karo - ab sdkmanager mil jayega
+          SDKMANAGER=$(find $HOME/.buildozer -name sdkmanager -type f | head -n 1)
+          echo "Found sdkmanager at: $SDKMANAGER"
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
+          mkdir -p $ANDROID_HOME/licenses || true
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "24333f8a4f788a98278d7be218930e8097c8f5b" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          cp $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license $ANDROID_HOME/licenses/ || true
+          yes | $SDKMANAGER --licenses || true
+          # Dusri baar final build
           buildozer android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
