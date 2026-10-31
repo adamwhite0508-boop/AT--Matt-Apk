@@ -4,11 +4,10 @@ package.name = atworldmatter
 package.domain = com.atmatter.world
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
-source.include_patterns = banner.png
 version = 1.0
 requirements = python3,kivy==2.3.0,Pillow,kivymd
 orientation = portrait
-android.permissions = INTERNET,RECORD_AUDIO,CAMERA
+android.permissions = INTERNET
 android.api = 33
 android.minapi = 21
 android.build_tools_version = 33.0.2
