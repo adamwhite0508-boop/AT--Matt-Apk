@@ -4,8 +4,8 @@ package.name = atworldmatter
 package.domain = com.atmatter.world
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
-version = 1.2
-requirements = python3,kivy==2.2.0,kivymd==1.2.0,Pillow
+version = 1.3
+requirements = python3,kivy==2.3.1,kivymd==1.2.0,Pillow
 orientation = portrait
 android.permissions = INTERNET
 android.api = 33
@@ -21,5 +21,5 @@ p4a.branch = master
 p4a.bootstrap = sdl2
 
 [buildozer]
-log_level = 2
+log_level = 1
 warn_on_root = 1
