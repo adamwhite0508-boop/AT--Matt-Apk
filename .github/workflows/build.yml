@@ -19,15 +19,16 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython==0.29.33
           sudo apt-get update && sudo apt-get install -y libffi-dev libssl-dev
-      - name: Accept All Licenses & Install Build-Tools 37
+      - name: Fix sdkmanager path for Buildozer
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;34.0.0" "build-tools;37.0.0" "platforms;android-33" "platform-tools"
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;37.0.0" "build-tools;34.0.0" "platforms;android-33" "platform-tools"
+          mkdir -p /home/runner/.buildozer/android/platform/android-sdk/tools/bin
+          ln -sf $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager /home/runner/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+          ln -sf $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager /home/runner/.buildozer/android/platform/android-sdk/tools/bin/avdmanager || true
+          chmod +x /home/runner/.buildozer/android/platform/android-sdk/tools/bin/*
           mkdir -p /home/runner/.buildozer/android/platform/android-sdk/licenses
           cp -r $ANDROID_HOME/licenses/* /home/runner/.buildozer/android/platform/android-sdk/licenses/ || true
-          mkdir -p /home/runner/.buildozer/android/platform/android-sdk/build-tools
-          cp -r $ANDROID_HOME/build-tools/37.0.0 /home/runner/.buildozer/android/platform/android-sdk/build-tools/ || true
-          cp -r $ANDROID_HOME/build-tools/34.0.0 /home/runner/.buildozer/android/platform/android-sdk/build-tools/ || true
       - name: Build AAB - AT World Matter
         run: |
           buildozer android release
