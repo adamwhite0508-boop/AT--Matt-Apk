@@ -16,39 +16,10 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y git zip unzip build-essential libffi-dev libssl-dev
-          pip install buildozer cython==0.29.36 pillow
+          pip install --upgrade buildozer cython==0.29.36 pillow
       - name: Build APK
         run: |
           rm -rf .buildozer bin
-          export SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
-          mkdir -p $SDK_ROOT/licenses
-          
-          # 1st run - SDK download hoga
-          buildozer android debug || true
-          
-          # sdkmanager dhoondo - naya aur purana dono jagah
-          SDKMANAGER=$(find $HOME/.buildozer -name sdkmanager -type f | head -n 1)
-          echo "SDKMANAGER=$SDKMANAGER"
-          chmod +x $SDKMANAGER
-          
-          # tools/bin me copy karo - stable isko dhoondhta hai
-          mkdir -p $SDK_ROOT/tools/bin
-          cp $SDKMANAGER $SDK_ROOT/tools/bin/sdkmanager -f
-          
-          # License files banao
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK_ROOT/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK_ROOT/licenses/android-sdk-license
-          echo "24333f8a4f788a98278d7be218930e8097c8f5b" >> $SDK_ROOT/licenses/android-sdk-license
-          
-          # 37 ko jabardasti install - yahi Aidl ka baap hai
-          yes | $SDKMANAGER --sdk_root=$SDK_ROOT --licenses || true
-          yes | $SDKMANAGER --sdk_root=$SDK_ROOT "build-tools;37.0.0" || true
-          yes | $SDKMANAGER --sdk_root=$SDK_ROOT "build-tools;33.0.2" || true
-          yes | $SDKMANAGER --sdk_root=$SDK_ROOT "platform-tools" || true
-          
-          ls $SDK_ROOT/build-tools/ || true
-          
-          # 2nd run - final APK
           buildozer android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
