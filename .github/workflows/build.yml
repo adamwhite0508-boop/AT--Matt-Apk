@@ -20,6 +20,21 @@ jobs:
       - name: Build APK
         run: |
           rm -rf .buildozer bin
+          export SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
+          mkdir -p $SDK_ROOT/licenses
+          buildozer android debug || true
+          SDKMANAGER=$(find $HOME/.buildozer -name sdkmanager -type f | head -n 1)
+          echo "SDKMANAGER=$SDKMANAGER"
+          chmod +x $SDKMANAGER
+          mkdir -p $SDK_ROOT/tools/bin
+          cp $SDKMANAGER $SDK_ROOT/tools/bin/sdkmanager -f
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK_ROOT/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK_ROOT/licenses/android-sdk-license
+          echo "24333f8a4f788a98278d7be218930e8097c8f5b" >> $SDK_ROOT/licenses/android-sdk-license
+          yes | $SDKMANAGER --sdk_root=$SDK_ROOT --licenses || true
+          yes | $SDKMANAGER --sdk_root=$SDK_ROOT "build-tools;37.0.0" || true
+          yes | $SDKMANAGER --sdk_root=$SDK_ROOT "platform-tools" || true
+          ls $SDK_ROOT/build-tools/ -l
           buildozer android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
