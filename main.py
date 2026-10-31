@@ -29,50 +29,65 @@ MDScreenManager:
     name: 'login'
     MDFloatLayout:
         md_bg_color: 1,1,1,1
-        MDLabel:
-            text: "AT World Matter"
-            halign: "center"
-            bold: True
-            font_size: "28sp"
-            text_color: 0.06,0.45,0.73,1
-            pos_hint: {'center_y':.78}
+        # --- NAYA BANNER DESIGN - CENTERED ---
+        Image:
+            source: "banner.png"
+            size_hint: .78, .50
+            pos_hint: {'center_x':.5,'center_y':.68}
+            allow_stretch: True
+            keep_ratio: True
         MDBoxLayout:
             orientation: 'vertical'
-            size_hint: .85,.26
-            pos_hint: {'center_x':.5,'center_y':.48}
-            spacing: "14dp"
+            size_hint: .82,.34
+            pos_hint: {'center_x':.5,'center_y':.26}
+            spacing: "12dp"
             MDTextField:
-                hint_text: "Mobile number - Fast Login"
-                icon_left: "cellphone"
+                hint_text: "Email"
+                icon_left: "email"
+                mode: "round"
+                icon_left_color: 0.06,0.45,0.73,1
             MDTextField:
-                hint_text: "OTP"
-                icon_left: "key"
-        MDRaisedButton:
-            text: "Skip - Demo Login"
-            md_bg_color: 0.06,0.45,0.73,1
-            pos_hint: {'center_x':.5,'center_y':.28}
-            size_hint_x: .7
-            on_press: app.skip_login()
+                hint_text: "Password"
+                icon_left: "lock"
+                password: True
+                mode: "round"
+                icon_left_color: 0.06,0.45,0.73,1
+            MDRaisedButton:
+                text: "Log In"
+                md_bg_color: 0.06,0.45,0.73,1
+                size_hint_x: 1
+                on_press: app.skip_login()
+            MDLabel:
+                text: "Forgot password?"
+                halign: "center"
+                font_size: "11sp"
+                text_color: 0.06,0.45,0.73,1
+            MDLabel:
+                text: "Version 1.0 • AT World Matter © 2024"
+                halign: "center"
+                font_size: "9sp"
+                text_color: 0.5,0.5,0.5,1
 
 <MainScreen>:
     name: 'main'
     MDBoxLayout:
         orientation: 'vertical'
-        md_bg_color: 0.92,0.97,1,1
+        md_bg_color: 1,1,1,1
         MDBoxLayout:
             size_hint_y: None
-            height: "68dp"
+            height: "58dp"
             md_bg_color: 0.06,0.45,0.73,1
-            padding: [8,0,2,0]
-            MDIconButton:
-                icon: "earth"
-                icon_color: 1,1,1,1
-                on_press: app.open_at_world_menu()
+            padding: [8,0]
+            Image:
+                source: "banner.png"
+                size_hint: None, None
+                size: "38dp","38dp"
+                pos_hint: {'center_y':.5}
             MDLabel:
                 text: "AT World"
                 bold: True
+                font_size: "20sp"
                 text_color: 1,1,1,1
-                font_size: "22sp"
                 padding: [8,0]
             MDIconButton:
                 icon: "magnify"
@@ -84,11 +99,12 @@ MDScreenManager:
             MDIconButton:
                 icon: "dots-vertical"
                 icon_color: 1,1,1,1
+                on_press: app.open_at_world_menu()
         MDCard:
             size_hint_y: None
-            height: "48dp"
-            md_bg_color: 1,1,1,1
-            radius: [0,0,18,18]
+            height: "44dp"
+            md_bg_color: 0.96,0.96,0.96,1
+            radius: [0,0,12,12]
             padding: [12,0]
             MDTextField:
                 id: main_search
@@ -103,69 +119,63 @@ MDScreenManager:
                 padding: "6dp"
         MDCard:
             size_hint_y: None
-            height: "68dp"
+            height: "62dp"
             md_bg_color: 1,1,1,1
-            radius: [18,18,0,0]
+            radius: [14,14,0,0]
             MDBoxLayout:
                 MDBoxLayout:
                     orientation: 'vertical'
                     MDIconButton:
-                        id: tab_chats
                         icon: "chat"
-                        theme_text_color: "Custom"
                         text_color: 0.06,0.45,0.73,1
                         pos_hint: {'center_x':.5}
                         on_press: app.show_tab('chats')
                     MDLabel:
                         text: "Chats"
                         halign: "center"
-                        font_size: "11sp"
+                        font_size: "10sp"
                         bold: True
                         text_color: 0.06,0.45,0.73,1
                 MDBoxLayout:
                     orientation: 'vertical'
                     MDIconButton:
-                        id: tab_updates
                         icon: "update"
                         pos_hint: {'center_x':.5}
                         on_press: app.show_tab('updates')
                     MDLabel:
                         text: "Updates"
                         halign: "center"
-                        font_size: "11sp"
+                        font_size: "10sp"
                 MDBoxLayout:
                     orientation: 'vertical'
                     MDIconButton:
-                        id: tab_ads
                         icon: "bullhorn"
                         pos_hint: {'center_x':.5}
                         on_press: app.show_tab('ads')
                     MDLabel:
                         text: "Ads"
                         halign: "center"
-                        font_size: "11sp"
+                        font_size: "10sp"
                 MDBoxLayout:
                     orientation: 'vertical'
                     MDIconButton:
-                        id: tab_calls
                         icon: "phone"
                         pos_hint: {'center_x':.5}
                         on_press: app.show_tab('calls')
                     MDLabel:
                         text: "Calls"
                         halign: "center"
-                        font_size: "11sp"
+                        font_size: "10sp"
 
 <ATWorldMenuScreen>:
     name: 'at_menu'
     MDBoxLayout:
         orientation: 'vertical'
-        md_bg_color: 0.78,0.89,0.98,1
+        md_bg_color: 0.92,0.97,1,1
         MDBoxLayout:
             size_hint_y: None
-            height: "68dp"
+            height: "58dp"
             md_bg_color: 0.06,0.45,0.73,1
-            padding: [8,0]
             MDIconButton:
                 icon: "arrow-left"
                 icon_color: 1,1,1,1
@@ -173,20 +183,18 @@ MDScreenManager:
             MDLabel:
                 text: "AT World - 7 Tools"
                 bold: True
-                font_size: "19sp"
                 text_color: 1,1,1,1
-                padding: [8,0]
         ScrollView:
             MDBoxLayout:
                 orientation: 'vertical'
                 padding: "14dp"
-                spacing: "12dp"
+                spacing: "10dp"
                 adaptive_height: True
                 MDCard:
                     size_hint_y: None
-                    height: "72dp"
+                    height: "68dp"
                     md_bg_color: 0.65,0.85,0.98,1
-                    radius: [16]
+                    radius: [14]
                     padding: "12dp"
                     on_release: app.root.current = 'jarvis'
                     MDLabel:
@@ -194,9 +202,9 @@ MDScreenManager:
                         bold: True
                 MDCard:
                     size_hint_y: None
-                    height: "60dp"
+                    height: "58dp"
                     md_bg_color: 0.68,0.85,0.97,1
-                    radius: [16]
+                    radius: [14]
                     padding: "12dp"
                     MDLabel:
                         text: "AT Matter - Scenes"
@@ -206,7 +214,6 @@ MDScreenManager:
     name: 'chat'
     MDBoxLayout:
         orientation: 'vertical'
-        md_bg_color: 0.89,0.85,0.78,1
         MDTopAppBar:
             id: chat_bar
             title: "Contact"
@@ -222,9 +229,8 @@ MDScreenManager:
                 adaptive_height: True
         MDCard:
             size_hint_y: None
-            height: "62dp"
+            height: "58dp"
             md_bg_color: 1,1,1,1
-            radius: [18,18,0,0]
             padding: "6dp"
             MDTextField:
                 id: msg_input
@@ -232,7 +238,6 @@ MDScreenManager:
                 mode: "round"
             MDIconButton:
                 icon: "send"
-                theme_text_color: "Custom"
                 text_color: 0.06,0.45,0.73,1
                 on_press: app.send_message()
 
@@ -240,7 +245,6 @@ MDScreenManager:
     name: 'jarvis'
     MDBoxLayout:
         orientation: 'vertical'
-        md_bg_color: 0.95,0.98,1,1
         MDTopAppBar:
             title: "AT Brain - Jarvis Email"
             type: "small"
@@ -248,7 +252,7 @@ MDScreenManager:
         MDBoxLayout:
             orientation: 'vertical'
             padding: "16dp"
-            spacing: "14dp"
+            spacing: "12dp"
             MDTextField:
                 id: jarvis_dept
                 hint_text: "Department"
@@ -283,17 +287,16 @@ class ATWorldMatterApp(MDApp):
         return Builder.load_string(KV)
     def on_start(self): Clock.schedule_once(lambda dt: self.show_tab('chats'), 0.3)
     def show_tab(self, tab):
-        from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, MDListItemLeadingAvatar, MDListItemTrailingSupportingText
+        from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, MDListItemLeadingAvatar
         main = self.root.get_screen('main')
         lst = main.ids.dynamic_list
         lst.clear_widgets()
         if tab == 'chats':
             for av, name, msg, time, unread in self.all_chats:
-                item = MDListItem(MDListItemLeadingAvatar(text=av), MDListItemHeadlineText(text=name, bold=True), MDListItemSupportingText(text=f"{msg}"), MDListItemTrailingSupportingText(text=f"{time} ✓✓"))
+                item = MDListItem(MDListItemLeadingAvatar(text=av), MDListItemHeadlineText(text=name, bold=True), MDListItemSupportingText(text=f"{msg} • {time}"))
                 item.bind(on_release=lambda x, n=name: self.open_chat(n))
                 lst.add_widget(item)
-    def filter_chats(self, text):
-        if not text: self.show_tab('chats'); return
+    def filter_chats(self, text): pass
     def focus_search(self): self.root.get_screen('main').ids.main_search.focus = True
     def skip_login(self): self.root.current = 'main'
     def open_at_world_menu(self): self.root.current = 'at_menu'
