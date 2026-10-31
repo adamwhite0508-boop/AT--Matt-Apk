@@ -1,531 +1,417 @@
 from kivymd.app import MDApp
 from kivy.lang import Builder
-from kivy.storage.jsonstore import JsonStore
-from kivy.properties import StringProperty, NumericProperty, BooleanProperty
 from kivy.clock import Clock
-from kivy.metrics import dp
-from kivy.utils import platform
-import random
-import os
-import re
+from kivy.uix.screenmanager import Screen
 from datetime import datetime
 
-# ======== NEW FEATURE: AT World Matter Security + User AI + JARVIS ========
 class SecurityGuard:
-    def __init__(self):
-        self.banned_words = ["abuse", "sarkar virodhi", "bomb", "gaali", "hate", "terror"]
-        self.hacking_words = ["hack", "crack", "mod apk", "bypass", "inject", "sql", "../", "root", "cheat"]
-        self.store = JsonStore('at_world_matter_security.json')
-    def check_all(self, user_id, message):
-        msg = message.lower()
-        for w in self.hacking_words:
-            if w in msg:
-                return False, "🚫 AT World Matter Security: Hacking attempt blocked!"
-        for w in self.banned_words:
-            if w in msg:
-                return self.take_action(user_id, w)
+    def check_all(self, uid, msg):
+        bad = ["abuse","bomb","gaali","hack","crack","sarkar virodhi","terror"]
+        for w in bad:
+            if w in msg.lower(): return False, f"🚫 {w} blocked"
         return True, ""
-    def take_action(self, user_id, word):
-        warnings = self.store.get(user_id)['count'] if self.store.exists(user_id) else 0
-        warnings += 1
-        if warnings == 1:
-            self.store.put(user_id, count=warnings)
-            return False, f"⚠️ AT World Matter Warning 1/2: '{word}' allowed nahi hai."
-        else:
-            self.store.put(user_id, count=warnings, blocked=True)
-            return False, "🚫 BLOCKED by AT World Matter: 24hr block."
-    def is_blocked(self, user_id):
-        if self.store.exists(user_id):
-            return self.store.get(user_id).get('blocked', False)
-        return False
 
 class UserMainAI:
-    def __init__(self):
-        self.gemini_key = "" # Yaha aapki FREE API Key ayegi
-        try:
-            store = JsonStore('at_chats.json')
-            if store.exists("GEMINI_KEY"):
-                self.gemini_key = store.get("GEMINI_KEY")['key']
-        except:
-            pass
-
-    def get_reply(self, user_message):
-        msg = user_message.lower()
-        # JARVIS TRIGGER
-        if any(x in msg for x in ["email bana", "sarkari", "government", "jal vibhag", "water pipeline", "complaint", "chithi"]):
-            return "JARVIS_MODE: Sir, samajh gaya! Aapko sarkari email banana hai. Main aapko Jarvis Screen pe le chalta hu - Waha se 2 click me ban jayega! 🔥"
-        if "hello" in msg or "hi" in msg:
-            return "Hello! Mai AT World Matter AI hu! Jarvis Mode ON hai - Bolo kya banana hai? Email, Letter, RTI? 🧠"
-        elif "kaun ho" in msg:
-            return "Mai AT World Matter ka official AT BRAIN hu! Iron Man ke Jarvis jaisa - Bolke kaam karunga!"
-        return f"AT BRAIN 🧠: '{user_message}' samajh gaya! 🔐 Agar email banana hai to bolo 'email bana de'"
-
-    def create_govt_email_with_gemini(self, dept, tone, problem, consumer_no, address):
-        # Agar Gemini Key nahi hai to Offline Template dega - FREE
-        if not self.gemini_key or len(self.gemini_key) < 10:
-            # OFFLINE TEMPLATE - Bina Internet ke
-            if tone == "Sakht":
-                body = f"Subject: Urgent Complaint - {dept} - Consumer No {consumer_no}\n\nTo: {dept.lower()}@gov.in\n\nSeva me,\nShri {dept} Adhikari,\n\nVishay: {problem} - {address} me gambhir samasya\n\nMahoday, Main {address} ka niwasi hu. Mere ghar ke bahar {problem} pichle 15 dino se hai. Maine 2 baar Jal Vibhag me complaint ki (Consumer No: {consumer_no}) par koi sunwai nahi hui.\n\nAapse nivedan hai ki 48 ghante me karwai karein, anyatha mujhe RTI / Consumer Forum me jana padega.\n\nDhanyavad.\n[Apka Naam]\n{address}\nDate: {datetime.now().strftime('%d-%m-%Y')}"
-            else:
-                body = f"Subject: Request: {problem} - {address}\n\nRespected Sir, {dept} Department,\n\nMere ghar {address} ke bahar {problem} hai. Consumer No: {consumer_no}. Kripya jaldi samadhan karein.\n\nDhanyavad."
-            return body
-
-        # ONLINE - Gemini FREE se
-        try:
-            import google.generativeai as genai
-            genai.configure(api_key=self.gemini_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            prompt = f"Write a formal government complaint email in Hindi+English mix for {dept}. Tone: {tone}. Problem: {problem}. Consumer No: {consumer_no}, Address: {address}. Include Subject, To, Body, mention 2 previous complaints. Make it professional for Indian govt."
-            response = model.generate_content(prompt)
-            return response.text
-        except Exception as e:
-            return f"Offline Email (Gemini Error: {e}):\n\nTo: {dept}@gov.in\nSubject: {problem}\n\nRespected Sir, {problem} at {address}. Consumer {consumer_no}. Please resolve in 48hrs."
-
-    def log_to_main_ai(self, city, area, type_complaint):
-        # Ye Main AI Heatmap ke liye - Supabase me jayega
-        try:
-            # Yaha Supabase code ayega - Abhi local me save kar rahe hain
-            store = JsonStore('at_main_ai_heatmap.json')
-            key = f"{city}_{area}_{type_complaint}"
-            count = store.get(key)['count'] if store.exists(key) else 0
-            store.put(key, count=count+1, city=city, area=area, type=type_complaint, last_date=str(datetime.now()))
-            print(f"Main AI Logged: {key} -> {count+1}")
-        except:
-            pass
-
-def is_rooted_device():
-    if platform != 'android': return False
-    for f in ["/system/xbin/su", "/system/bin/su"]:
-        if os.path.exists(f): return True
-    return False
-# ======== NEW FEATURE END ========
+    def get_reply(self, txt): 
+        return "JARVIS_MODE" if "email" in txt.lower() else "OK"
+    def make_email(self, dept, prob):
+        return f"To: {dept}@gov.in\nSubject: {prob}\n\nRespected Sir,\n{prob} at Gomti Nagar Lucknow (226010).\nConsumer: AT-4521\nResolve in 48hrs.\n\nThanks\n{datetime.now().strftime('%d-%m-%Y')}"
 
 KV = '''
 MDScreenManager:
     LoginScreen:
     MainScreen:
+    ATWorldMenuScreen:
     ChatScreen:
-    VideoScreen:
-    SettingsScreen:
-    PosterScreen:
-    AvatarScreen:
-    AdminScreen:
-    GroupCallScreen:
-    StatusScreen:
     JarvisScreen:
 
 <LoginScreen>:
     name: 'login'
     MDFloatLayout:
         md_bg_color: 1,1,1,1
-        Image:
-            source: 'banner.png'
-            size_hint: .7,.32
-            pos_hint: {'center_x':.5,'center_y':.75}
         MDLabel:
-            text: "AT World Matter - Jarvis ON"
+            text: "AT World Matter"
             halign: "center"
             bold: True
+            font_size: "28sp"
             text_color: 0.06,0.45,0.73,1
-            pos_hint: {'center_y':.56}
-            font_size: "20sp"
-            on_touch_down: app.on_logo_tap() if self.collide_point(*args[1].pos) else None
+            pos_hint: {'center_y':.78}
+        MDLabel:
+            text: "Ocean Blue Light • Fast Login"
+            halign: "center"
+            font_size: "12sp"
+            text_color: 0.06,0.45,0.73,0.6
+            pos_hint: {'center_y':.74}
         MDBoxLayout:
             orientation: 'vertical'
-            size_hint: .85,.32
-            pos_hint: {'center_x':.5,'center_y':.35}
-            spacing: "12dp"
+            size_hint: .85,.26
+            pos_hint: {'center_x':.5,'center_y':.48}
+            spacing: "14dp"
             MDTextField:
-                id: phone_input
-                hint_text: "Mobile number"
-                input_filter: "int"
-                max_text_length: 10
+                hint_text: "Mobile number - Fast Login"
                 icon_left: "cellphone"
             MDTextField:
-                id: otp_input
                 hint_text: "OTP"
-                input_filter: "int"
-                max_text_length: 6
                 icon_left: "key"
-            MDLabel:
-                id: otp_status
-                text: "Jarvis Secure Mode - AT World Matter ✅"
-                halign: "center"
-                font_size: "11sp"
-                text_color: 0,0.6,0,1
-        MDBoxLayout:
-            size_hint: .85,None
-            height: "48dp"
-            pos_hint: {'center_x':.5,'center_y':.17}
-            spacing: "10dp"
-            MDRaisedButton:
-                text: "Send OTP"
-                md_bg_color: 0.06,0.45,0.73,1
-                size_hint_x: .5
-                on_press: app.send_otp()
-            MDRaisedButton:
-                text: "Verify"
-                md_bg_color: 0,0.6,0.2,1
-                size_hint_x: .5
-                on_press: app.verify_otp()
-        MDTextButton:
+        MDRaisedButton:
             text: "Skip - Demo Login"
-            text_color: 0.06,0.45,0.73,1
-            bold: True
-            pos_hint: {'center_x':.5,'center_y':.09}
+            md_bg_color: 0.06,0.45,0.73,1
+            pos_hint: {'center_x':.5,'center_y':.28}
+            size_hint_x: .7
             on_press: app.skip_login()
 
 <MainScreen>:
     name: 'main'
     MDBoxLayout:
         orientation: 'vertical'
-        md_bg_color: 1,1,1,1
-        MDTopAppBar:
-            title: "AT World Matter"
-            md_bg_color: 1,1,1,1
-            specific_text_color: 0.06,0.45,0.73,1
-            right_action_items: [["email-edit", lambda x: setattr(app.root, 'current', 'jarvis')], ["bell-ring", lambda x: app.test_local_push()], ["shield-account", lambda x: setattr(app.root, 'current', 'admin')], ["cog", lambda x: setattr(app.root, 'current', 'settings')]]
+        md_bg_color: 0.92,0.97,1,1
         MDBoxLayout:
             size_hint_y: None
-            height: "48dp"
-            MDFlatButton:
-                id: tab_chats
-                text: "CHATS"
+            height: "68dp"
+            md_bg_color: 0.06,0.45,0.73,1
+            padding: [8,0,2,0]
+            MDIconButton:
+                icon: "earth"
+                icon_color: 1,1,1,1
+                icon_size: "28sp"
+                md_bg_color: 0.1,0.55,0.85,1
+                on_press: app.open_at_world_menu()
+            MDLabel:
+                text: "AT World"
                 bold: True
-                text_color: 0.06,0.45,0.73,1
-                size_hint_x: .25
-                on_press: app.switch_tab('chats')
-            MDFlatButton:
-                id: tab_status
-                text: "STATUS"
-                text_color: 0.6,0.6,0.6,1
-                size_hint_x: .25
-                on_press: app.switch_tab('status')
-            MDFlatButton:
-                id: tab_groups
-                text: "GROUPS"
-                text_color: 0.6,0.6,0.6,1
-                size_hint_x: .25
-                on_press: app.switch_tab('groups')
-            MDFlatButton:
-                id: tab_calls
-                text: "CALLS"
-                text_color: 0.6,0.6,0.6,1
-                size_hint_x: .25
-                on_press: app.switch_tab('calls')
+                text_color: 1,1,1,1
+                font_size: "22sp"
+                padding: [8,0]
+            MDIconButton:
+                icon: "magnify"
+                icon_color: 1,1,1,1
+                on_press: app.focus_search()
+            MDIconButton:
+                icon: "camera-outline"
+                icon_color: 1,1,1,1
+            MDIconButton:
+                icon: "dots-vertical"
+                icon_color: 1,1,1,1
+        MDCard:
+            size_hint_y: None
+            height: "48dp"
+            md_bg_color: 1,1,1,1
+            radius: [0,0,18,18]
+            padding: [12,0]
+            MDTextField:
+                id: main_search
+                hint_text: "Search chats, status, ads..."
+                mode: "fill"
+                fill_color: 0,0,0,0
+                line_color_normal: 0,0,0,0
+                on_text: app.filter_chats(self.text)
         ScrollView:
             MDList:
-                id: chat_list
-        MDFloatLayout:
+                id: dynamic_list
+                padding: "6dp"
+        MDCard:
             size_hint_y: None
-            height: "75dp"
-            MDFabButton:
-                id: fab
-                icon: "message-text"
-                md_bg_color: 0.06,0.45,0.73,1
-                pos_hint: {'x':.82,'y':.15}
-                on_press: app.fab_action()
+            height: "68dp"
+            md_bg_color: 1,1,1,1
+            radius: [18,18,0,0]
+            MDBoxLayout:
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    MDIconButton:
+                        id: tab_chats
+                        icon: "chat"
+                        theme_text_color: "Custom"
+                        text_color: 0.06,0.45,0.73,1
+                        pos_hint: {'center_x':.5}
+                        on_press: app.show_tab('chats')
+                    MDLabel:
+                        text: "Chats"
+                        halign: "center"
+                        font_size: "11sp"
+                        bold: True
+                        text_color: 0.06,0.45,0.73,1
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    MDIconButton:
+                        id: tab_updates
+                        icon: "update"
+                        pos_hint: {'center_x':.5}
+                        on_press: app.show_tab('updates')
+                    MDLabel:
+                        text: "Updates"
+                        halign: "center"
+                        font_size: "11sp"
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    MDIconButton:
+                        id: tab_ads
+                        icon: "bullhorn"
+                        pos_hint: {'center_x':.5}
+                        on_press: app.show_tab('ads')
+                    MDLabel:
+                        text: "Ads"
+                        halign: "center"
+                        font_size: "11sp"
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    MDIconButton:
+                        id: tab_calls
+                        icon: "phone"
+                        pos_hint: {'center_x':.5}
+                        on_press: app.show_tab('calls')
+                    MDLabel:
+                        text: "Calls"
+                        halign: "center"
+                        font_size: "11sp"
 
-<JarvisScreen>:
-    name: 'jarvis'
+<ATWorldMenuScreen>:
+    name: 'at_menu'
     MDBoxLayout:
         orientation: 'vertical'
-        md_bg_color: 1,1,1,1
-        MDTopAppBar:
-            title: "AT Jarvis - Sarkari Email"
-            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'main')]]
-            right_action_items: [["content-copy", lambda x: app.copy_jarvis_email()]]
+        md_bg_color: 0.78,0.89,0.98,1
+        MDBoxLayout:
+            size_hint_y: None
+            height: "68dp"
+            md_bg_color: 0.06,0.45,0.73,1
+            padding: [8,0]
+            MDIconButton:
+                icon: "arrow-left"
+                icon_color: 1,1,1,1
+                on_press: app.root.current = 'main'
+            MDLabel:
+                text: "AT World - 7 Tools"
+                bold: True
+                font_size: "19sp"
+                text_color: 1,1,1,1
+                padding: [8,0]
         ScrollView:
             MDBoxLayout:
                 orientation: 'vertical'
-                padding: "15dp"
+                padding: "14dp"
                 spacing: "12dp"
                 adaptive_height: True
-                MDLabel:
-                    text: "Iron Man Jarvis - Bolo, Email Bana Du?"
-                    bold: True
-                    font_size: "16sp"
-                    size_hint_y: None
-                    height: "30dp"
-                MDBoxLayout:
-                    size_hint_y: None
-                    height: "50dp"
-                    spacing: "10dp"
-                    MDRaisedButton:
-                        text: "📷 Bill Scan Karo"
-                        md_bg_color: 0.06,0.45,0.73,1
-                        size_hint_x: .5
-                        on_press: app.scan_bill()
-                    MDRaisedButton:
-                        text: "🎤 Bolke Batao"
-                        md_bg_color: 0.6,0.2,0.8,1
-                        size_hint_x: .5
-                        on_press: app.voice_to_text()
-                MDTextField:
-                    id: jarvis_dept
-                    hint_text: "Kis Vibhag Ko? Ex: Jal Vibhag, Nagar Nigam"
-                    text: "Jal Vibhag"
-                MDTextField:
-                    id: jarvis_consumer
-                    hint_text: "Consumer No / Bill No (Scan se auto ayega)"
-                MDTextField:
-                    id: jarvis_address
-                    hint_text: "Apka Address? Ex: Gomti Nagar, Lucknow"
-                    text: "Gomti Nagar, Lucknow"
-                MDTextField:
-                    id: jarvis_problem
-                    hint_text: "Problem Kya Hai?"
-                    text: "Ghar ke bahar water pipeline tooti hai, paani waste ho raha hai"
-                    multiline: True
-                MDBoxLayout:
-                    size_hint_y: None
-                    height: "45dp"
-                    spacing: "8dp"
-                    MDLabel:
-                        text: "Tone:"
-                        size_hint_x: .2
-                    MDRaisedButton:
-                        id: tone_pyaar
-                        text: "Pyar Se"
-                        size_hint_x: .25
-                        md_bg_color: 0,0.6,0,1
-                        on_press: app.set_tone('Pyar Se')
-                    MDRaisedButton:
-                        id: tone_sakht
-                        text: "Sakht"
-                        size_hint_x: .25
-                        md_bg_color: 1,0.5,0,1
-                        on_press: app.set_tone('Sakht')
-                    MDRaisedButton:
-                        id: tone_kanooni
-                        text: "Kanooni"
-                        size_hint_x: .3
-                        md_bg_color: 1,0,0,1
-                        on_press: app.set_tone('Kanooni')
-                MDRaisedButton:
-                    text: "⚡ Jarvis Se Email Banwao"
-                    md_bg_color: 0.06,0.45,0.73,1
-                    size_hint_y: None
-                    height: "50dp"
-                    font_size: "16sp"
-                    bold: True
-                    on_press: app.generate_jarvis_email()
                 MDCard:
                     size_hint_y: None
-                    height: "350dp"
-                    md_bg_color: 0.95,0.95,0.95,1
-                    padding: "10dp"
-                    ScrollView:
-                        MDLabel:
-                            id: jarvis_output
-                            text: "Yaha aapka sarkari email ayega...\\n\\nExample: Aap 'Bill Scan' dabao to Consumer No auto bhar jayega, fir 'Email Banwao' dabao."
-                            size_hint_y: None
-                            height: self.texture_size[1]
-                            text_size: self.width, None
-
-<StatusScreen>:
-    name: 'status_main'
-    MDBoxLayout:
-        orientation: 'vertical'
-        md_bg_color: 1,1,1,1
-        MDTopAppBar:
-            title: "Status"
-            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'main')]]
-            right_action_items: [["plus", lambda x: app.add_status()]]
-        ScrollView:
-            MDList:
-                id: status_list
-                padding: "10dp"
+                    height: "72dp"
+                    md_bg_color: 0.65,0.85,0.98,1
+                    radius: [16]
+                    padding: "12dp"
+                    on_release: app.root.current = 'jarvis'
+                    MDLabel:
+                        text: "AT Brain - AI Chat & Jarvis Email"
+                        bold: True
+                MDCard:
+                    size_hint_y: None
+                    height: "72dp"
+                    md_bg_color: 1,0.9,0.7,1
+                    radius: [16]
+                    padding: "12dp"
+                    MDLabel:
+                        text: "AT Remote X - AnyDesk Killer - Small icon big work"
+                        bold: True
+                MDCard:
+                    size_hint_y: None
+                    height: "60dp"
+                    md_bg_color: 0.68,0.85,0.97,1
+                    radius: [16]
+                    padding: "12dp"
+                    MDLabel:
+                        text: "AT Matter - Scenes"
+                        bold: True
+                MDCard:
+                    size_hint_y: None
+                    height: "60dp"
+                    md_bg_color: 0.68,0.85,0.97,1
+                    radius: [16]
+                    padding: "12dp"
+                    MDLabel:
+                        text: "AT Poster Studio - Create Posters"
+                        bold: True
+                MDCard:
+                    size_hint_y: None
+                    height: "60dp"
+                    md_bg_color: 0.68,0.85,0.97,1
+                    radius: [16]
+                    padding: "12dp"
+                    MDLabel:
+                        text: "AT Avatar Studio - AI Avatars"
+                        bold: True
+                MDCard:
+                    size_hint_y: None
+                    height: "60dp"
+                    md_bg_color: 0.68,0.85,0.97,1
+                    radius: [16]
+                    padding: "12dp"
+                    MDLabel:
+                        text: "AT Security Guard - Protection"
+                        bold: True
+                MDCard:
+                    size_hint_y: None
+                    height: "60dp"
+                    md_bg_color: 0.68,0.85,0.97,1
+                    radius: [16]
+                    padding: "12dp"
+                    MDLabel:
+                        text: "AT Compressor - Compress Files"
+                        bold: True
 
 <ChatScreen>:
     name: 'chat'
     MDBoxLayout:
         orientation: 'vertical'
-        md_bg_color: 0.93,0.9,0.84,1
+        md_bg_color: 0.89,0.85,0.78,1
         MDTopAppBar:
-            id: chat_title
-            title: "Chat"
-            md_bg_color: 1,1,1,1
+            id: chat_bar
+            title: "Contact"
+            type: "small"
+            md_bg_color: 0.06,0.45,0.73,1
             left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'main')]]
-            right_action_items: [["video", lambda x: app.start_video_call(app.current_chat)], ["phone", lambda x: app.start_call(app.current_chat)], ["paperclip", lambda x: app.share_file()]]
-        MDLabel:
-            id: status_label
-            text: "online - AT World Matter Secure"
-            font_size: "11sp"
-            text_color: 0,0.6,0,1
-            size_hint_y: None
-            height: "18dp"
-            padding: [15,0]
-            md_bg_color: 1,1,1,1
+            right_action_items: [["video", lambda x: None], ["phone", lambda x: None]]
         ScrollView:
-            id: chat_scroll
-            MDList:
+            MDBoxLayout:
                 id: msg_list
+                orientation: 'vertical'
                 padding: "10dp"
-                spacing: "6dp"
-        MDBoxLayout:
+                spacing: "8dp"
+                adaptive_height: True
+        MDCard:
             size_hint_y: None
-            height: "56dp"
-            padding: "6dp"
-            spacing: "6dp"
+            height: "62dp"
             md_bg_color: 1,1,1,1
-            MDIconButton:
-                icon: "microphone"
-                theme_text_color: "Custom"
-                text_color: 0.06,0.45,0.73,1
-                on_press: app.start_voice_record()
-                on_release: app.stop_voice_record()
+            radius: [18,18,0,0]
+            padding: "6dp"
             MDTextField:
                 id: msg_input
-                hint_text: "Message - 'email bana de' bolo"
+                hint_text: "Message"
                 mode: "round"
-                on_text: app.show_typing(self.text)
             MDIconButton:
                 icon: "send"
-                md_bg_color: 0.06,0.45,0.73,1
-                icon_color: 1,1,1,1
+                theme_text_color: "Custom"
+                text_color: 0.06,0.45,0.73,1
                 on_press: app.send_message()
 
-<VideoScreen>:
-    name: 'video'
-    MDFloatLayout:
-        md_bg_color: 0.05,0.05,0.08,1
-        Image:
-            source: 'icon.png'
-            size_hint: .5,.5
-            pos_hint: {'center_x':.5,'center_y':.6}
-        MDLabel:
-            id: video_name
-            text: "Calling..."
-            halign: "center"
-            text_color: 1,1,1,1
-            font_style: "H6"
-            pos_hint: {'center_y':.32}
-        MDLabel:
-            id: agora_status
-            text: "Demo Mode - AT World Matter Secure"
-            halign: "center"
-            text_color: 0,1,0,1
-            font_size: "12sp"
-            pos_hint: {'center_y':.25}
-        MDFabButton:
-            icon: "phone-hangup"
-            md_bg_color: 1,0.2,0.2,1
-            pos_hint: {'center_x':.5,'y':.05}
-            on_release: app.root.current = 'main'
-
-<GroupCallScreen>:
-    name: 'groupcall'
+<JarvisScreen>:
+    name: 'jarvis'
     MDBoxLayout:
         orientation: 'vertical'
-        md_bg_color: 0.05,0.05,0.08,1
+        md_bg_color: 0.95,0.98,1,1
         MDTopAppBar:
-            title: "Group Call - 6 People"
-            md_bg_color: 0.1,0.1,0.1,1
-            specific_text_color: 1,1,1,1
-            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'main')]]
-        MDGridLayout:
-            cols: 2
-            spacing: "5dp"
-            padding: "5dp"
-            MDCard:
-                md_bg_color: 0.2,0.2,0.2,1
-                MDLabel:
-                    text: "You"
-                    halign: "center"
-                    text_color: 0,1,0,1
-            MDCard:
-                md_bg_color: 0.2,0.2,0.2,1
-                MDLabel:
-                    text: "Anuj"
-                    halign: "center"
-                    text_color: 1,1,1,1
-            MDCard:
-                md_bg_color: 0.2,0.2,0.2,1
-                MDLabel:
-                    text: "Riya"
-                    halign: "center"
-                    text_color: 1,1,1,1
-            MDCard:
-                md_bg_color: 0.2,0.2,0.2,1
-                MDLabel:
-                    text: "+3 more"
-                    halign: "center"
-                    text_color: 1,1,0,1
-        MDFabButton:
-            icon: "phone-hangup"
-            md_bg_color: 1,0.2,0.2,1
-            pos_hint: {'center_x':.5,'y':.05}
-            on_release: app.root.current = 'main'
-
-<PosterScreen>:
-    name: 'poster'
-    MDBoxLayout:
-        orientation: 'vertical'
-        md_bg_color: 1,1,1,1
-        MDTopAppBar:
-            title: "Poster Studio"
-            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'main')]]
+            title: "AT Brain - Jarvis Email"
+            type: "small"
+            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'at_menu')]]
         MDBoxLayout:
             orientation: 'vertical'
-            padding: "15dp"
-            spacing: "12dp"
+            padding: "16dp"
+            spacing: "14dp"
             MDTextField:
-                id: poster_text
-                hint_text: "Poster pe kya likhna hai?"
-                text: "AT World Matter"
-            MDCard:
-                size_hint_y: None
-                height: "250dp"
-                md_bg_color: 0.06,0.45,0.73,1
-                padding: "15dp"
-                MDLabel:
-                    id: poster_preview
-                    text: "AT World Matter\\nPoster Preview"
-                    halign: "center"
-                    text_color: 1,1,1,1
-                    font_style: "H5"
-                    bold: True
-            MDBoxLayout:
-                size_hint_y: None
-                height: "45dp"
-                spacing: "10dp"
-                MDRaisedButton:
-                    text: "Blue Theme"
-                    md_bg_color: 0.06,0.45,0.73,1
-                    size_hint_x: .5
-                    on_press: app.create_poster('blue')
-                MDRaisedButton:
-                    text: "Festival"
-                    md_bg_color: 1,0.5,0,1
-                    size_hint_x: .5
-                    on_press: app.create_poster('festival')
+                id: jarvis_dept
+                hint_text: "Department"
+                text: "Jal Vibhag Lucknow"
+            MDTextField:
+                id: jarvis_problem
+                hint_text: "Problem"
+                text: "Pipeline tooti hai, 3 din se paani nahi"
             MDRaisedButton:
-                text: "Save Poster"
-                md_bg_color: 0,0.6,0.2,1
-                pos_hint: {'center_x':.5}
-                on_press: app.save_poster()
+                text: "Email Banwao"
+                md_bg_color: 0.06,0.45,0.73,1
+                size_hint_x: 1
+                on_press: app.generate_jarvis_email()
+            MDScrollView:
+                MDLabel:
+                    id: jarvis_output
+                    text: "Email yaha banega..."
+                    adaptive_height: True
+'''
 
-<AvatarScreen>:
-    name: 'avatar'
-    MDBoxLayout:
-        orientation: 'vertical'
-        md_bg_color: 1,1,1,1
-        MDTopAppBar:
-            title: "AI Avatar Studio"
-            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'main')]]
-        MDBoxLayout:
-            orientation: 'vertical'
-            padding: "15dp"
-            spacing: "15dp"
-            Image:
-                id: avatar_img
-                source: 'icon.png'
-                size_hint: None,None
-                size: "200dp","200dp"
-                pos_hint: {'center_x':.5}
-            MDLabel:
-                id: avatar_status
-                text: "Tap to generate your avatar"
-                halign: "center"
-           
+class LoginScreen(Screen): pass
+class MainScreen(Screen): pass
+class ATWorldMenuScreen(Screen): pass
+class ChatScreen(Screen): pass
+class JarvisScreen(Screen): pass
+
+class ATWorldMatterApp(MDApp):
+    def build(self):
+        self.security = SecurityGuard()
+        self.brain = UserMainAI()
+        self.all_chats = [
+            ("AJ", "Alice Johnson", "Sounds good! See you then", "10:32", "2"),
+            ("M", "Mom", "Don't forget to call me", "09:15", ""),
+            ("JP", "John Patel", "Sent document please review", "Yesterday", "1"),
+        ]
+        self.status_data = [("Alice","10:32 AM","Mom, John, You"),("Mom","09:15 AM","Alice, You")]
+        self.ads_data = [("iPhone 15 - 45k","Gomti Nagar • 2h ago"),("1BHK Rent","Indira Nagar • 5h ago")]
+        self.call_data = [("Alice","Outgoing • 2:34 • Today","phone",False),("Mom","Missed • Yesterday","phone-missed",True),("John","Incoming • 5:12","phone-incoming",False)]
+        return Builder.load_string(KV)
+    
+    def on_start(self):
+        Clock.schedule_once(lambda dt: self.show_tab('chats'), 0.3)
+    
+    def show_tab(self, tab):
+        from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, MDListItemLeadingAvatar, MDListItemTrailingIcon, MDListItemTrailingSupportingText
+        main = self.root.get_screen('main')
+        lst = main.ids.dynamic_list
+        lst.clear_widgets()
+        for t in ['chats','updates','ads','calls']:
+            try: main.ids[f'tab_{t}'].text_color = (0.06,0.45,0.73,1) if t==tab else (0.5,0.5,0.5,1)
+            except: pass
+        if tab == 'chats':
+            for av, name, msg, time, unread in self.all_chats:
+                item = MDListItem(MDListItemLeadingAvatar(text=av), MDListItemHeadlineText(text=name, bold=True), MDListItemSupportingText(text=f"{msg}"), MDListItemTrailingSupportingText(text=f"{time} ✓✓"))
+                item.bind(on_release=lambda x, n=name: self.open_chat(n))
+                lst.add_widget(item)
+        elif tab == 'updates':
+            lst.add_widget(MDListItem(MDListItemLeadingAvatar(icon="plus"), MDListItemHeadlineText(text="My Status"), MDListItemSupportingText(text="Tap to add - Who viewed?")))
+            for name, time, seen in self.status_data:
+                lst.add_widget(MDListItem(MDListItemLeadingAvatar(text=name[0]), MDListItemHeadlineText(text=name), MDListItemSupportingText(text=f"{time} • Seen by: {seen}")))
+        elif tab == 'ads':
+            for title, info in self.ads_data:
+                lst.add_widget(MDListItem(MDListItemHeadlineText(text=title, bold=True), MDListItemSupportingText(text=info)))
+            lst.add_widget(MDListItem(MDListItemLeadingAvatar(icon="plus-box"), MDListItemHeadlineText(text="Post Your Ad"), MDListItemSupportingText(text="Ocean Blue Marketplace")))
+        elif tab == 'calls':
+            for name, info, icon, missed in self.call_data:
+                lst.add_widget(MDListItem(MDListItemLeadingAvatar(text=name[0]), MDListItemHeadlineText(text=name, bold=True), MDListItemSupportingText(text=info), MDListItemTrailingIcon(icon=icon)))
+
+    def filter_chats(self, text):
+        if not text: self.show_tab('chats'); return
+        from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, MDListItemLeadingAvatar, MDListItemTrailingSupportingText
+        lst = self.root.get_screen('main').ids.dynamic_list
+        lst.clear_widgets()
+        for av, name, msg, time, unread in self.all_chats:
+            if text.lower() in name.lower() or text.lower() in msg.lower():
+                item = MDListItem(MDListItemLeadingAvatar(text=av), MDListItemHeadlineText(text=name, bold=True), MDListItemSupportingText(text=f"{msg} • {time} ✓✓"), MDListItemTrailingSupportingText(text=time))
+                item.bind(on_release=lambda x, n=name: self.open_chat(n))
+                lst.add_widget(item)
+
+    def focus_search(self): self.root.get_screen('main').ids.main_search.focus = True
+    def skip_login(self): self.root.current = 'main'
+    def open_at_world_menu(self): self.root.current = 'at_menu'
+    def open_chat(self, name):
+        self.root.get_screen('chat').ids.chat_bar.title = name
+        self.root.get_screen('chat').ids.msg_list.clear_widgets()
+        from kivymd.uix.card import MDCard
+        from kivymd.uix.label import MDLabel
+        for txt, me, t in [("Hi! Document bheja hai", False, "09:10"), ("Sounds good! See you then", True, "10:32 ✓✓ Seen")]:
+            c = MDCard(md_bg_color=(0.06,0.45,0.73,1) if me else (1,1,1,1), radius=[16,16,2,16] if me else [16,16,16,2], size_hint_y=None, size_hint_x=None, width=280, height=55, padding=[12,8], pos_hint={'right':1} if me else {'x':0})
+            c.add_widget(MDLabel(text=f"{txt}\n[font_size=10]{t}[/font_size]", text_color=(1,1,1,1) if me else (0,0,0,1), markup=True))
+            self.root.get_screen('chat').ids.msg_list.add_widget(c)
+        self.root.current = 'chat'
+
+    def send_message(self):
+        txt = self.root.get_screen('chat').ids.msg_input.text.strip()
+        if not txt: return
+        ok,_ = self.security.check_all("user", txt)
+        if not ok: return
+        from kivymd.uix.card import MDCard
+        from kivymd.uix.label import MDLabel
+        c = MDCard(md_bg_color=(0.06,0.45,0.73,1), radius=[16,16,2,16], size_hint_y=None, size_hint_x=None, width=280, height=55, padding=[12,8], pos_hint={'right':1})
+        c.add_widget(MDLabel(text=f"{txt}\n[font_size=10]10:35 AM ✓✓ Seen[/font_size]", text_color=(1,1,1,1), markup=True))
+        self.root.get_screen('chat').ids.msg_list.add_widget(c)
+        self.root.get_screen('chat').ids.msg_input.text = ""
+        if self.brain.get_reply(txt) == "JARVIS_MODE": Clock.schedule_once(lambda dt: setattr(self.root, 'current', 'jarvis'), 0.5)
+
+    def generate_jarvis_email(self):
+        d = self.root.get_screen('jarvis').ids.jarvis_dept.text
+        p = self.root.get_screen('jarvis').ids.jarvis_problem.text
+        self.root.get_screen('jarvis').ids.jarvis_output.text = self.brain.make_email(d, p)
+
+ATWorldMatterApp().run()
