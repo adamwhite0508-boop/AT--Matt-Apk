@@ -12,6 +12,15 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+      - name: Accept Licenses
+        run: |
+          mkdir -p ~/.android
+          touch ~/.android/repositories.cfg
+          mkdir -p $HOME/.android/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.android/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.android/licenses/android-sdk-license
+          echo "24333f8a4f788a98278d7be218930e8097c8f5b" >> $HOME/.android/licenses/android-sdk-license
+          yes | sdkmanager --licenses || true
       - name: Install deps
         run: |
           sudo apt update
@@ -19,7 +28,6 @@ jobs:
           pip install buildozer cython==0.29.36 pillow
       - name: Build APK
         run: |
-          rm -rf .buildozer
           buildozer android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
