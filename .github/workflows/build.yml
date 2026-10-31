@@ -4,45 +4,28 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+concurrency:
+  group: build-aab
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-22.04
+    container:
+      image: kivy/buildozer:latest
+    
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Clean Cache
-        run: rm -rf .buildozer bin
-
-      - name: Setup Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Install Buildozer
+      - name: Build AAB with Docker
         run: |
-          pip install --upgrade pip
-          pip install buildozer cython==0.29.33
-
-      - name: Accept Android Licenses - FIX
-        run: |
-          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo "24333f8a63b6825ea9c5514f83c1059b8ea4b2db" >> ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          yes | sdkmanager --licenses || true
-
-      - name: Build AAB
-        run: |
-          yes | buildozer android debug
+          rm -rf .buildozer bin
+          buildozer android debug
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: AT-World-Matter-AAB
           path: bin/*.aab
+          if-no-files-found: error
