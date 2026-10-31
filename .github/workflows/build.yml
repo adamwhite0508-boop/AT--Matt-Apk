@@ -12,11 +12,42 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip wget
+          sudo apt install -y git zip unzip wget python3-pip libffi-dev libssl-dev
+          pip install --upgrade pip
           pip install buildozer==1.5.0 cython==0.29.36
+
+      - name: Create buildozer.spec
+        run: |
+          cat > buildozer.spec << 'EOF'
+          [app]
+          title = AT World Matter
+          package.name = atworldmatter
+          package.domain = com.anuj.atworldmatter
+          source.dir = .
+          source.include_exts = py,png,jpg,kv,atlas
+          version = 1.7
+          requirements = python3,kivy==2.3.0,kivymd==1.1.1,pillow
+          orientation = portrait
+          fullscreen = 0
+
+          [buildozer]
+          log_level = 2
+
+          [app:android]
+          android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,CAMERA
+          android.api = 33
+          android.minapi = 21
+          android.ndk = 25b
+          android.sdk = 33
+          android.accept_sdk_license_agreement = True
+          p4a.bootstrap = sdl2
+          EOF
+          cat buildozer.spec
+
       - name: Fix SDK
         run: |
           SDK=$HOME/.buildozer/android/platform/android-sdk
@@ -37,10 +68,26 @@ jobs:
           cp $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
           chmod +x $SDK/tools/bin/sdkmanager
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK --licenses || true
-      - name: Build APK
+
+      - name: Build APK with LOG
         run: |
           rm -rf bin .buildozer/state.db
-          buildozer android debug
+          buildozer android debug > build.log 2>&1 || true
+          echo "========== LAST 300 LINES =========="
+          tail -n 300 build.log
+          echo "========== ERROR SEARCH =========="
+          grep -i "error\|failed\|exception\|Traceback" build.log | tail -n 50 || true
+          echo "========== BUILD CHECK =========="
+          ls -lh bin/ || echo "bin folder empty - build failed before apk"
+          # Agar APK bana to success, nahi to fail dikhao
+          if ls bin/*.apk 1> /dev/null 2>&1; then
+            echo "APK BUILT SUCCESS!"
+          else
+            echo "SHOWING FULL LOG FOR DEBUG"
+            cat build.log
+            exit 1
+          fi
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
