@@ -10,8 +10,6 @@ orientation = portrait
 android.permissions = INTERNET
 android.api = 33
 android.minapi = 21
-android.build_tools_version = 33.0.2
-android.accept_sdk_license_agreement = True
 android.archs = arm64-v8a
 
 [buildozer]
