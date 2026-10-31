@@ -11,9 +11,7 @@ orientation = portrait
 android.permissions = INTERNET,RECORD_AUDIO,CAMERA
 android.api = 33
 android.minapi = 21
-android.ndk = 25b
-android.sdk = 33
-android.build_tools_version = 37.0.0
+android.build_tools_version = 33.0.2
 android.accept_sdk_license_agreement = True
 android.archs = arm64-v8a
 
@@ -23,5 +21,5 @@ warn_on_root = 1
 
 [app:android]
 p4a.fork = kivy
-p4a.branch = master
+p4a.branch = stable
 p4a.bootstrap = sdl2
