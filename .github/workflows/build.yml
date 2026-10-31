@@ -1,11 +1,11 @@
-name: Build AAB - AT World Matter
+name: Build AAB
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
 concurrency:
-  group: build-aab
+  group: build
   cancel-in-progress: true
 
 jobs:
@@ -13,19 +13,17 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: kivy/buildozer:latest
-    
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Build AAB with Docker
+      - uses: actions/checkout@v4
+      - name: Build as non-root
         run: |
           rm -rf .buildozer bin
-          buildozer android debug
-
+          # Permission fix
+          chown -R 1000:1000 .
+          # Run as normal user, not root
+          su -c "buildozer android debug" user
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: AT-World-Matter-AAB
           path: bin/*.aab
-          if-no-files-found: error
