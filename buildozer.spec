@@ -10,15 +10,11 @@ orientation = portrait
 android.permissions = INTERNET
 android.api = 33
 android.minapi = 21
-android.build_tools_version = 33.0.2
-android.accept_sdk_license_agreement = True
 android.archs = arm64-v8a
+p4a.fork = kivy
+p4a.branch = stable
+p4a.bootstrap = sdl2
 
 [buildozer]
 log_level = 2
 warn_on_root = 1
-
-[app:android]
-p4a.fork = kivy
-p4a.branch = stable
-p4a.bootstrap = sdl2
