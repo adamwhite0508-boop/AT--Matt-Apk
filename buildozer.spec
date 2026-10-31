@@ -12,14 +12,9 @@ fullscreen = 0
 android.permissions = INTERNET,RECORD_AUDIO,CAMERA
 android.api = 33
 android.minapi = 21
-android.sdk = 33
 android.build_tools_version = 34.0.0
-android.ndk = 25b
 android.accept_sdk_license_agreement = True
 android.archs = arm64-v8a, armeabi-v7a
-android.allow_backup = True
-# icon hata diya hai kyunki aapke paas icon.png nahi hai, banner.png use hoga
-# android.icon = banner.png
 
 [buildozer]
 log_level = 2
