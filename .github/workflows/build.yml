@@ -16,29 +16,40 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y git zip unzip
-          pip install --upgrade pip
           pip install buildozer==1.5.0 cython==0.29.36
-      - name: Accept Android Licenses + Install Build-Tools 37
+      - name: Create buildozer.spec if missing
+        run: |
+          if [ ! -f buildozer.spec ]; then
+            echo "[app]" > buildozer.spec
+            echo "title = AT World Matter" >> buildozer.spec
+            echo "package.name = atworldmatter" >> buildozer.spec
+            echo "package.domain = com.anuj.atworldmatter" >> buildozer.spec
+            echo "source.dir = ." >> buildozer.spec
+            echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
+            echo "version = 1.5" >> buildozer.spec
+            echo "requirements = python3,kivy==2.3.0,kivymd==1.1.1,androidstorage4kivy" >> buildozer.spec
+            echo "orientation = portrait" >> buildozer.spec
+            echo "fullscreen = 0" >> buildozer.spec
+            echo "" >> buildozer.spec
+            echo "[buildozer]" >> buildozer.spec
+            echo "log_level = 2" >> buildozer.spec
+            echo "" >> buildozer.spec
+            echo "[app:android]" >> buildozer.spec
+            echo "android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE" >> buildozer.spec
+            echo "android.api = 33" >> buildozer.spec
+            echo "android.minapi = 21" >> buildozer.spec
+            echo "android.ndk = 25b" >> buildozer.spec
+            echo "android.sdk = 33" >> buildozer.spec
+            echo "android.accept_sdk_license_agreement = True" >> buildozer.spec
+            echo "p4a.bootstrap = sdl2" >> buildozer.spec
+          fi
+          cat buildozer.spec
+      - name: Accept Licenses and Build
         run: |
           mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo "24333f8a4f788a98278d7be218930e8097c8f5b" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          mkdir -p $HOME/.android
-          touch $HOME/.android/repositories.cfg
-          # SDK Manager se 37 install karo
-          python3 -m buildozer --version
-          # Buildozer ko ek baar chalao taaki SDK download ho
-          buildozer android debug || true
-          # Ab license accept karo
-          SDK=$HOME/.buildozer/android/platform/android-sdk
-          CMDLINE=$SDK/cmdline-tools/latest/bin/sdkmanager
-          if [ -f $SDK/cmdline-tools/latest/bin/sdkmanager ]; then
-            yes | $CMDLINE --sdk_root=$SDK --licenses || true
-            yes | $CMDLINE --sdk_root=$SDK "build-tools;37.0.0" "build-tools;33.0.2" "platform-tools" "platforms;android-33" || true
-          fi
-      - name: Build APK Final
-        run: |
           rm -rf bin
           buildozer android debug
       - name: Upload APK
