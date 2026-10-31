@@ -44,7 +44,6 @@ jobs:
           android.accept_sdk_license_agreement = True
           p4a.bootstrap = sdl2
           EOF
-          echo "--- NEW SPEC ---"
           cat buildozer.spec
       - name: Accept Licenses and Build
         run: |
@@ -52,6 +51,18 @@ jobs:
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo "24333f8a4f788a98278d7be218930e8097c8f5b" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          # YAHI FIX HAI SIR - SDK ka naya rasta purane raste se jodo
+          SDK=$HOME/.buildozer/android/platform/android-sdk
+          mkdir -p $SDK/tools/bin
+          # Pehle ek baar buildozer chalao taaki cmdline-tools download ho
+          buildozer android debug || true
+          # Ab naya sdkmanager purane raste pe copy karo - Jadoo yahi hai!
+          if [ -f $SDK/cmdline-tools/latest/bin/sdkmanager ]; then
+            cp $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
+            chmod +x $SDK/tools/bin/sdkmanager
+            cp -r $SDK/cmdline-tools/latest/lib $SDK/tools/ || true
+            echo "FIXED: sdkmanager linked!"
+          fi
           rm -rf bin
           buildozer android debug
       - name: Upload APK
