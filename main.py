@@ -29,13 +29,27 @@ MDScreenManager:
     name: 'login'
     MDFloatLayout:
         md_bg_color: 1,1,1,1
-        # --- NAYA BANNER DESIGN - CENTERED ---
-        Image:
-            source: "banner.png"
-            size_hint: .78, .50
-            pos_hint: {'center_x':.5,'center_y':.68}
-            allow_stretch: True
-            keep_ratio: True
+        # --- BINA BANNER KE - TEXT LOGO ---
+        MDIcon:
+            icon: "earth"
+            font_size: "110sp"
+            text_color: 0.06,0.45,0.73,1
+            pos_hint: {'center_x':.5,'center_y':.72}
+            halign: "center"
+        MDLabel:
+            text: "AT World Matter"
+            halign: "center"
+            bold: True
+            font_size: "32sp"
+            text_color: 0.06,0.45,0.73,1
+            pos_hint: {'center_x':.5,'center_y':.56}
+        MDLabel:
+            text: "Matter"
+            halign: "center"
+            font_size: "28sp"
+            text_color: 0.6,0.75,0.9,1
+            pos_hint: {'center_x':.5,'center_y':.50}
+        
         MDBoxLayout:
             orientation: 'vertical'
             size_hint: .82,.34
@@ -45,13 +59,11 @@ MDScreenManager:
                 hint_text: "Email"
                 icon_left: "email"
                 mode: "round"
-                icon_left_color: 0.06,0.45,0.73,1
             MDTextField:
                 hint_text: "Password"
                 icon_left: "lock"
                 password: True
                 mode: "round"
-                icon_left_color: 0.06,0.45,0.73,1
             MDRaisedButton:
                 text: "Log In"
                 md_bg_color: 0.06,0.45,0.73,1
@@ -78,23 +90,20 @@ MDScreenManager:
             height: "58dp"
             md_bg_color: 0.06,0.45,0.73,1
             padding: [8,0]
-            Image:
-                source: "banner.png"
-                size_hint: None, None
-                size: "38dp","38dp"
+            MDIcon:
+                icon: "earth"
+                theme_text_color: "Custom"
+                text_color: 1,1,1,1
+                font_size: "28sp"
                 pos_hint: {'center_y':.5}
             MDLabel:
-                text: "AT World"
+                text: "AT World Matter"
                 bold: True
-                font_size: "20sp"
+                font_size: "18sp"
                 text_color: 1,1,1,1
                 padding: [8,0]
             MDIconButton:
                 icon: "magnify"
-                icon_color: 1,1,1,1
-                on_press: app.focus_search()
-            MDIconButton:
-                icon: "camera-outline"
                 icon_color: 1,1,1,1
             MDIconButton:
                 icon: "dots-vertical"
