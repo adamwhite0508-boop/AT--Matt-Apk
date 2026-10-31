@@ -12,17 +12,16 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Install Buildozer
+      - name: Install dependencies
         run: |
           pip install buildozer cython==0.29.33
-      - name: Build APK (with license accept)
-        run: |
-          yes | buildozer android debug || true
-          export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
-          export ANDROID_HOME=$ANDROID_SDK_ROOT
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/*/bin/sdkmanager --licenses || true
-          yes | $ANDROID_HOME/cmdline-tools/*/bin/sdkmanager --licenses || true
-          buildozer android debug
+          sudo apt install -y libltdl-dev
+      - name: Build with Buildozer Action
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
+        with:
+          command: buildozer android debug
+          buildozer_version: master
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
