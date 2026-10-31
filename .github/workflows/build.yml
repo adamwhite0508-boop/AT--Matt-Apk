@@ -17,8 +17,27 @@ jobs:
           sudo apt update
           sudo apt install -y git zip unzip
           pip install --upgrade pip
-          pip install buildozer cython==0.29.36
-      - name: Build APK
+          pip install buildozer==1.5.0 cython==0.29.36
+      - name: Accept Android Licenses + Install Build-Tools 37
+        run: |
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "24333f8a4f788a98278d7be218930e8097c8f5b" >> $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          mkdir -p $HOME/.android
+          touch $HOME/.android/repositories.cfg
+          # SDK Manager se 37 install karo
+          python3 -m buildozer --version
+          # Buildozer ko ek baar chalao taaki SDK download ho
+          buildozer android debug || true
+          # Ab license accept karo
+          SDK=$HOME/.buildozer/android/platform/android-sdk
+          CMDLINE=$SDK/cmdline-tools/latest/bin/sdkmanager
+          if [ -f $SDK/cmdline-tools/latest/bin/sdkmanager ]; then
+            yes | $CMDLINE --sdk_root=$SDK --licenses || true
+            yes | $CMDLINE --sdk_root=$SDK "build-tools;37.0.0" "build-tools;33.0.2" "platform-tools" "platforms;android-33" || true
+          fi
+      - name: Build APK Final
         run: |
           rm -rf bin
           buildozer android debug
