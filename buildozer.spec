@@ -10,6 +10,7 @@ orientation = portrait
 
 [buildozer]
 log_level = 2
+warn_on_root = 0
 
 [app:android]
 android.archs = arm64-v8a
