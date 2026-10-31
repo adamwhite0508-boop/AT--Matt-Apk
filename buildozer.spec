@@ -3,25 +3,10 @@ title = AT World Matter
 package.name = atworldmatter
 package.domain = com.atworld.matter
 source.dir = .
-source.include_exts = py,png,jpg,kv,json
-version = 5.0
-requirements = python3,kivy==2.3.0,kivymd,pillow,plyer,android,requests
+version = 2.0
+requirements = python3,kivy==2.3.0,kivymd==2.0.0,Pillow
 orientation = portrait
+android.permissions = INTERNET, CAMERA, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE
 
 [buildozer]
 log_level = 2
-warn_on_root = 0
-
-[app:android]
-android.archs = arm64-v8a
-android.api = 33
-android.minapi = 21
-android.ndk = 25b
-android.sdk = 33
-android.ndk_api = 33
-android.build_tools_version = 33.0.2
-android.accept_sdk_license_agreements = True
-android.permissions = INTERNET,CAMERA,RECORD_AUDIO,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
-p4a.branch = master
-p4a.bootstrap = sdl2
-android.release_artifact = aab
