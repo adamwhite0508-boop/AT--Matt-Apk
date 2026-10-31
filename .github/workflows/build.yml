@@ -1,41 +1,19 @@
-name: Build AAB - Final
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
-
-concurrency:
-  group: build
-  cancel-in-progress: true
-
+name: Build APK
+on: [push]
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - uses: actions/setup-java@v4
+      - run: |
+          pip install buildozer cython==0.29.33
+          sudo apt update
+          sudo apt install -y openjdk-17-jdk unzip
+      - run: buildozer android debug
+      - uses: actions/upload-artifact@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
-      - run: pip install buildozer cython==0.29.33
-
-      - name: Build AAB - License Fix
-        run: |
-          rm -rf .buildozer bin
-          buildozer android debug || true
-          SDK=$(find ~/.buildozer -name sdkmanager -type f | head -n 1)
-          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo "24333f8a63b6825ea9c5514f83c1059b8ea4b2db" >> ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          yes | $SDK --licenses || true
-          $SDK "build-tools;33.0.2" "build-tools;37.0.0" || true
-          buildozer android debug
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: AT-World-Matter-AAB
-          path: bin/*.aab
+          name: AT-World-Matter-APK
+          path: bin/*.apk
