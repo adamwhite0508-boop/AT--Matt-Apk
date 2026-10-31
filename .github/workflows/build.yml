@@ -5,29 +5,22 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          
-      - name: Set up Java 17
-        uses: actions/setup-java@v3
+      - uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
-          
-      - name: Install dependencies
+      - name: Install deps
         run: |
           sudo apt update
-          sudo apt install -y build-essential git python3-dev ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev libbz2-dev libssl-dev libffi-dev
-          pip install --upgrade pip
+          sudo apt install -y git zip unzip build-essential libffi-dev libssl-dev
           pip install buildozer cython==0.29.36 pillow
-
       - name: Build APK
         run: |
-          yes | buildozer android debug || buildozer android debug
-
+          rm -rf .buildozer
+          buildozer android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
