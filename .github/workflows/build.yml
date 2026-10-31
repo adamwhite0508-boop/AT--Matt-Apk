@@ -17,32 +17,34 @@ jobs:
           sudo apt update
           sudo apt install -y git zip unzip
           pip install buildozer==1.5.0 cython==0.29.36
-      - name: Create buildozer.spec if missing
+      - name: FORCE Create buildozer.spec
         run: |
-          if [ ! -f buildozer.spec ]; then
-            echo "[app]" > buildozer.spec
-            echo "title = AT World Matter" >> buildozer.spec
-            echo "package.name = atworldmatter" >> buildozer.spec
-            echo "package.domain = com.anuj.atworldmatter" >> buildozer.spec
-            echo "source.dir = ." >> buildozer.spec
-            echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
-            echo "version = 1.5" >> buildozer.spec
-            echo "requirements = python3,kivy==2.3.0,kivymd==1.1.1,androidstorage4kivy" >> buildozer.spec
-            echo "orientation = portrait" >> buildozer.spec
-            echo "fullscreen = 0" >> buildozer.spec
-            echo "" >> buildozer.spec
-            echo "[buildozer]" >> buildozer.spec
-            echo "log_level = 2" >> buildozer.spec
-            echo "" >> buildozer.spec
-            echo "[app:android]" >> buildozer.spec
-            echo "android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE" >> buildozer.spec
-            echo "android.api = 33" >> buildozer.spec
-            echo "android.minapi = 21" >> buildozer.spec
-            echo "android.ndk = 25b" >> buildozer.spec
-            echo "android.sdk = 33" >> buildozer.spec
-            echo "android.accept_sdk_license_agreement = True" >> buildozer.spec
-            echo "p4a.bootstrap = sdl2" >> buildozer.spec
-          fi
+          rm -f buildozer.spec
+          cat > buildozer.spec << 'EOF'
+          [app]
+          title = AT World Matter
+          package.name = atworldmatter
+          package.domain = com.anuj.atworldmatter
+          source.dir = .
+          source.include_exts = py,png,jpg,kv,atlas
+          version = 1.5
+          requirements = python3,kivy==2.3.0,kivymd==1.1.1,androidstorage4kivy
+          orientation = portrait
+          fullscreen = 0
+
+          [buildozer]
+          log_level = 2
+
+          [app:android]
+          android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
+          android.api = 33
+          android.minapi = 21
+          android.ndk = 25b
+          android.sdk = 33
+          android.accept_sdk_license_agreement = True
+          p4a.bootstrap = sdl2
+          EOF
+          echo "--- NEW SPEC ---"
           cat buildozer.spec
       - name: Accept Licenses and Build
         run: |
