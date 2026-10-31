@@ -1,4 +1,4 @@
-name: Build AAB - Final
+name: Build AAB - Final License Fix
 on:
   push:
     branches: [ main ]
@@ -11,10 +11,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Python 3.10
         uses: actions/setup-python@v5
@@ -29,14 +27,28 @@ jobs:
 
       - name: Install Buildozer
         run: |
-          pip install --upgrade pip
           pip install buildozer cython==0.29.33
           sudo apt update
-          sudo apt install -y libffi-dev libssl-dev
+          sudo apt install -y libffi-dev
 
-      - name: Build AAB
+      - name: Build AAB - With Force License Accept
         run: |
           rm -rf .buildozer bin
+          # 1st try - SDK download karne ke liye
+          buildozer android debug || true
+          
+          # License accept karna - Asli fix yahan hai
+          SDKMANAGER=$(find ~/.buildozer -name "sdkmanager" -type f | head -n 1)
+          echo "Found SDKMANAGER at: $SDKMANAGER"
+          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "24333f8a63b6825ea9c5514f83c1059b8ea4b2db" >> ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo "y" | $SDKMANAGER --licenses || true
+          yes | $SDKMANAGER --licenses || true
+          $SDKMANAGER "build-tools;33.0.2" "build-tools;37.0.0" || true
+          
+          # 2nd try - Ab license accept hai, AAB banega
           buildozer android debug
 
       - name: Upload AAB
@@ -44,4 +56,3 @@ jobs:
         with:
           name: AT-World-Matter-AAB
           path: bin/*.aab
-          if-no-files-found: error
