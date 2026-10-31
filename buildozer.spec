@@ -3,7 +3,7 @@ title = AT World Matter
 package.name = atworldmatter
 package.domain = com.atworld.matter
 source.dir = .
-source.include_exts = py,png,jpg,jpeg,kv,atlas,json
+source.include_exts = py,png,jpg,kv,json
 version = 5.0
 requirements = python3,kivy==2.3.0,kivymd,pillow,plyer,android,requests
 orientation = portrait
