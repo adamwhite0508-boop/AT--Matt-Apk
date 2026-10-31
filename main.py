@@ -2,20 +2,12 @@ from kivymd.app import MDApp
 from kivy.lang import Builder
 from kivy.clock import Clock
 from kivy.uix.screenmanager import Screen
+from kivymd.uix.menu import MDDropdownMenu
 from datetime import datetime
 
-class SecurityGuard:
-    def check_all(self, uid, msg):
-        bad = ["abuse","bomb","gaali","hack","crack","sarkar virodhi","terror"]
-        for w in bad:
-            if w in msg.lower(): return False, f"🚫 {w} blocked"
-        return True, ""
-
 class UserMainAI:
-    def get_reply(self, txt): 
-        return "JARVIS_MODE" if "email" in txt.lower() else "OK"
     def make_email(self, dept, prob):
-        return f"To: {dept}@gov.in\nSubject: {prob}\n\nRespected Sir,\n{prob} at Gomti Nagar Lucknow (226010).\nConsumer: AT-4521\nResolve in 48hrs.\n\nThanks\n{datetime.now().strftime('%d-%m-%Y')}"
+        return f"To: {dept}@gov.in\nSubject: {prob}\n\nRespected Sir,\n{prob} at Gomti Nagar, Lucknow.\nResolve in 48hrs.\nThanks"
 
 KV = '''
 MDScreenManager:
@@ -29,32 +21,15 @@ MDScreenManager:
     name: 'login'
     MDFloatLayout:
         md_bg_color: 1,1,1,1
-        # --- BINA BANNER KE - TEXT LOGO ---
-        MDIcon:
-            icon: "earth"
-            font_size: "110sp"
-            text_color: 0.06,0.45,0.73,1
-            pos_hint: {'center_x':.5,'center_y':.72}
-            halign: "center"
-        MDLabel:
-            text: "AT World Matter"
-            halign: "center"
-            bold: True
-            font_size: "32sp"
-            text_color: 0.06,0.45,0.73,1
-            pos_hint: {'center_x':.5,'center_y':.56}
-        MDLabel:
-            text: "Matter"
-            halign: "center"
-            font_size: "28sp"
-            text_color: 0.6,0.75,0.9,1
-            pos_hint: {'center_x':.5,'center_y':.50}
-        
+        Image:
+            source: "banner.png"
+            size_hint: .78, .52
+            pos_hint: {'center_x':.5,'center_y':.68}
         MDBoxLayout:
             orientation: 'vertical'
-            size_hint: .82,.34
-            pos_hint: {'center_x':.5,'center_y':.26}
-            spacing: "12dp"
+            size_hint: .82,.32
+            pos_hint: {'center_x':.5,'center_y':.25}
+            spacing: "10dp"
             MDTextField:
                 hint_text: "Email"
                 icon_left: "email"
@@ -66,52 +41,47 @@ MDScreenManager:
                 mode: "round"
             MDRaisedButton:
                 text: "Log In"
-                md_bg_color: 0.06,0.45,0.73,1
+                md_bg_color: 0.11,0.44,0.71,1
                 size_hint_x: 1
                 on_press: app.skip_login()
-            MDLabel:
-                text: "Forgot password?"
-                halign: "center"
-                font_size: "11sp"
-                text_color: 0.06,0.45,0.73,1
-            MDLabel:
-                text: "Version 1.0 • AT World Matter © 2024"
-                halign: "center"
-                font_size: "9sp"
-                text_color: 0.5,0.5,0.5,1
 
 <MainScreen>:
     name: 'main'
     MDBoxLayout:
         orientation: 'vertical'
-        md_bg_color: 1,1,1,1
         MDBoxLayout:
             size_hint_y: None
-            height: "58dp"
-            md_bg_color: 0.06,0.45,0.73,1
-            padding: [8,0]
-            MDIcon:
-                icon: "earth"
-                theme_text_color: "Custom"
-                text_color: 1,1,1,1
-                font_size: "28sp"
+            height: "64dp"
+            md_bg_color: 0.11,0.44,0.71,1
+            padding: [10,0]
+            Image:
+                source: "banner.png"
+                size_hint: None, None
+                size: "40dp","40dp"
                 pos_hint: {'center_y':.5}
             MDLabel:
                 text: "AT World Matter"
                 bold: True
-                font_size: "18sp"
                 text_color: 1,1,1,1
                 padding: [8,0]
             MDIconButton:
                 icon: "magnify"
                 icon_color: 1,1,1,1
+                pos_hint: {'center_y':.5}
+                on_press: app.focus_search()
             MDIconButton:
+                icon: "bell-outline"
+                icon_color: 1,1,1,1
+                pos_hint: {'center_y':.5}
+            MDIconButton:
+                id: three_dot_btn
                 icon: "dots-vertical"
                 icon_color: 1,1,1,1
-                on_press: app.open_at_world_menu()
+                pos_hint: {'center_y':.5}
+                on_release: app.open_three_dot_menu(self)
         MDCard:
             size_hint_y: None
-            height: "44dp"
+            height: "48dp"
             md_bg_color: 0.96,0.96,0.96,1
             radius: [0,0,12,12]
             padding: [12,0]
@@ -121,22 +91,20 @@ MDScreenManager:
                 mode: "fill"
                 fill_color: 0,0,0,0
                 line_color_normal: 0,0,0,0
-                on_text: app.filter_chats(self.text)
         ScrollView:
             MDList:
                 id: dynamic_list
                 padding: "6dp"
         MDCard:
             size_hint_y: None
-            height: "62dp"
+            height: "64dp"
             md_bg_color: 1,1,1,1
-            radius: [14,14,0,0]
             MDBoxLayout:
                 MDBoxLayout:
                     orientation: 'vertical'
                     MDIconButton:
                         icon: "chat"
-                        text_color: 0.06,0.45,0.73,1
+                        text_color: 0.11,0.44,0.71,1
                         pos_hint: {'center_x':.5}
                         on_press: app.show_tab('chats')
                     MDLabel:
@@ -144,13 +112,12 @@ MDScreenManager:
                         halign: "center"
                         font_size: "10sp"
                         bold: True
-                        text_color: 0.06,0.45,0.73,1
+                        text_color: 0.11,0.44,0.71,1
                 MDBoxLayout:
                     orientation: 'vertical'
                     MDIconButton:
                         icon: "update"
                         pos_hint: {'center_x':.5}
-                        on_press: app.show_tab('updates')
                     MDLabel:
                         text: "Updates"
                         halign: "center"
@@ -160,7 +127,6 @@ MDScreenManager:
                     MDIconButton:
                         icon: "bullhorn"
                         pos_hint: {'center_x':.5}
-                        on_press: app.show_tab('ads')
                     MDLabel:
                         text: "Ads"
                         halign: "center"
@@ -170,7 +136,6 @@ MDScreenManager:
                     MDIconButton:
                         icon: "phone"
                         pos_hint: {'center_x':.5}
-                        on_press: app.show_tab('calls')
                     MDLabel:
                         text: "Calls"
                         halign: "center"
@@ -180,11 +145,10 @@ MDScreenManager:
     name: 'at_menu'
     MDBoxLayout:
         orientation: 'vertical'
-        md_bg_color: 0.92,0.97,1,1
         MDBoxLayout:
             size_hint_y: None
             height: "58dp"
-            md_bg_color: 0.06,0.45,0.73,1
+            md_bg_color: 0.11,0.44,0.71,1
             MDIconButton:
                 icon: "arrow-left"
                 icon_color: 1,1,1,1
@@ -218,6 +182,24 @@ MDScreenManager:
                     MDLabel:
                         text: "AT Matter - Scenes"
                         bold: True
+                MDCard:
+                    size_hint_y: None
+                    height: "58dp"
+                    md_bg_color: 0.9,0.9,1,1
+                    radius: [14]
+                    padding: "12dp"
+                    MDLabel:
+                        text: "AT Tools 3"
+                        bold: True
+                MDCard:
+                    size_hint_y: None
+                    height: "58dp"
+                    md_bg_color: 0.9,0.9,1,1
+                    radius: [14]
+                    padding: "12dp"
+                    MDLabel:
+                        text: "AT Tools 4"
+                        bold: True
 
 <ChatScreen>:
     name: 'chat'
@@ -227,7 +209,7 @@ MDScreenManager:
             id: chat_bar
             title: "Contact"
             type: "small"
-            md_bg_color: 0.06,0.45,0.73,1
+            md_bg_color: 0.11,0.44,0.71,1
             left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'main')]]
         ScrollView:
             MDBoxLayout:
@@ -239,7 +221,6 @@ MDScreenManager:
         MDCard:
             size_hint_y: None
             height: "58dp"
-            md_bg_color: 1,1,1,1
             padding: "6dp"
             MDTextField:
                 id: msg_input
@@ -247,7 +228,6 @@ MDScreenManager:
                 mode: "round"
             MDIconButton:
                 icon: "send"
-                text_color: 0.06,0.45,0.73,1
                 on_press: app.send_message()
 
 <JarvisScreen>:
@@ -269,16 +249,14 @@ MDScreenManager:
             MDTextField:
                 id: jarvis_problem
                 hint_text: "Problem"
-                text: "Pipeline tooti hai, 3 din se paani nahi"
             MDRaisedButton:
                 text: "Email Banwao"
-                md_bg_color: 0.06,0.45,0.73,1
+                md_bg_color: 0.11,0.44,0.71,1
                 size_hint_x: 1
                 on_press: app.generate_jarvis_email()
             MDScrollView:
                 MDLabel:
                     id: jarvis_output
-                    text: "Email yaha banega..."
                     adaptive_height: True
 '''
 
@@ -289,36 +267,60 @@ class ChatScreen(Screen): pass
 class JarvisScreen(Screen): pass
 
 class ATWorldMatterApp(MDApp):
+    three_dot_menu = None
     def build(self):
-        self.security = SecurityGuard()
-        self.brain = UserMainAI()
-        self.all_chats = [("AJ", "Alice Johnson", "Sounds good!", "10:32", "2"), ("M", "Mom", "Don't forget to call", "09:15", "")]
+        self.all_chats = [("AJ", "Alice Johnson", "Sounds good!", "10:32", "2")]
         return Builder.load_string(KV)
-    def on_start(self): Clock.schedule_once(lambda dt: self.show_tab('chats'), 0.3)
+
+    def on_start(self):
+        Clock.schedule_once(lambda dt: self.show_tab('chats'), 0.3)
+        # 3 DOT MENU ITEMS - YEHI AAPKA FEATURE HAI
+        menu_items = [
+            {"text": "AT World - 7 Tools", "viewclass": "OneLineListItem", "on_release": lambda x="AT World - 7 Tools": self.menu_callback(x)},
+            {"text": "AT Brain - Jarvis Email", "viewclass": "OneLineListItem", "on_release": lambda x="AT Brain": self.menu_callback(x)},
+            {"text": "Profile", "viewclass": "OneLineListItem", "on_release": lambda x="Profile": self.menu_callback(x)},
+            {"text": "Settings", "viewclass": "OneLineListItem", "on_release": lambda x="Settings": self.menu_callback(x)},
+            {"text": "About", "viewclass": "OneLineListItem", "on_release": lambda x="About": self.menu_callback(x)},
+            {"text": "Logout", "viewclass": "OneLineListItem", "on_release": lambda x="Logout": self.menu_callback(x)},
+        ]
+        # menu ko baad me banayenge jab screen ready hogi
+
+    def open_three_dot_menu(self, button):
+        menu_items = [
+            {"text": "AT World - 7 Tools", "viewclass": "OneLineListItem", "on_release": lambda x="at_menu": self.menu_callback(x)},
+            {"text": "AT Brain - Jarvis", "viewclass": "OneLineListItem", "on_release": lambda x="jarvis": self.menu_callback(x)},
+            {"text": "Profile", "viewclass": "OneLineListItem", "on_release": lambda x="profile": self.menu_callback(x)},
+            {"text": "Settings", "viewclass": "OneLineListItem", "on_release": lambda x="settings": self.menu_callback(x)},
+        ]
+        self.three_dot_menu = MDDropdownMenu(caller=button, items=menu_items, width_mult=4)
+        self.three_dot_menu.open()
+
+    def menu_callback(self, screen_name):
+        self.three_dot_menu.dismiss()
+        if screen_name in ['at_menu','jarvis']:
+            self.root.current = screen_name
+        else:
+            print(f"{screen_name} clicked")
+
     def show_tab(self, tab):
         from kivymd.uix.list import MDListItem, MDListItemHeadlineText, MDListItemSupportingText, MDListItemLeadingAvatar
-        main = self.root.get_screen('main')
-        lst = main.ids.dynamic_list
+        lst = self.root.get_screen('main').ids.dynamic_list
         lst.clear_widgets()
         if tab == 'chats':
             for av, name, msg, time, unread in self.all_chats:
                 item = MDListItem(MDListItemLeadingAvatar(text=av), MDListItemHeadlineText(text=name, bold=True), MDListItemSupportingText(text=f"{msg} • {time}"))
                 item.bind(on_release=lambda x, n=name: self.open_chat(n))
                 lst.add_widget(item)
-    def filter_chats(self, text): pass
     def focus_search(self): self.root.get_screen('main').ids.main_search.focus = True
     def skip_login(self): self.root.current = 'main'
     def open_at_world_menu(self): self.root.current = 'at_menu'
     def open_chat(self, name):
         self.root.get_screen('chat').ids.chat_bar.title = name
         self.root.current = 'chat'
-    def send_message(self):
-        txt = self.root.get_screen('chat').ids.msg_input.text.strip()
-        if not txt: return
-        self.root.get_screen('chat').ids.msg_input.text = ""
+    def send_message(self): self.root.get_screen('chat').ids.msg_input.text = ""
     def generate_jarvis_email(self):
         d = self.root.get_screen('jarvis').ids.jarvis_dept.text
         p = self.root.get_screen('jarvis').ids.jarvis_problem.text
-        self.root.get_screen('jarvis').ids.jarvis_output.text = self.brain.make_email(d, p)
+        self.root.get_screen('jarvis').ids.jarvis_output.text = UserMainAI().make_email(d, p)
 
 ATWorldMatterApp().run()
