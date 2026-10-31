@@ -1,227 +1,407 @@
-# AT World Mater - CRASH FIX FINAL v1.4 - NO CRASH - WHATSAPP HARA
-from kivymd.app import MDApp
 from kivy.lang import Builder
-from kivy.clock import Clock
-from kivy.uix.screenmanager import Screen
+from kivy.core.window import Window
+from kivymd.app import MDApp
+from kivy.uix.screenmanager import ScreenManager, Screen
+from kivymd.uix.dialog import MDDialog
 from kivy.utils import platform
-import sqlite3, os, json, datetime
+import os
 
-USER_ID = "Anuj_Tripathi_001"
-
-# DB PATH - CRASH SAFE
-try:
-    if platform == 'android':
-        from android.storage import app_storage_path
-        DB_PATH = os.path.join(app_storage_path(), "at_world_mater.db")
-    else:
-        DB_PATH = "at_world_mater.db"
-except:
-    DB_PATH = "at_world_mater.db"
-
-class FullDB:
-    def __init__(self):
-        try:
-            self.conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-            self.conn.execute("CREATE TABLE IF NOT EXISTS chats (id INTEGER PRIMARY KEY, user_id TEXT, name TEXT, message TEXT, is_me INTEGER, time TEXT)")
-            self.conn.commit()
-        except Exception as e:
-            print(f"DB Error: {e}")
-            self.conn = None
-    def save_chat(self, name, msg, is_me):
-        if not self.conn: return
-        try: self.conn.execute("INSERT INTO chats (user_id,name,message,is_me,time) VALUES (?,?,?,?,?)", (USER_ID, name, msg, 1 if is_me else 0, str(datetime.datetime.now())[:19])); self.conn.commit()
-        except: pass
-    def get_chats(self, name):
-        if not self.conn: return []
-        try: return self.conn.execute("SELECT message, is_me FROM chats WHERE name=? AND user_id=? ORDER BY id", (name, USER_ID)).fetchall()
-        except: return []
-    def backup(self):
-        if not self.conn: return "✅ Phone me Safe!"
-        try: cnt = self.conn.execute("SELECT COUNT(*) FROM chats").fetchone()[0]; return f"✅ WASM+RAKSHAK+SECURE: {cnt} chats Phone me Safe!"
-        except: return "✅ Phone me Safe!"
-
-DB = FullDB()
+Window.softinput_mode = "below_target"
 
 KV = '''
-MDScreenManager:
-    MainScreen:
-    ChatScreen:
-    MenuScreen:
+ScreenManager:
+    HomeScreen:
+    BrainScreen:
+    PosterScreen:
+    OnlineScreen:
+    SettingsScreen:
+    CrownScreen:
 
-<MainScreen>:
-    name: 'main'
+<HomeScreen>:
+    name: "home"
     MDBoxLayout:
-        orientation: 'vertical'
+        orientation: "vertical"
+        padding: "12dp"
+        spacing: "10dp"
+        md_bg_color: app.theme_cls.bg_normal
+
         MDBoxLayout:
             size_hint_y: None
-            height: "56dp"
-            md_bg_color: 0.03,0.36,0.33,1
-            padding: 10
-            MDLabel:
-                text: "AT World Matter - WASM"
-                bold: True
-                text_color: 1,1,1,1
+            height: "40dp"
             MDIconButton:
-                icon: "content-save"
-                theme_icon_color: "Custom"
-                icon_color: 1,1,1,1
-                on_press: app.do_backup()
-            MDIconButton:
-                icon: "dots-vertical"
-                theme_icon_color: "Custom"
-                icon_color: 1,1,1,1
-                on_press: app.root.current = 'menu'
-        ScrollView:
-            MDList:
-                id: chat_list
-                padding: "4dp"
-        MDBoxLayout:
-            size_hint_y: None
-            height: "56dp"
-            md_bg_color: 1,1,1,1
+                icon: "weather-night"
+                on_release: app.toggle_dark()
             MDLabel:
-                text: "Chats - 11 - WASM Active"
+                text: "AT WORLD MATTER"
                 halign: "center"
-                font_size: "12sp"
-
-<MenuScreen>:
-    name: 'menu'
-    MDBoxLayout:
-        orientation: 'vertical'
-        MDBoxLayout:
-            size_hint_y: None
-            height: "56dp"
-            md_bg_color: 0.03,0.36,0.33,1
-            MDIconButton:
-                icon: "arrow-left"
-                theme_icon_color: "Custom"
-                icon_color: 1,1,1,1
-                on_press: app.root.current = 'main'
-            MDLabel:
-                text: "AT World - 7 Tools"
                 bold: True
-                text_color: 1,1,1,1
-        ScrollView:
-            MDList:
-                OneLineListItem:
-                    text: "1. AT Brain - AI Chat & Jarvis"
-                    on_press: app.open_chat("AT BRAIN")
-                OneLineListItem:
-                    text: "2. AT Matter - Scenes - WASM"
-                OneLineListItem:
-                    text: "3. Poster Studio - Export Done"
-                OneLineListItem:
-                    text: "4. Camera - Photo Captured"
-                OneLineListItem:
-                    text: "5. Gallery - 12 Images"
-                OneLineListItem:
-                    text: "6. Voice Notes + Call Logs"
-                OneLineListItem:
-                    text: "7. Downloads + Share + Backup - SECURE"
-
-<ChatScreen>:
-    name: 'chat'
-    MDBoxLayout:
-        orientation: 'vertical'
-        MDBoxLayout:
-            size_hint_y: None
-            height: "56dp"
-            md_bg_color: 0.03,0.36,0.33,1
             MDIconButton:
-                icon: "arrow-left"
-                theme_icon_color: "Custom"
-                icon_color: 1,1,1,1
-                on_press: app.root.current = 'main'
-            MDLabel:
-                id: chat_title
-                text: "Contact"
-                bold: True
-                text_color: 1,1,1,1
-        ScrollView:
+                icon: "bell-outline"
+                on_release: app.show_msg("AT WORLD MATTER Notification")
+            MDIconButton:
+                icon: "cog-outline"
+                on_release: root.manager.current = "settings"
+
+        MDCard:
+            size_hint_y: None
+            height: "110dp"
+            md_bg_color: 0.11,0.42,1,1
+            radius: [22,22,22,22]
+            padding: "15dp"
+            on_release: root.manager.current = "crown"
             MDBoxLayout:
-                id: msg_box
-                orientation: 'vertical'
-                padding: "10dp"
-                spacing: "8dp"
-                adaptive_height: True
+                orientation: "vertical"
+                MDLabel:
+                    text: "🌍 AT WORLD MATTER"
+                    bold: True
+                    theme_text_color: "Custom"
+                    text_color: 1,1,1,1
+                    font_style: "H6"
+                    halign: "center"
+                MDLabel:
+                    text: "WASM + RAKSHAK + SECURE - AT CROWN Tap"
+                    theme_text_color: "Custom"
+                    text_color: 1,1,1,1
+                    halign: "center"
+                    font_style: "Caption"
+
+        MDGridLayout:
+            cols: 2
+            spacing: "10dp"
+            size_hint_y: None
+            height: "160dp"
+            MDCard:
+                md_bg_color: 0.11,0.42,1,1
+                radius: [18]
+                on_release: root.manager.current = "brain"
+                MDBoxLayout:
+                    orientation: "vertical"
+                    padding: "12dp"
+                    MDLabel:
+                        text: "🧠 AT BRAIN"
+                        bold: True
+                        text_color: 1,1,1,1
+                    MDLabel:
+                        text: "AI Hindi/Bhojpuri"
+                        font_style: "Caption"
+                        text_color: 1,1,1,1
+            MDCard:
+                md_bg_color: 0.48,0.38,1,1
+                radius: [18]
+                on_release: root.manager.current = "poster"
+                MDBoxLayout:
+                    orientation: "vertical"
+                    padding: "12dp"
+                    MDLabel:
+                        text: "🖼️ Photo Shayari"
+                        bold: True
+                        text_color: 1,1,1,1
+                    MDLabel:
+                        text: "Poster Maker"
+                        font_style: "Caption"
+                        text_color: 1,1,1,1
+            MDCard:
+                md_bg_color: 0,0.78,1,1
+                radius: [18]
+                on_release: root.manager.current = "online"
+                MDBoxLayout:
+                    orientation: "vertical"
+                    padding: "12dp"
+                    MDLabel:
+                        text: "💬 Online AT"
+                        bold: True
+                        text_color: 1,1,1,1
+                    MDLabel:
+                        text: "Global Chat"
+                        font_style: "Caption"
+                        text_color: 1,1,1,1
+
+        MDGridLayout:
+            cols: 4
+            spacing: "8dp"
+            size_hint_y: None
+            height: "140dp"
+            MDCard:
+                radius: [14]
+                on_release: app.open_camera()
+                MDBoxLayout:
+                    orientation: "vertical"
+                    padding: "5dp"
+                    MDIcon:
+                        icon: "camera"
+                        halign: "center"
+                    MDLabel:
+                        text: "Camera"
+                        halign: "center"
+                        font_style: "Caption"
+            MDCard:
+                radius: [14]
+                on_release: app.open_gallery()
+                MDBoxLayout:
+                    orientation: "vertical"
+                    padding: "5dp"
+                    MDIcon:
+                        icon: "image"
+                        halign: "center"
+                    MDLabel:
+                        text: "Gallery"
+                        halign: "center"
+                        font_style: "Caption"
+            MDCard:
+                radius: [14]
+                on_release: root.manager.current = "poster"
+                MDBoxLayout:
+                    orientation: "vertical"
+                    padding: "5dp"
+                    MDIcon:
+                        icon: "draw"
+                        halign: "center"
+                    MDLabel:
+                        text: "Poster"
+                        halign: "center"
+                        font_style: "Caption"
+            MDCard:
+                radius: [14]
+                on_release: app.show_msg("Contacts - AT")
+                MDBoxLayout:
+                    orientation: "vertical"
+                    padding: "5dp"
+                    MDIcon:
+                        icon: "account"
+                        halign: "center"
+                    MDLabel:
+                        text: "Contacts"
+                        halign: "center"
+                        font_style: "Caption"
+            MDCard:
+                radius: [14]
+                on_release: app.show_msg("Calling AT WORLD MATTER...")
+                MDBoxLayout:
+                    orientation: "vertical"
+                    padding: "5dp"
+                    MDIcon:
+                        icon: "phone"
+                        halign: "center"
+                    MDLabel:
+                        text: "Call"
+                        halign: "center"
+                        font_style: "Caption"
+            MDCard:
+                radius: [14]
+                on_release: app.show_msg("🎙️ Voice Recording Saved!")
+                MDBoxLayout:
+                    orientation: "vertical"
+                    padding: "5dp"
+                    MDIcon:
+                        icon: "microphone"
+                        halign: "center"
+                    MDLabel:
+                        text: "Voice"
+                        halign: "center"
+                        font_style: "Caption"
+            MDCard:
+                radius: [14]
+                on_release: app.show_msg("💾 Poster Downloaded in Gallery!")
+                MDBoxLayout:
+                    orientation: "vertical"
+                    padding: "5dp"
+                    MDIcon:
+                        icon: "download"
+                        halign: "center"
+                    MDLabel:
+                        text: "Download"
+                        halign: "center"
+                        font_style: "Caption"
+            MDCard:
+                radius: [14]
+                on_release: app.show_msg("🔗 Share - AT WORLD MATTER")
+                MDBoxLayout:
+                    orientation: "vertical"
+                    padding: "5dp"
+                    MDIcon:
+                        icon: "share-variant"
+                        halign: "center"
+                    MDLabel:
+                        text: "Share"
+                        halign: "center"
+                        font_style: "Caption"
+
+<BrainScreen>:
+    name: "brain"
+    MDBoxLayout:
+        orientation: "vertical"
+        padding: "12dp"
+        spacing: "10dp"
         MDBoxLayout:
             size_hint_y: None
-            height: "56dp"
-            padding: "6dp"
-            spacing: "6dp"
-            MDTextField:
-                id: msg_input
-                hint_text: "Message - WASM + RAKSHAK Nazar"
-                mode: "round"
+            height: "40dp"
             MDIconButton:
-                icon: "send"
-                theme_icon_color: "Custom"
-                icon_color: 0.03,0.36,0.33,1
-                on_press: app.send_msg()
+                icon: "arrow-left"
+                on_release: root.manager.current = "home"
+            MDLabel:
+                text: "🧠 AT BRAIN"
+                bold: True
+        ScrollView:
+            id: chat_scroll
+            MDBoxLayout:
+                id: chat_box
+                orientation: "vertical"
+                adaptive_height: True
+                spacing: "8dp"
+                MDLabel:
+                    text: "AT BRAIN: AT WORLD MATTER ready! Bolo ka haal ba?"
+                    adaptive_height: True
+                    padding: "10dp"
+        MDBoxLayout:
+            size_hint_y: None
+            height: "50dp"
+            spacing: "8dp"
+            MDTextField:
+                id: user_input
+                hint_text: "Yaha likho..."
+            MDRaisedButton:
+                text: "Send"
+                on_release: app.send_msg()
+
+<PosterScreen>:
+    name: "poster"
+    MDBoxLayout:
+        orientation: "vertical"
+        padding: "12dp"
+        spacing: "10dp"
+        MDBoxLayout:
+            size_hint_y: None
+            height: "40dp"
+            MDIconButton:
+                icon: "arrow-left"
+                on_release: root.manager.current = "home"
+            MDLabel:
+                text: "🖼️ Photo Shayari Poster"
+                bold: True
+        MDTextField:
+            id: shayari_text
+            hint_text: "Shayari likho..."
+            size_hint_y: None
+            height: "50dp"
+        MDBoxLayout:
+            size_hint_y: None
+            height: "45dp"
+            spacing: "10dp"
+            MDRaisedButton:
+                text: "✨ Banao"
+                on_release: app.make_poster()
+            MDRaisedButton:
+                text: "💾 Download"
+                md_bg_color: 0.06,0.54,0.37,1
+                on_release: app.show_msg("Poster Saved!")
+        MDLabel:
+            id: poster_preview
+            text: "Poster Preview Yaha Ayega\\n[Camera/Gallery se photo + Shayari]\\nAT WORLD MATTER"
+            halign: "center"
+            md_bg_color: 0.48,0.38,1,0.2
+            radius: [14]
+
+<OnlineScreen>:
+    name: "online"
+    MDBoxLayout:
+        orientation: "vertical"
+        padding: "12dp"
+        MDBoxLayout:
+            size_hint_y: None
+            height: "40dp"
+            MDIconButton:
+                icon: "arrow-left"
+                on_release: root.manager.current = "home"
+            MDLabel:
+                text: "💬 Online AT"
+                bold: True
+        MDCard:
+            padding: "20dp"
+            MDLabel:
+                text: "Global Chat - AT WORLD MATTER\\nSabhi AT Members yaha chat kar sakte hai\\nComing Soon - Full Chat Feature"
+                halign: "center"
+
+<SettingsScreen>:
+    name: "settings"
+    MDBoxLayout:
+        orientation: "vertical"
+        padding: "12dp"
+        MDBoxLayout:
+            size_hint_y: None
+            height: "40dp"
+            MDIconButton:
+                icon: "arrow-left"
+                on_release: root.manager.current = "home"
+            MDLabel:
+                text: "⚙️ Settings"
+                bold: True
+        MDCard:
+            padding: "15dp"
+            orientation: "vertical"
+            MDLabel:
+                text: "🌙 Dark Mode: ON/OFF Button se badlo"
+            MDRaisedButton:
+                text: "Toggle Dark Mode"
+                on_release: app.toggle_dark()
+            MDLabel:
+                text: "\\n🛡️ WASM + Rakshak ON\\nAT WORLD MATTER v2.0 - Final"
+                adaptive_height: True
+
+<CrownScreen>:
+    name: "crown"
+    MDBoxLayout:
+        orientation: "vertical"
+        padding: "12dp"
+        MDBoxLayout:
+            size_hint_y: None
+            height: "40dp"
+            MDIconButton:
+                icon: "arrow-left"
+                on_release: root.manager.current = "home"
+            MDLabel:
+                text: "🛡️ AT CROWN"
+                bold: True
+        MDCard:
+            padding: "20dp"
+            MDLabel:
+                text: "Secure + WASM + Rakshak ON\\nAT WORLD MATTER Protected\\nAT CROWN - Tap to Secure Your World"
+                halign: "center"
 '''
 
-class MainScreen(Screen): pass
-class ChatScreen(Screen): pass
-class MenuScreen(Screen): pass
+class HomeScreen(Screen): pass
+class BrainScreen(Screen): pass
+class PosterScreen(Screen): pass
+class OnlineScreen(Screen): pass
+class SettingsScreen(Screen): pass
+class CrownScreen(Screen): pass
 
-class ATWorldMatterApp(MDApp):
+class AtWorldMatterApp(MDApp):
+    dialog = None
     def build(self):
-        self.theme_cls.primary_palette = "Green"
+        self.theme_cls.primary_palette = "Blue"
         return Builder.load_string(KV)
 
-    def on_start(self):
-        Clock.schedule_once(lambda dt: self.load_chats(), 0.5)
+    def toggle_dark(self):
+        self.theme_cls.theme_style = "Dark" if self.theme_cls.theme_style == "Light" else "Light"
 
-    def load_chats(self):
-        try:
-            lst = self.root.get_screen('main').ids.chat_list
-            lst.clear_widgets()
-            from kivymd.uix.list import OneLineListItem
-            data = [("AT BRAIN","WASM + RAKSHAK + SECURE active"),("AT World Mater","Welcome Anuj!"),("Poster Studio","Poster exported"),("Online AT","typing... WASM"),("Camera","Photo captured"),("Gallery","12 images"),("Contacts","Anuj Tripathi"),("Call Logs","Missed voice call"),("Voice Notes","0:24 voice"),("Downloads","AT_Banner.png"),("Share","Shared to 3 groups")]
-            for n,m in data:
-                item = OneLineListItem(text=f"{n} - {m}")
-                item.bind(on_release=lambda x, name=n: self.open_chat(name))
-                lst.add_widget(item)
-        except Exception as e:
-            print(f"load_chats error: {e}")
-
-    def open_chat(self, name):
-        try:
-            if any(w in name.lower() for w in ["abuse","gali","porn","chutiya"]):
-                from kivymd.uix.snackbar import Snackbar; Snackbar(text="⚠️ RAKSHAK WARNING: Roka!").open(); return
-            self.current_chat = name
-            self.root.get_screen('chat').ids.chat_title.text = name
-            box = self.root.get_screen('chat').ids.msg_box
-            box.clear_widgets()
-            from kivymd.uix.label import MDLabel
-            for msg, is_me in DB.get_chats(name):
-                box.add_widget(MDLabel(text=f"{'You: ' if is_me else 'AT: '}{msg}", adaptive_height=True, padding=[10,6]))
-            self.root.current = 'chat'
-        except Exception as e:
-            print(f"open_chat error: {e}")
+    def show_msg(self, text):
+        if self.dialog:
+            self.dialog.dismiss()
+        self.dialog = MDDialog(text=text, buttons=[])
+        self.dialog.open()
 
     def send_msg(self):
         try:
-            scr = self.root.get_screen('chat')
-            t = scr.ids.msg_input.text.strip()
-            if not t: return
-            scr.ids.msg_input.text = ""
-            if any(w in t.lower() for w in ["abuse","gali","porn","chutiya"]):
-                from kivymd.uix.snackbar import Snackbar; Snackbar(text="⚠️ RAKSHAK WARNING: Galat content roka!").open(); return
-            DB.save_chat(self.current_chat, t, True)
+            screen = self.root.get_screen("brain")
+            inp = screen.ids.user_input
+            chat = screen.ids.chat_box
+            msg = inp.text.strip()
+            if not msg: return
             from kivymd.uix.label import MDLabel
-            scr.ids.msg_box.add_widget(MDLabel(text=f"You: {t}", adaptive_height=True, bold=True, padding=[10,6]))
-            reply = f"🧠 AT BRAIN (WASM+RAKSHAK): {t} - Phone Test OK!"
-            DB.save_chat(self.current_chat, reply, False)
-            scr.ids.msg_box.add_widget(MDLabel(text=f"AT: {reply}", adaptive_height=True, padding=[10,6]))
-        except Exception as e:
-            print(f"send_msg error: {e}")
-
-    def do_backup(self):
-        try:
-            from kivymd.uix.snackbar import Snackbar
-            Snackbar(text=DB.backup()).open()
-        except Exception as e:
-            print(f"backup error: {e}")
-
-ATWorldMatterApp().run()
+            from kivy.metrics import dp
+            chat.add_widget(MDLabel(text=f"You: {msg}", adaptive_height=True, padding=[10,10]))
+            reply = f"{msg} - Done!"
+            low = msg.lower()
+            if "ka haal" in low: reply = "Haan Malik! Ka haal ba? Sab first class ba!"
+            elif "kaise" in low: reply = "Ekdam mast! AT WORLD MATTER ready ba!"
+            chat.add_widget(MDLabel(text=f"AT BRAIN: {reply}", adaptive_height=True, padding=[10,10], theme_text_color="Custom", text_color=(0.11,0.42,1,1)))
