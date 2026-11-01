@@ -25,6 +25,7 @@ jobs:
           import pathlib, shutil
           shutil.rmtree(".buildozer", ignore_errors=True)
           shutil.rmtree("bin", ignore_errors=True)
+          pathlib.Path("buildozer.spec").unlink(missing_ok=True)
           spec = """[app]
           title = AT World Matter
           package.name = atworldmatter
@@ -32,7 +33,7 @@ jobs:
           source.dir = .
           source.include_exts = py,png,jpg,kv,atlas
           version = 6.0
-          requirements = python3,kivy==2.3.0,kivymd==1.1.1,pillow,plyer,android
+          requirements = python3,kivy==2.3.0,kivymd==1.1.1,pillow
           orientation = portrait
           [buildozer]
           log_level = 1
@@ -40,7 +41,7 @@ jobs:
           bootstrap = sdl2
           android.permissions = INTERNET
           android.api = 33
-          android.minapi = 21
+          android.minapi = 24
           android.ndk = 25b
           android.sdk = 33
           android.build_tools_version = 33.0.1
@@ -49,7 +50,7 @@ jobs:
           p4a.branch = v2023.08.05
           """
           pathlib.Path("buildozer.spec").write_text(spec)
-          print(spec)
+          print("SPEC CREATED SINGLE ARCH")
 
       - name: Pre-install SDK
         shell: python
@@ -58,12 +59,11 @@ jobs:
           home = os.path.expanduser("~")
           sdk_root = pathlib.Path(home) / ".buildozer/android/platform/android-sdk"
           sdk_root.mkdir(parents=True, exist_ok=True)
-          licenses_dir = sdk_root / "licenses"
-          licenses_dir.mkdir(parents=True, exist_ok=True)
-          lic_file = licenses_dir / "android-sdk-license"
-          lic_file.write_text("8933bad161af4178b1185d1a37fbf41ea5269c55\n")
+          ld = sdk_root / "licenses"
+          ld.mkdir(parents=True, exist_ok=True)
+          (ld / "android-sdk-license").write_text("8933bad161af4178b1185d1a37fbf41ea5269c55\n")
           os.chdir("/tmp")
-          subprocess.run("rm -rf cmdline-tools commandlinetools-linux-11076708_latest.zip", shell=True)
+          subprocess.run("rm -rf cmdline-tools", shell=True)
           subprocess.run("wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip", shell=True)
           subprocess.run("unzip -q commandlinetools-linux-11076708_latest.zip", shell=True)
           latest_dir = sdk_root / "cmdline-tools" / "latest"
@@ -77,27 +77,27 @@ jobs:
           if target.exists() or target.is_symlink():
               target.unlink()
           target.symlink_to(bin_path)
-          sdk_root_str = str(sdk_root)
-          latest_bin_str = str(latest_dir / "bin" / "sdkmanager")
-          subprocess.run("yes | " + latest_bin_str + " --sdk_root=" + sdk_root_str + " --licenses || true", shell=True)
-          subprocess.run("yes | " + latest_bin_str + " --sdk_root=" + sdk_root_str + " 'platform-tools' 'platforms;android-33' 'build-tools;33.0.1' || true", shell=True)
-          platform_dir = pathlib.Path(home) / ".buildozer/android/platform"
-          platform_dir.mkdir(parents=True, exist_ok=True)
-          os.chdir(str(platform_dir))
-          ndk_25 = platform_dir / "android-ndk-r25b"
+          srs = str(sdk_root)
+          lbs = str(bin_path)
+          subprocess.run("yes | " + lbs + " --sdk_root=" + srs + " --licenses || true", shell=True)
+          subprocess.run("yes | " + lbs + " --sdk_root=" + srs + " 'platform-tools' 'platforms;android-33' 'build-tools;33.0.1' || true", shell=True)
+          pd = pathlib.Path(home) / ".buildozer/android/platform"
+          pd.mkdir(parents=True, exist_ok=True)
+          os.chdir(str(pd))
+          ndk_25 = pd / "android-ndk-r25b"
           if not ndk_25.exists():
               subprocess.run("wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip", shell=True)
               subprocess.run("unzip -q android-ndk-r25b-linux.zip", shell=True)
-          r28c = platform_dir / "android-ndk-r28c"
-          r25b = platform_dir / "android-ndk-r25b"
+          r28c = pd / "android-ndk-r28c"
+          r25b = pd / "android-ndk-r25b"
           if r28c.exists() or r28c.is_symlink():
               subprocess.run("rm -rf " + str(r28c), shell=True)
           subprocess.run("ln -s " + str(r25b) + " " + str(r28c), shell=True)
-          print("SDK DONE")
 
       - name: Build APK
         run: |
           rm -rf bin
+          cat buildozer.spec | grep archs
           buildozer android debug
 
       - name: Upload APK
