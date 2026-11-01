@@ -62,7 +62,6 @@ jobs:
           sdk_root.mkdir(parents=True, exist_ok=True)
           (sdk_root / "licenses").mkdir(parents=True, exist_ok=True)
           (sdk_root / "licenses" / "android-sdk-license").write_text("8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a4f788a98278d7be218930e8097c8f5b\n")
-          # download cmdline-tools
           os.chdir("/tmp")
           subprocess.run("rm -rf cmdline-tools commandlinetools-linux-11076708_latest.zip", shell=True)
           subprocess.run("wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip", shell=True)
@@ -72,26 +71,6 @@ jobs:
           subprocess.run(f"chmod +x {sdk_root}/cmdline-tools/latest/bin/sdkmanager", shell=True)
           (sdk_root / "tools" / "bin").mkdir(parents=True, exist_ok=True)
           target = sdk_root / "tools" / "bin" / "sdkmanager"
-          if target.is_symlink() or target.exists():
-              target.unlink()
+          if target.is_symlink() or target.exists(): target.unlink()
           target.symlink_to(sdk_root / "cmdline-tools" / "latest" / "bin" / "sdkmanager")
-          subprocess.run(f"yes | {sdk_root}/cmdline-tools/latest/bin/sdkmanager --sdk_root={sdk_root} --licenses || true", shell=True)
-          subprocess.run(f"yes | {sdk_root}/cmdline-tools/latest/bin/sdkmanager --sdk_root={sdk_root} 'platform-tools' 'platforms;android-33' 'build-tools;33.0.1' || true", shell=True)
-          # NDK 25b
-          platform_dir = pathlib.Path(home) / ".buildozer/android/platform"
-          os.chdir(str(platform_dir))
-          if not (platform_dir / "android-ndk-r25b").exists():
-              subprocess.run("wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip", shell=True)
-              subprocess.run("unzip -q android-ndk-r25b-linux.zip", shell=True)
-          print("SDK and NDK ready")
-          PY
-
-      - name: Build APK
-        run: |
-          buildozer android debug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: AT-World-Matter-APK
-          path: bin/*.apk
+          subprocess.run(f"yes | {sdk_root}/cmdline-tools/latest/bin/sdkmanager --sdk_root={sdk_root} --licenses || true",
