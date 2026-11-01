@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Clean
+      - name: Clean All
         run: |
           rm -rf .buildozer bin buildozer.spec
           rm -rf ~/.buildozer
@@ -16,7 +16,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Create spec SINGLE ARCH
+      - name: Create Fixed Spec
         run: |
           cat > buildozer.spec << 'EOF'
           [app]
@@ -29,10 +29,10 @@ jobs:
           requirements = python3,kivy==2.3.0,kivymd==2.0.0,pillow,materialyoucolor,materialshapes
           orientation = portrait
           [buildozer]
-          log_level = 1
+          log_level = 2
           [app:android]
           bootstrap = sdl2
-          p4a.branch = v2023.08.05
+          p4a.branch = master
           android.api = 33
           android.minapi = 24
           android.ndk = 25b
@@ -42,7 +42,7 @@ jobs:
           android.archs = arm64-v8a
           android.permissions = INTERNET
           EOF
-      - name: Setup SDK
+      - name: Setup SDK NDK
         run: |
           pip install buildozer Cython==0.29.36
           SDK=$HOME/.buildozer/android/platform/android-sdk
