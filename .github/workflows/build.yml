@@ -16,55 +16,37 @@ jobs:
       - name: Install deps
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip wget libffi-dev
-          pip install buildozer==1.5.0 cython==0.29.36
+          sudo apt install -y git zip unzip wget libffi-dev libssl-dev
+          pip install buildozer Cython==0.29.36
 
       - name: Make spec
         run: |
           rm -f buildozer.spec
-          echo "[app]" > buildozer.spec
-          echo "title = AT World Matter" >> buildozer.spec
-          echo "package.name = atworldmatter" >> buildozer.spec
-          echo "package.domain = com.anuj.atworldmatter" >> buildozer.spec
-          echo "source.dir = ." >> buildozer.spec
-          echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
-          echo "version = 2.0" >> buildozer.spec
-          echo "requirements = hostpython3==3.11.9,python3==3.11.9,kivy==2.3.1,kivymd==1.1.1,pillow" >> buildozer.spec
-          echo "orientation = portrait" >> buildozer.spec
-          echo "" >> buildozer.spec
-          echo "[buildozer]" >> buildozer.spec
-          echo "log_level = 2" >> buildozer.spec
-          echo "" >> buildozer.spec
-          echo "[app:android]" >> buildozer.spec
-          echo "android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,CAMERA" >> buildozer.spec
-          echo "android.api = 33" >> buildozer.spec
-          echo "android.minapi = 21" >> buildozer.spec
-          echo "android.ndk = 25b" >> buildozer.spec
-          echo "android.sdk = 33" >> buildozer.spec
-          echo "android.accept_sdk_license_agreement = True" >> buildozer.spec
-          echo "p4a.bootstrap = sdl2" >> buildozer.spec
-          cat buildozer.spec
+          cat > buildozer.spec << 'EOF'
+          [app]
+          title = AT World Matter
+          package.name = atworldmatter
+          package.domain = com.anuj.atworldmatter
+          source.dir = .
+          source.include_exts = py,png,jpg,kv,atlas
+          version = 6.0
+          requirements = python3,kivy==2.3.0,kivymd==1.1.1,pillow,plyer,android
+          orientation = portrait
 
-      - name: Fix SDK
-        run: |
-          SDK=$HOME/.buildozer/android/platform/android-sdk
-          mkdir -p $SDK/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK/licenses/android-sdk-license
-          echo "24333f8a4f788a98278d7be218930e8097c8f5b" >> $SDK/licenses/android-sdk-license
-          mkdir -p $SDK/cmdline-tools
-          cd /tmp
-          rm -rf cmdline-tools
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          unzip -q commandlinetools-linux-11076708_latest.zip
-          rm -rf $SDK/cmdline-tools/latest
-          mkdir -p $SDK/cmdline-tools/latest
-          mv cmdline-tools/* $SDK/cmdline-tools/latest/
-          chmod +x $SDK/cmdline-tools/latest/bin/sdkmanager
-          mkdir -p $SDK/tools/bin
-          ln -sf $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
-          yes | $SDK/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK --licenses || true
-          yes | $SDK/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK "platform-tools" "platforms;android-33" "build-tools;33.0.1" || true
+          [buildozer]
+          log_level = 2
+
+          [app:android]
+          bootstrap = sdl2
+          android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,CAMERA,RECORD_AUDIO
+          android.api = 33
+          android.minapi = 21
+          android.ndk = 25b
+          android.sdk = 33
+          android.accept_sdk_license_agreement = True
+          android.archs = arm64-v8a, armeabi-v7a
+          p4a.branch = master
+          EOF
 
       - name: Build APK
         run: |
@@ -72,7 +54,4 @@ jobs:
           buildozer android debug
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: AT-World-Matter-APK
-          path: bin/*.apk
+        uses: actions/upload
