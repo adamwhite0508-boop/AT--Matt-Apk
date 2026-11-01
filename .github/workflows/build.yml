@@ -13,34 +13,29 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install deps
+      - name: Clean everything
         run: |
-          sudo apt update
-          sudo apt install -y git zip unzip wget libffi-dev libssl-dev
-          pip install buildozer Cython==0.29.36
+          rm -rf .buildozer bin buildozer.spec
+          rm -rf ~/.buildozer/android/platform/build-*
+          echo "CLEANED"
 
-      - name: Make spec
-        shell: python
+      - name: Create spec (bash - no python error)
         run: |
-          import pathlib, shutil, textwrap
-          shutil.rmtree(".buildozer", ignore_errors=True)
-          shutil.rmtree("bin", ignore_errors=True)
-          pathlib.Path("buildozer.spec").unlink(missing_ok=True)
-          spec = textwrap.dedent('''
+          cat > buildozer.spec << 'ENDOFFILE'
           [app]
           title = AT World Matter
           package.name = atworldmatter
-          package.domain = com.anuj.atworldmatter
+          package.domain = com.atworldmatter.app
           source.dir = .
           source.include_exts = py,png,jpg,kv,atlas
-          version = 6.0
+          version = 1.0
           requirements = python3,kivy==2.3.0,kivymd==1.1.1,pillow
           orientation = portrait
           [buildozer]
           log_level = 1
           [app:android]
           bootstrap = sdl2
-          android.permissions = INTERNET
+          p4a.branch = v2023.08.05
           android.api = 33
           android.minapi = 24
           android.ndk = 25b
@@ -48,61 +43,47 @@ jobs:
           android.build_tools_version = 33.0.1
           android.accept_sdk_license_agreement = True
           android.archs = arm64-v8a
-          p4a.branch = v2023.08.05
-          ''')
-          pathlib.Path("buildozer.spec").write_text(spec)
-          print(spec)
+          android.permissions = INTERNET
+          ENDOFFILE
+          cat buildozer.spec
+          grep archs buildozer.spec
+
+      - name: Install deps
+        run: |
+          sudo apt update
+          sudo apt install -y git zip unzip wget libffi-dev libssl-dev
+          pip install buildozer Cython==0.29.36
 
       - name: Pre-install SDK
-        shell: python
         run: |
-          import os, subprocess, pathlib
-          home = os.path.expanduser("~")
-          sdk_root = pathlib.Path(home) / ".buildozer/android/platform/android-sdk"
-          sdk_root.mkdir(parents=True, exist_ok=True)
-          (sdk_root / "licenses").mkdir(parents=True, exist_ok=True)
-          (sdk_root / "licenses" / "android-sdk-license").write_text("8933bad161af4178b1185d1a37fbf41ea5269c55\n")
-          os.chdir("/tmp")
-          subprocess.run("rm -rf cmdline-tools", shell=True)
-          subprocess.run("wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip", shell=True)
-          subprocess.run("unzip -q commandlinetools-linux-11076708_latest.zip", shell=True)
-          latest_dir = sdk_root / "cmdline-tools" / "latest"
-          latest_dir.mkdir(parents=True, exist_ok=True)
-          subprocess.run("cp -r /tmp/cmdline-tools/* " + str(latest_dir) + "/", shell=True)
-          bin_path = latest_dir / "bin" / "sdkmanager"
-          subprocess.run("chmod +x " + str(bin_path), shell=True)
-          tools_bin = sdk_root / "tools" / "bin"
-          tools_bin.mkdir(parents=True, exist_ok=True)
-          target = tools_bin / "sdkmanager"
-          if target.exists() or target.is_symlink():
-              target.unlink()
-          target.symlink_to(bin_path)
-          srs = str(sdk_root)
-          lbs = str(bin_path)
-          subprocess.run("yes | " + lbs + " --sdk_root=" + srs + " --licenses || true", shell=True)
-          subprocess.run("yes | " + lbs + " --sdk_root=" + srs + " 'platform-tools' 'platforms;android-33' 'build-tools;33.0.1' || true", shell=True)
-          pd = pathlib.Path(home) / ".buildozer/android/platform"
-          pd.mkdir(parents=True, exist_ok=True)
-          os.chdir(str(pd))
-          ndk_25 = pd / "android-ndk-r25b"
-          if not ndk_25.exists():
-              subprocess.run("wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip", shell=True)
-              subprocess.run("unzip -q android-ndk-r25b-linux.zip", shell=True)
-          r28c = pd / "android-ndk-r28c"
-          r25b = pd / "android-ndk-r25b"
-          if r28c.exists() or r28c.is_symlink():
-              subprocess.run("rm -rf " + str(r28c), shell=True)
-          subprocess.run("ln -s " + str(r25b) + " " + str(r28c), shell=True)
-          # FORCE DELETE OLD DUAL BUILD FOLDER
-          subprocess.run("rm -rf " + str(pd / "build-arm64-v8a_armeabi-v7a") + " " + str(pd / "build-armeabi-v7a") + " " + str(pd / "build-arm64-v8a"), shell=True)
-          subprocess.run("rm -rf " + str(pathlib.Path(home) / ".buildozer/android/app"), shell=True)
+          SDK_ROOT="$HOME/.buildozer/android/platform/android-sdk"
+          mkdir -p "$SDK_ROOT/licenses"
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > "$SDK_ROOT/licenses/android-sdk-license"
+          cd /tmp
+          rm -rf cmdline-tools commandlinetools-linux-11076708_latest.zip
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q commandlinetools-linux-11076708_latest.zip
+          mkdir -p "$SDK_ROOT/cmdline-tools/latest"
+          cp -r cmdline-tools/* "$SDK_ROOT/cmdline-tools/latest/"
+          chmod +x "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          mkdir -p "$SDK_ROOT/tools/bin"
+          ln -sf "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "$SDK_ROOT/tools/bin/sdkmanager"
+          yes | "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK_ROOT" --licenses || true
+          yes | "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK_ROOT" "platform-tools" "platforms;android-33" "build-tools;33.0.1" || true
+          PLAT="$HOME/.buildozer/android/platform"
+          mkdir -p "$PLAT"
+          cd "$PLAT"
+          if [ ! -d "android-ndk-r25b" ]; then
+            wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
+            unzip -q android-ndk-r25b-linux.zip
+          fi
+          rm -rf android-ndk-r28c
+          ln -s android-ndk-r25b android-ndk-r28c
+          rm -rf "$PLAT/build-arm64-v8a_armeabi-v7a" "$PLAT/build-armeabi-v7a" "$HOME/.buildozer/android/app"
 
       - name: Build APK
         run: |
-          rm -rf bin
-          rm -rf .buildozer/android/platform/build-*
-          rm -rf .buildozer/android/app
-          cat buildozer.spec | grep -A2 archs
+          rm -rf bin .buildozer/android/platform/build-* .buildozer/android/app
           buildozer android debug
 
       - name: Upload APK
