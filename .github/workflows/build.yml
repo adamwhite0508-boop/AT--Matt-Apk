@@ -20,9 +20,9 @@ jobs:
           pip install buildozer Cython==0.29.36
 
       - name: Make spec
+        shell: python
         run: |
-          rm -rf .buildozer bin
-          python3 << 'PY'
+          import pathlib
           spec = """
           [app]
           title = AT World Matter
@@ -49,13 +49,12 @@ jobs:
           android.archs = arm64-v8a
           p4a.branch = v2023.08.05
           """
-          open('buildozer.spec','w').write(spec)
-          print(open('buildozer.spec').read())
-          PY
+          pathlib.Path("buildozer.spec").write_text(spec)
+          print(open("buildozer.spec").read())
 
       - name: Pre-install SDK
+        shell: python
         run: |
-          python3 << 'PY'
           import os, subprocess, pathlib
           home = os.path.expanduser("~")
           sdk_root = pathlib.Path(home) / ".buildozer/android/platform/android-sdk"
@@ -69,8 +68,34 @@ jobs:
           (sdk_root / "cmdline-tools" / "latest").mkdir(parents=True, exist_ok=True)
           subprocess.run(f"cp -r /tmp/cmdline-tools/* {sdk_root}/cmdline-tools/latest/", shell=True)
           subprocess.run(f"chmod +x {sdk_root}/cmdline-tools/latest/bin/sdkmanager", shell=True)
-          (sdk_root / "tools" / "bin").mkdir(parents=True, exist_ok=True)
-          target = sdk_root / "tools" / "bin" / "sdkmanager"
-          if target.is_symlink() or target.exists(): target.unlink()
+          tools_bin = sdk_root / "tools" / "bin"
+          tools_bin.mkdir(parents=True, exist_ok=True)
+          target = tools_bin / "sdkmanager"
+          if target.exists() or target.is_symlink():
+              target.unlink()
           target.symlink_to(sdk_root / "cmdline-tools" / "latest" / "bin" / "sdkmanager")
-          subprocess.run(f"yes | {sdk_root}/cmdline-tools/latest/bin/sdkmanager --sdk_root={sdk_root} --licenses || true",
+          subprocess.run(f"yes | {sdk_root}/cmdline-tools/latest/bin/sdkmanager --sdk_root={sdk_root} --licenses || true", shell=True)
+          subprocess.run(f"yes | {sdk_root}/cmdline-tools/latest/bin/sdkmanager --sdk_root={sdk_root} 'platform-tools' 'platforms;android-33' 'build-tools;33.0.1' || true", shell=True)
+          platform_dir = pathlib.Path(home) / ".buildozer/android/platform"
+          platform_dir.mkdir(parents=True, exist_ok=True)
+          os.chdir(str(platform_dir))
+          if not (platform_dir / "android-ndk-r25b").exists():
+              subprocess.run("wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip", shell=True)
+              subprocess.run("unzip -q android-ndk-r25b-linux.zip", shell=True)
+          r28c = platform_dir / "android-ndk-r28c"
+          r25b = platform_dir / "android-ndk-r25b"
+          if r28c.exists() or r28c.is_symlink():
+              subprocess.run(f"rm -rf {r28c}", shell=True)
+          subprocess.run(f"ln -s {r25b} {r28c}", shell=True)
+          print("SDK + NDK ready")
+
+      - name: Build APK
+        run: |
+          rm -rf .buildozer bin
+          buildozer android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AT-World-Matter-APK
+          path: bin/*.apk
