@@ -35,13 +35,13 @@ jobs:
           source.dir = .
           source.include_exts = py,png,jpg,kv,atlas
           version = 1.0
-          requirements = python3,kivy==2.3.0,kivymd==2.0.0,pillow,materialyoucolor,materialshapes
+          requirements = python3,kivy==2.2.0,kivymd==1.1.1,Pillow==9.5.0
           orientation = portrait
           [buildozer]
           log_level = 2
           [app:android]
           bootstrap = sdl2
-          p4a.branch = master
+          p4a.branch = v2023.08.05
           android.api = 33
           android.minapi = 24
           android.ndk = 25b
