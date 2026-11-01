@@ -5,8 +5,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Clean
-        run: rm -rf .buildozer bin buildozer.spec ~/.buildozer
+      - name: Clean full cache
+        run: |
+          rm -rf .buildozer bin buildozer.spec
+          rm -rf ~/.buildozer
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
@@ -14,7 +16,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Create SINGLE ARCH spec
+      - name: Create spec SINGLE ARCH ONLY
         run: |
           cat > buildozer.spec << 'EOF'
           [app]
@@ -37,13 +39,18 @@ jobs:
           android.sdk = 33
           android.build_tools_version = 33.0.1
           android.accept_sdk_license_agreement = True
-          android.arch = arm64-v8a
           android.archs = arm64-v8a
           android.permissions = INTERNET
           EOF
-      - name: Setup SDK
+      - name: Install and FORCE PATCH
         run: |
           pip install buildozer Cython==0.29.36
+          # YEHI FIX HAI - Buildozer ke andar se dual arch hata rahe hai
+          PYFILE=$(python3 -c "import buildozer.targets.android; print(buildozer.targets.android.__file__)")
+          echo "Patching $PYFILE"
+          sed -i 's/arm64-v8a, armeabi-v7a/arm64-v8a/g' $PYFILE || true
+          sed -i 's/armeabi-v7a, arm64-v8a/arm64-v8a/g' $PYFILE || true
+          sed -i "s/'armeabi-v7a'//g" $PYFILE || true
           SDK=$HOME/.buildozer/android/platform/android-sdk
           mkdir -p $SDK/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK/licenses/android-sdk-license
@@ -64,7 +71,9 @@ jobs:
           rm -rf android-ndk-r28c
           ln -s android-ndk-r25b android-ndk-r28c
       - name: Build APK
-        run: buildozer android debug
+        run: |
+          rm -rf $HOME/.buildozer/android/platform/build-*
+          buildozer android debug
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
