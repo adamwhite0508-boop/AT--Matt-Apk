@@ -22,11 +22,12 @@ jobs:
       - name: Make spec
         shell: python
         run: |
-          import pathlib, shutil
+          import pathlib, shutil, textwrap
           shutil.rmtree(".buildozer", ignore_errors=True)
           shutil.rmtree("bin", ignore_errors=True)
           pathlib.Path("buildozer.spec").unlink(missing_ok=True)
-          spec = """[app]
+          spec = textwrap.dedent('''
+          [app]
           title = AT World Matter
           package.name = atworldmatter
           package.domain = com.anuj.atworldmatter
@@ -48,9 +49,9 @@ jobs:
           android.accept_sdk_license_agreement = True
           android.archs = arm64-v8a
           p4a.branch = v2023.08.05
-          """
+          ''')
           pathlib.Path("buildozer.spec").write_text(spec)
-          print("SPEC CREATED SINGLE ARCH")
+          print(spec)
 
       - name: Pre-install SDK
         shell: python
@@ -59,9 +60,8 @@ jobs:
           home = os.path.expanduser("~")
           sdk_root = pathlib.Path(home) / ".buildozer/android/platform/android-sdk"
           sdk_root.mkdir(parents=True, exist_ok=True)
-          ld = sdk_root / "licenses"
-          ld.mkdir(parents=True, exist_ok=True)
-          (ld / "android-sdk-license").write_text("8933bad161af4178b1185d1a37fbf41ea5269c55\n")
+          (sdk_root / "licenses").mkdir(parents=True, exist_ok=True)
+          (sdk_root / "licenses" / "android-sdk-license").write_text("8933bad161af4178b1185d1a37fbf41ea5269c55\n")
           os.chdir("/tmp")
           subprocess.run("rm -rf cmdline-tools", shell=True)
           subprocess.run("wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip", shell=True)
@@ -93,11 +93,16 @@ jobs:
           if r28c.exists() or r28c.is_symlink():
               subprocess.run("rm -rf " + str(r28c), shell=True)
           subprocess.run("ln -s " + str(r25b) + " " + str(r28c), shell=True)
+          # FORCE DELETE OLD DUAL BUILD FOLDER
+          subprocess.run("rm -rf " + str(pd / "build-arm64-v8a_armeabi-v7a") + " " + str(pd / "build-armeabi-v7a") + " " + str(pd / "build-arm64-v8a"), shell=True)
+          subprocess.run("rm -rf " + str(pathlib.Path(home) / ".buildozer/android/app"), shell=True)
 
       - name: Build APK
         run: |
           rm -rf bin
-          cat buildozer.spec | grep archs
+          rm -rf .buildozer/android/platform/build-*
+          rm -rf .buildozer/android/app
+          cat buildozer.spec | grep -A2 archs
           buildozer android debug
 
       - name: Upload APK
