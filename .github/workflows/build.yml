@@ -21,25 +21,62 @@ jobs:
 
       - name: Make spec
         run: |
-          rm -f buildozer.spec
-          echo "[app]" > buildozer.spec
-          echo "title = AT World Matter" >> buildozer.spec
-          echo "package.name = atworldmatter" >> buildozer.spec
-          echo "package.domain = com.anuj.atworldmatter" >> buildozer.spec
-          echo "source.dir = ." >> buildozer.spec
-          echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
-          echo "version = 6.0" >> buildozer.spec
-          echo "requirements = python3,kivy==2.3.0,kivymd==1.1.1,pillow,plyer,android" >> buildozer.spec
-          echo "orientation = portrait" >> buildozer.spec
-          echo "" >> buildozer.spec
-          echo "[buildozer]" >> buildozer.spec
-          echo "log_level = 1" >> buildozer.spec
-          echo "" >> buildozer.spec
-          echo "[app:android]" >> buildozer.spec
-          echo "bootstrap = sdl2" >> buildozer.spec
-          echo "android.permissions = INTERNET" >> buildozer.spec
-          echo "android.api = 33" >> buildozer.spec
-          echo "android.minapi = 21" >> buildozer.spec
-          echo "android.ndk = 25b" >> buildozer.spec
-          echo "android.sdk = 33" >> buildozer.spec
-          echo "
+          python3 << 'PY'
+          spec = """
+          [app]
+          title = AT World Matter
+          package.name = atworldmatter
+          package.domain = com.anuj.atworldmatter
+          source.dir = .
+          source.include_exts = py,png,jpg,kv,atlas
+          version = 6.0
+          requirements = python3,kivy==2.3.0,kivymd==1.1.1,pillow,plyer,android
+          orientation = portrait
+
+          [buildozer]
+          log_level = 1
+
+          [app:android]
+          bootstrap = sdl2
+          android.permissions = INTERNET
+          android.api = 33
+          android.minapi = 21
+          android.ndk = 25b
+          android.sdk = 33
+          android.build_tools_version = 33.0.1
+          android.accept_sdk_license_agreement = True
+          android.archs = arm64-v8a
+          p4a.branch = v2024.01.21
+          """
+          open('buildozer.spec','w').write(spec)
+          print(open('buildozer.spec').read())
+          PY
+
+      - name: Pre-install SDK
+        run: |
+          SDK=$HOME/.buildozer/android/platform/android-sdk
+          mkdir -p $SDK/cmdline-tools $SDK/tools/bin $SDK/licenses
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $SDK/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK/licenses/android-sdk-license
+          echo "24333f8a4f788a98278d7be218930e8097c8f5b" >> $SDK/licenses/android-sdk-license
+          cd /tmp
+          rm -rf cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q commandlinetools-linux-11076708_latest.zip
+          mkdir -p $SDK/cmdline-tools/latest
+          cp -r cmdline-tools/* $SDK/cmdline-tools/latest/
+          chmod +x $SDK/cmdline-tools/latest/bin/sdkmanager
+          ln -sf $SDK/cmdline-tools/latest/bin/sdkmanager $SDK/tools/bin/sdkmanager
+          yes | $SDK/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK --licenses || true
+          yes | $SDK/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK "platform-tools" "platforms;android-33" "build-tools;33.0.1" "build-tools;37.0.0" || true
+
+      - name: Build APK
+        run: |
+          rm -rf bin
+          buildozer android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AT-World-Matter-APK
+          path: bin/*.apk
