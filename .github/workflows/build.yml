@@ -14,7 +14,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Create spec SIMPLE TEST
+      - name: Create spec
         run: |
           cat > buildozer.spec << 'EOF'
           [app]
@@ -24,10 +24,10 @@ jobs:
           source.dir = .
           source.include_exts = py,png,jpg,kv,atlas
           version = 1.0
-          requirements = python3,kivy==2.2.0
+          requirements = python3,kivy==2.2.0,kivymd==1.1.1,Pillow==9.5.0
           orientation = portrait
           [buildozer]
-          log_level = 2
+          log_level = 1
           [app:android]
           bootstrap = sdl2
           p4a.branch = v2023.08.05
@@ -63,7 +63,7 @@ jobs:
           rm -rf android-ndk-r28c
           ln -s android-ndk-r25b android-ndk-r28c
       - name: Build APK
-        run: buildozer android debug
+        run: buildozer android debug 2>&1 | tail -n 200
       - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
