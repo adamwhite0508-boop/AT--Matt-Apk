@@ -9,8 +9,6 @@ source.include_patterns = assets/*,images/*,*.png,*.jpg
 source.exclude_exts = spec,md,yml,yaml
 
 version = 1.0
-version.regex = __version__ = ['"](.*)['"]
-version.filename = %(source.dir)s/main.py
 
 requirements = python3,kivy==2.3.0,kivymd==1.2.0,Pillow
 orientation = portrait
@@ -35,8 +33,4 @@ android.archs = arm64-v8a
 android.allow_backup = False
 
 android.permissions = INTERNET
-
-# icon (agar hai to)
-# android.icon = icon.png
-# presplash color
 android.presplash_color = #FFFFFF
