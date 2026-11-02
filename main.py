@@ -150,4 +150,31 @@ class ATWorldMatterApp(MDApp):
     def build(self):
         self.theme_cls.primary_palette = "Blue"
         self.theme_cls.theme_style = "Light"
-        # Agar image nahi hai to Fit
+        # Agar image nahi hai to blank na ho
+        if not os.path.exists("icon.png"):
+            print("Warning: icon.png not found!")
+        if not os.path.exists("login_banner.png"):
+            print("Warning: login_banner.png not found!")
+        return Builder.load_string(KV)
+
+    def go_home(self):
+        self.root.ids.sm.current = "main"
+        self.root.ids.nav_drawer.set_state("close")
+
+    def open_drawer(self):
+        self.root.ids.nav_drawer.set_state("open")
+
+    def open_at_function(self, name):
+        print(f"Opening: {name}")
+        self.root.ids.nav_drawer.set_state("close")
+        if name == "brain":
+            self.root.ids.sm.current = "main"
+        elif name == "poster":
+            self.root.ids.sm.current = "main"
+        elif name == "crown":
+            self.root.ids.sm.current = "main"
+        elif name == "about":
+            self.root.ids.sm.current = "main"
+
+if __name__ == "__main__":
+    ATWorldMatterApp().run()
