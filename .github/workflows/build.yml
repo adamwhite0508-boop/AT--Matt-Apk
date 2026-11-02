@@ -5,7 +5,6 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-
       - name: Clean
         run: rm -rf .buildozer bin buildozer.spec ~/.buildozer /home/runner/.buildozer
 
@@ -18,7 +17,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Create spec - SINGLE ARCH FORCED
+      - name: Create spec - SINGLE ARCH
         run: |
           cat > buildozer.spec << 'EOF'
           [app]
@@ -28,7 +27,7 @@ jobs:
           source.dir = .
           source.include_exts = py,png,jpg,kv,atlas
           version = 1.0
-          requirements = python3,kivy==2.2.0,kivymd==1.1.1,Pillow==9.5.0
+          requirements = python3,kivy==2.2.0,kivymd==1.1.1,Pillow
           orientation = portrait
           [buildozer]
           log_level = 2
@@ -46,15 +45,31 @@ jobs:
           android.permissions = INTERNET
           EOF
           cat buildozer.spec
-          echo "--- Checking arch line ---"
-          grep -i arch buildozer.spec
 
-      - name: Install and PATCH Buildozer to single arch
+      - name: Install Buildozer + HACK to remove armeabi-v7a
         run: |
           pip install buildozer Cython==0.29.36
-          # Patch default.spec so it never uses armeabi-v7a
-          find /opt/hostedtoolcache -name "default.spec" 2>/dev/null -exec sed -i 's/armeabi-v7a//g; s/arm64-v8a, ,/arm64-v8a/g; s/, ,/,/g' {} \; || true
-          find /opt/hostedtoolcache -name "default.spec" -exec cat {} \; | grep arch || true
+          PYBIN=$(find /opt/hostedtoolcache/Python -name python -type f | grep "3.10.*/x64/bin/python$" | head -1)
+          echo "Found python at $PYBIN"
+          mv $PYBIN ${PYBIN}.real
+          cat > $PYBIN << 'PYEOF'
+          #!/bin/bash
+          filtered=()
+          for arg in "$@"; do
+            if [[ "$arg" == *"armeabi-v7a"* ]]; then
+              echo "[HACK] Removing arg: $arg" >&2
+              continue
+            fi
+            filtered+=("$arg")
+          done
+          # Fix build dir name if it contains dual arch
+          for i in "${!filtered[@]}"; do
+            filtered[$i]=$(echo "${filtered[$i]}" | sed 's/arm64-v8a_armeabi-v7a/arm64-v8a/g' | sed 's/armeabi-v7a_arm64-v8a/arm64-v8a/g')
+          done
+          exec ${PYBIN}.real "${filtered[@]}"
+          PYEOF
+          chmod +x $PYBIN
+          cat $PYBIN
 
       - name: Setup SDK NDK
         run: |
