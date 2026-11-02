@@ -6,10 +6,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Clean cache
-        run: |
-          rm -rf .buildozer bin buildozer.spec
-          rm -rf ~/.buildozer /home/runner/.buildozer
+      - name: Clean
+        run: rm -rf .buildozer bin buildozer.spec ~/.buildozer /home/runner/.buildozer
 
       - uses: actions/setup-python@v5
         with:
@@ -20,7 +18,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Create buildozer.spec
+      - name: Create spec - SINGLE ARCH FORCED
         run: |
           cat > buildozer.spec << 'EOF'
           [app]
@@ -43,13 +41,20 @@ jobs:
           android.sdk = 33
           android.build_tools_version = 33.0.1
           android.accept_sdk_license_agreement = True
+          android.arch = arm64-v8a
           android.archs = arm64-v8a
           android.permissions = INTERNET
           EOF
           cat buildozer.spec
+          echo "--- Checking arch line ---"
+          grep -i arch buildozer.spec
 
-      - name: Install Buildozer
-        run: pip install buildozer Cython==0.29.36
+      - name: Install and PATCH Buildozer to single arch
+        run: |
+          pip install buildozer Cython==0.29.36
+          # Patch default.spec so it never uses armeabi-v7a
+          find /opt/hostedtoolcache -name "default.spec" 2>/dev/null -exec sed -i 's/armeabi-v7a//g; s/arm64-v8a, ,/arm64-v8a/g; s/, ,/,/g' {} \; || true
+          find /opt/hostedtoolcache -name "default.spec" -exec cat {} \; | grep arch || true
 
       - name: Setup SDK NDK
         run: |
