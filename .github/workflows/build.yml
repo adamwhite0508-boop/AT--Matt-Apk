@@ -5,16 +5,20 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Clean
+      
+      - name: Clean old build
         run: rm -rf .buildozer bin buildozer.spec ~/.buildozer
-      - uses: actions/setup-python@v4
+
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-      - uses: actions/setup-java@v3
+
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Create spec
+
+      - name: Create buildozer.spec
         run: |
           cat > buildozer.spec << 'EOF'
           [app]
@@ -24,25 +28,4 @@ jobs:
           source.dir = .
           source.include_exts = py,png,jpg,kv,atlas
           version = 1.0
-          requirements = python3,kivy==2.2.0,kivymd==1.1.1,Pillow==9.5.0
-          orientation = portrait
-          [buildozer]
-          log_level = 2
-          [app:android]
-          bootstrap = sdl2
-          p4a.branch = v2023.08.05
-          android.api = 33
-          android.minapi = 24
-          android.ndk = 25b
-          android.sdk = 33
-          android.build_tools_version = 33.0.1
-          android.accept_sdk_license_agreement = True
-          android.archs = arm64-v8a
-          android.permissions = INTERNET
-          EOF
-      - name: Setup SDK + NDK
-        run: |
-          pip install buildozer Cython==0.29.36
-          SDK=$HOME/.buildozer/android/platform/android-sdk
-          mkdir -p $SDK/licenses
-          echo "8933bad161af4178b1185d1a37
+          requirements = python3,kivy==2.2.0,kivymd==1
