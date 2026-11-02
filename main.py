@@ -1,7 +1,6 @@
 from kivy.lang import Builder
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.clock import Clock
 import os
 
 KV = '''
@@ -33,7 +32,7 @@ MDNavigationLayout:
                     size_hint: None, None
                     size: "80dp", "80dp"
                     pos_hint: {"center_x": 0.5}
-                
+
                 MDLabel:
                     text: "AT World Matter"
                     bold: True
@@ -70,7 +69,7 @@ MDNavigationLayout:
                         on_release: app.open_at_function("crown")
                         IconLeftWidget:
                             icon: "shield-check-outline"
-                    
+
                     MDSeparator:
 
                     OneLineIconListItem:
@@ -84,16 +83,16 @@ MDNavigationLayout:
     MDBoxLayout:
         orientation: "vertical"
         md_bg_color: 1,1,1,1
-        
+
         FitImage:
             source: "login_banner.png"
             size_hint_y: 0.85
-        
+
         MDBoxLayout:
             size_hint_y: 0.15
             padding: "24dp"
             md_bg_color: 1,1,1,1
-            
+
             MDRaisedButton:
                 text: "Continue to AT World Matter"
                 pos_hint: {"center_x": 0.5, "center_y": 0.5}
@@ -116,7 +115,7 @@ MDNavigationLayout:
             orientation: "vertical"
             padding: "24dp"
             spacing: "16dp"
-            
+
             MDIcon:
                 icon: "check-decagram"
                 halign: "center"
@@ -134,7 +133,7 @@ MDNavigationLayout:
                 adaptive_height: True
 
             MDLabel:
-                text: "WASM + RAKSHAK Platform Ready!\\nAapka APK ab single arch (arm64-v8a) pe ban raha hai!"
+                text: "WASM + RAKSHAK Platform Ready!"
                 halign: "center"
                 theme_text_color: "Secondary"
                 adaptive_height: True
@@ -150,11 +149,6 @@ class ATWorldMatterApp(MDApp):
     def build(self):
         self.theme_cls.primary_palette = "Blue"
         self.theme_cls.theme_style = "Light"
-        # Agar image nahi hai to blank na ho
-        if not os.path.exists("icon.png"):
-            print("Warning: icon.png not found!")
-        if not os.path.exists("login_banner.png"):
-            print("Warning: login_banner.png not found!")
         return Builder.load_string(KV)
 
     def go_home(self):
@@ -167,14 +161,7 @@ class ATWorldMatterApp(MDApp):
     def open_at_function(self, name):
         print(f"Opening: {name}")
         self.root.ids.nav_drawer.set_state("close")
-        if name == "brain":
-            self.root.ids.sm.current = "main"
-        elif name == "poster":
-            self.root.ids.sm.current = "main"
-        elif name == "crown":
-            self.root.ids.sm.current = "main"
-        elif name == "about":
-            self.root.ids.sm.current = "main"
+        self.root.ids.sm.current = "main"
 
 if __name__ == "__main__":
     ATWorldMatterApp().run()
