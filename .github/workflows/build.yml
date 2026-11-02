@@ -1,5 +1,11 @@
-name: build
-on: [push]
+      - name: Clean old build
+        run: |
+          rm -rf .buildozer
+          rm -rf bin
+
+      - name: Build APK
+        run: |
+          yes | buildozer android debug
 
 jobs:
   build:
