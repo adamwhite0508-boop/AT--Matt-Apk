@@ -39,8 +39,9 @@ jobs:
           android.accept_sdk_license_agreement = True
           android.archs = arm64-v8a
           android.permissions = INTERNET
+          p4a.local_recipes = 
           EOF
-      - name: Setup SDK
+      - name: Setup SDK + NDK
         run: |
           pip install buildozer Cython==0.29.36
           SDK=$HOME/.buildozer/android/platform/android-sdk
@@ -62,8 +63,9 @@ jobs:
           if [ ! -d android-ndk-r25b ]; then wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip; unzip -q android-ndk-r25b-linux.zip; fi
           rm -rf android-ndk-r28c
           ln -s android-ndk-r25b android-ndk-r28c
+          ls -la android-ndk-r28c | head
       - name: Build APK
-        run: buildozer android debug 2>&1 | tail -n 200
+        run: buildozer android debug 2>&1 | tail -n 500
       - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
