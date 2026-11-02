@@ -2,18 +2,13 @@ name: build
 on: [push]
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Buildozer Action
-        uses: diggy/buildozer-action@v2
+      - name: Build in Docker
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/home/user/hostcwd kivy/buildozer:master sh -c "cd /home/user/hostcwd && buildozer android debug"
+      - uses: actions/upload-artifact@v4
         with:
-          python-version: 3.10
-          buildozer-cmd: buildozer android debug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: AT-World-Matter-APK
-          path: bin/*.apk  
+          name: APK
+          path: bin/*.apk
