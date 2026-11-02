@@ -6,7 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Clean
-        run: rm -rf .buildozer bin buildozer.spec ~/.buildozer /home/runner/.buildozer
+        run: rm -rf .buildozer bin buildozer.spec ~/.buildozer
 
       - uses: actions/setup-python@v5
         with:
@@ -41,35 +41,19 @@ jobs:
           android.build_tools_version = 33.0.1
           android.accept_sdk_license_agreement = True
           android.arch = arm64-v8a
-          android.archs = arm64-v8a
           android.permissions = INTERNET
           EOF
           cat buildozer.spec
 
-      - name: Install Buildozer + HACK to remove armeabi-v7a
+      - name: Install Buildozer - PATCHED for single arch
         run: |
           pip install buildozer Cython==0.29.36
-          PYBIN=$(find /opt/hostedtoolcache/Python -name python -type f | grep "3.10.*/x64/bin/python$" | head -1)
-          echo "Found python at $PYBIN"
-          mv $PYBIN ${PYBIN}.real
-          cat > $PYBIN << 'PYEOF'
-          #!/bin/bash
-          filtered=()
-          for arg in "$@"; do
-            if [[ "$arg" == *"armeabi-v7a"* ]]; then
-              echo "[HACK] Removing arg: $arg" >&2
-              continue
-            fi
-            filtered+=("$arg")
-          done
-          # Fix build dir name if it contains dual arch
-          for i in "${!filtered[@]}"; do
-            filtered[$i]=$(echo "${filtered[$i]}" | sed 's/arm64-v8a_armeabi-v7a/arm64-v8a/g' | sed 's/armeabi-v7a_arm64-v8a/arm64-v8a/g')
-          done
-          exec ${PYBIN}.real "${filtered[@]}"
-          PYEOF
-          chmod +x $PYBIN
-          cat $PYBIN
+          SITE=$(python -c "import site; print(site.getsitepackages()[0])")
+          echo "Patching $SITE/buildozer/targets/android.py"
+          sed -i "s/\['armeabi-v7a', 'arm64-v8a'\]/['arm64-v8a']/g" $SITE/buildozer/targets/android.py || true
+          sed -i "s/\"armeabi-v7a\", \"arm64-v8a\"/\"arm64-v8a\"/g" $SITE/buildozer/targets/android.py || true
+          sed -i "s/'armeabi-v7a', 'arm64-v8a'/'arm64-v8a'/g" $SITE/buildozer/targets/android.py || true
+          grep -n "arch" $SITE/buildozer/targets/android.py | head -20
 
       - name: Setup SDK NDK
         run: |
