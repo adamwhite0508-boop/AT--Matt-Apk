@@ -19,5 +19,6 @@ p4a.branch = master
 android.api = 33
 android.minapi = 24
 android.ndk = 25b
+android.build_tools_version = 33.0.2
 android.accept_sdk_license_agreement = True
 android.archs = arm64-v8a
