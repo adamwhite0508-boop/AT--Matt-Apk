@@ -5,11 +5,12 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Clean everything
+
+      - name: Clean ALL cache - IMPORTANT
         run: |
-          rm -rf .buildozer bin buildozer.spec
+          rm -rf .buildozer bin buildozer.spec __pycache__
           rm -rf ~/.buildozer
+          rm -rf /home/runner/.buildozer
           ls -la
 
       - uses: actions/setup-python@v5
@@ -21,7 +22,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Create buildozer.spec
+      - name: Create buildozer.spec - SINGLE ARCH ONLY
         run: |
           cat > buildozer.spec << 'EOF'
           [app]
@@ -46,7 +47,11 @@ jobs:
           android.accept_sdk_license_agreement = True
           android.archs = arm64-v8a
           android.permissions = INTERNET
+          p4a.fork = kivy
+          p4a.local_recipes = 
           EOF
+          echo "--- SPEC FILE ---"
+          cat buildozer.spec
 
       - name: Install Buildozer
         run: |
@@ -72,14 +77,16 @@ jobs:
           mkdir -p $PLAT
           cd $PLAT
           if [ ! -d android-ndk-r25b ]; then wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip; unzip -q android-ndk-r25b-linux.zip; fi
-          rm -rf android-ndk-r28c
+          rm -rf android-ndk-r28c android-ndk-r25
           ln -s android-ndk-r25b android-ndk-r28c
 
-      - name: Build APK
-        run: buildozer android debug
+      - name: Build APK - FORCE CLEAN
+        run: |
+          buildozer android clean
+          buildozer android debug
 
-      - name: Check APK
-        run: ls -lh bin/ && find . -name "*.apk"
+      - name: List APK
+        run: ls -lh bin/ || echo "No bin folder"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
