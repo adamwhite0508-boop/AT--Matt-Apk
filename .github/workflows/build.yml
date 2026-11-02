@@ -17,7 +17,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Create spec - SINGLE ARCH
+      - name: Create spec - FIXED KIVY 2.3.0 + SINGLE ARCH
         run: |
           cat > buildozer.spec << 'EOF'
           [app]
@@ -26,14 +26,20 @@ jobs:
           package.domain = com.atworldmatter.app
           source.dir = .
           source.include_exts = py,png,jpg,kv,atlas
+          source.exclude_patterns = build,bin,.git,.buildozer,.github,venv,__pycache__
           version = 1.0
-          requirements = python3,kivy==2.2.0,kivymd==1.1.1,Pillow
+          requirements = python3,kivy==2.3.0,kivymd==1.1.1,Pillow==10.0.1
           orientation = portrait
+          android.arch = arm64-v8a
+          android.archs = arm64-v8a
+
           [buildozer]
-          log_level = 2
+          log_level = 1
+
           [app:android]
           bootstrap = sdl2
-          p4a.branch = v2023.08.05
+          p4a.branch = master
+          p4a.fork = kivy
           android.api = 33
           android.minapi = 24
           android.ndk = 25b
@@ -41,19 +47,18 @@ jobs:
           android.build_tools_version = 33.0.1
           android.accept_sdk_license_agreement = True
           android.arch = arm64-v8a
+          android.archs = arm64-v8a
           android.permissions = INTERNET
           EOF
           cat buildozer.spec
 
-      - name: Install Buildozer - PATCHED for single arch
+      - name: Install Buildozer
         run: |
-          pip install buildozer Cython==0.29.36
+          pip install buildozer Cython==0.29.33
           SITE=$(python -c "import site; print(site.getsitepackages()[0])")
-          echo "Patching $SITE/buildozer/targets/android.py"
-          sed -i "s/\['armeabi-v7a', 'arm64-v8a'\]/['arm64-v8a']/g" $SITE/buildozer/targets/android.py || true
-          sed -i "s/\"armeabi-v7a\", \"arm64-v8a\"/\"arm64-v8a\"/g" $SITE/buildozer/targets/android.py || true
-          sed -i "s/'armeabi-v7a', 'arm64-v8a'/'arm64-v8a'/g" $SITE/buildozer/targets/android.py || true
-          grep -n "arch" $SITE/buildozer/targets/android.py | head -20
+          sed -i 's/armeabi-v7a//g; s/,,/,/g; s/\[,/[/g; s/, ]/]/g' $SITE/buildozer/default.spec || true
+          sed -i 's/armeabi-v7a//g; s/,,/,/g; s/\[,/[/g; s/, ]/]/g' $SITE/buildozer/targets/android.py || true
+          grep -i arch $SITE/buildozer/default.spec | head -5
 
       - name: Setup SDK NDK
         run: |
