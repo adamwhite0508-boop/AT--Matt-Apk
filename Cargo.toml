@@ -8,9 +8,8 @@ name = "at_world_matter"
 crate-type = ["cdylib"]
 
 [dependencies]
-eframe = { version = "0.27", features = ["default", "glow"] }
+eframe = { version = "0.27", features = ["glow"] }
 egui = "0.27"
-winit = "0.29"
 android-activity = { version = "0.5", features = ["native-activity"] }
 
 [profile.release]
@@ -18,3 +17,11 @@ panic = "abort"
 lto = true
 opt-level = "s"
 strip = true
+
+[package.metadata.android]
+package = "com.atworld.matter"
+build_targets = ["aarch64-linux-android"]
+
+[package.metadata.android.sdk]
+min_sdk_version = 23
+target_sdk_version = 30
