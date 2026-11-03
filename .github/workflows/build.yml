@@ -36,7 +36,7 @@ jobs:
           ANDROID_NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
         run: |
           unset ANDROID_SDK_ROOT
-          cargo apk build --release --verbose
+          cargo apk build --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
