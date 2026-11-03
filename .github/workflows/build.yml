@@ -12,17 +12,16 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          api-level: 33
-          build-tools: 33.0.2
-
       - name: Install NDK r25b
         id: ndk
         uses: nttld/setup-ndk@v1
         with:
           ndk-version: r25b
+
+      - name: Install Android Platform
+        run: |
+          echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-33" "build-tools;33.0.2" "platform-tools"
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list | grep platforms
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -36,7 +35,6 @@ jobs:
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
           ANDROID_NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
-          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
         run: cargo apk build --release
 
       - name: Upload APK
