@@ -3,9 +3,6 @@ name = "at_world_matter"
 version = "0.1.0"
 edition = "2021"
 
-[lib]
-crate-type = ["cdylib", "rlib"]
-
 [dependencies]
 eframe = { version = "0.27.2", features = ["glow"] }
 ndk-context = "0.1.1"
