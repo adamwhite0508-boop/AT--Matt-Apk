@@ -2,12 +2,16 @@
 name = "at_world_matter"
 version = "1.0.0"
 edition = "2021"
-description = "AT World Matter Secure App"
+
+[lib]
+name = "at_world_matter"
+crate-type = ["cdylib"]
 
 [dependencies]
 eframe = { version = "0.27", features = ["default", "glow"] }
 egui = "0.27"
 winit = "0.29"
+android-activity = { version = "0.5", features = ["native-activity"] }
 
 [profile.release]
 panic = "abort"
