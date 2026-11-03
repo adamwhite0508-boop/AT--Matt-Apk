@@ -8,8 +8,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 eframe = { version = "0.27.2", features = ["glow"] }
-ndk-context = "0.1.1"
+android_logger = "0.13"
 log = "0.4"
+winit = { version = "0.29", features = ["android-native-activity"] }
 
 [package.metadata.android]
 package = "com.atworld.matter"
