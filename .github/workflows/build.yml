@@ -1,26 +1,23 @@
-name: build
-on: [push]
-jobs:
-  build:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y openjdk-17-jdk zip unzip libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev
-          pip install --upgrade pip
-          pip install Cython==0.29.33 buildozer
-      - name: Build APK
-        run: |
-          rm -rf .buildozer bin ~/.buildozer
-          yes | buildozer android debug
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: AT-World-Matter-APK
-          path: bin/*.apk
-          if-no-files-found: warn
+[app]
+title = AT World Matter
+package.name = atworldmatter
+package.domain = com.atworldmatter.app
+source.dir = .
+source.include_exts = py,png,jpg,kv,atlas
+version = 1.0
+requirements = python3,kivy==2.3.0,kivymd==1.2.0,Pillow
+orientation = portrait
+
+[buildozer]
+log_level = 2
+
+[app:android]
+bootstrap = sdl2
+android.api = 33
+android.minapi = 24
+android.ndk = 25b
+android.sdk = 33
+android.build_tools_version = 33.0.2
+android.accept_sdk_license_agreement = True
+android.archs = arm64-v8a
+android.permissions = INTERNET
