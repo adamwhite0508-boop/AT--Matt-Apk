@@ -1,4 +1,4 @@
-name: Rust Secure APK
+name: build
 on: [push]
 jobs:
   build:
@@ -6,11 +6,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        
       - name: Install NDK 25
+        id: ndk
         uses: nttld/setup-ndk@v1
         with:
           ndk-version: r25b
-
+          
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -19,11 +23,15 @@ jobs:
       - name: Install cargo-ndk and cargo-apk
         run: |
           cargo install cargo-ndk
-          cargo install cargo-apk --no-default-features
+          cargo install cargo-apk
 
       - name: Build APK
         env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
           ANDROID_NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
+          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+          ANDROID_NDK_LATEST_HOME: ${{ steps.ndk.outputs.ndk-path }}
         run: |
           cargo apk build --release --target aarch64-linux-android
 
@@ -31,4 +39,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AT-World-Matter-Rust-APK
-          path: target/debug/apk/*.apk
+          path: target/**/*.apk
