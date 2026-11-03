@@ -7,21 +7,17 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
+eframe = { version = "0.27.2", default-features = false, features = ["glow"] }
+egui = "0.27.2"
 android_logger = "0.13"
 log = "0.4"
 winit = { version = "0.29", features = ["android-native-activity"] }
-wgpu = "0.19"
-# ya aap jo bhi use kar rahe ho, par eframe/egui hai to ye lagao:
-# eframe = { version = "0.27", features = ["android"] }
 
 [package.metadata.android]
 package = "com.atworld.matter"
 build_targets = ["aarch64-linux-android"]
-target_sdk_version = 33
-min_sdk_version = 23
+app_name = "AT World Matter"
 
 [package.metadata.android.sdk]
-target = "aarch64-linux-android"
-
-[package.metadata.android.permissions]
-uses-permission = ["android.permission.INTERNET"]
+min_sdk_version = 23
+target_sdk_version = 33
