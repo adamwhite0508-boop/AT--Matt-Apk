@@ -8,9 +8,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-      - name: Clean
-        run: rm -rf .buildozer bin
-      - name: Install
+      - name: Install dependencies
         run: |
           sudo apt update
           sudo apt install -y openjdk-17-jdk zip unzip libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev
@@ -18,9 +16,11 @@ jobs:
           pip install Cython==0.29.33 buildozer
       - name: Build APK
         run: |
+          rm -rf .buildozer bin
           yes | buildozer android debug
-      - name: Upload
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AT-World-Matter-APK
           path: bin/*.apk
+          if-no-files-found: warn
