@@ -1,25 +1,57 @@
 use eframe::egui;
-use winit::platform::android::activity::AndroidApp;
 
 #[derive(Default)]
-struct ATApp { page: String }
+struct ATWorldApp {
+    name: String,
+    message: String,
+}
 
-impl eframe::App for ATApp {
+impl eframe::App for ATWorldApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("AT WORLD MATTER - Rust Secure");
+            ui.heading("AT WORLD MATTER");
             ui.separator();
-            if ui.button("AT BRAIN AI").clicked() { self.page = "BRAIN".into(); }
-            if ui.button("Photo Poster").clicked() { self.page = "POSTER".into(); }
-            if ui.button("AT CROWN Secure").clicked() { self.page = "CROWN".into(); }
-            ui.label(format!("Current: {}", self.page));
+            ui.label("Sir, APK Successfully Ban Gaya!");
+            ui.add_space(10.0);
+            ui.text_edit_singleline(&mut self.name);
+            if ui.button("Click to Test").clicked() {
+                self.message = format!("Welcome {}!", self.name);
+            }
+            ui.label(&self.message);
         });
     }
 }
 
 #[cfg(target_os = "android")]
 #[no_mangle]
-fn android_main(_app: AndroidApp) {
-    let options = eframe::NativeOptions { renderer: eframe::Renderer::Glow, ..Default::default() };
-    eframe::run_native("AT World Matter", options, Box::new(|_cc| Box::new(ATApp::default()))).unwrap();
+fn android_main(app: winit::platform::android::activity::AndroidApp) {
+    android_logger::init_once(
+        android_logger::Config::default().with_max_level(log::LevelFilter::Info),
+    );
+    log::info!("AT World Matter Started");
+    
+    let options = eframe::NativeOptions {
+        renderer: eframe::Renderer::Glow,
+        android_app: Some(app),
+        ..Default::default()
+    };
+    
+    eframe::run_native(
+        "AT World Matter",
+        options,
+        Box::new(|_cc| Box::new(ATWorldApp::default())),
+    ).unwrap();
+}
+
+#[cfg(not(target_os = "android"))]
+fn main() {
+    let options = eframe::NativeOptions {
+        renderer: eframe::Renderer::Glow,
+        ..Default::default()
+    };
+    eframe::run_native(
+        "AT World Matter",
+        options,
+        Box::new(|_cc| Box::new(ATWorldApp::default())),
+    ).unwrap();
 }
