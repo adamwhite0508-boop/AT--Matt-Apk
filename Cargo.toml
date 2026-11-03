@@ -7,6 +7,7 @@ edition = "2021"
 eframe = { version = "0.27.2", features = ["glow"] }
 ndk-context = "0.1.1"
 
+# YE 2 LINES SE FIX HOGA - Photo wala error isi se khatam hoga
 [package.metadata.android]
 package = "com.atworld.matter"
 build_targets = ["aarch64-linux-android"]
@@ -21,3 +22,9 @@ path = "debug.keystore"
 keystore_password = "android"
 key_alias = "androiddebugkey"
 key_password = "android"
+
+# === YE PATCH HAI - Isi ki kami se 0.5.2 wala error aa raha tha ===
+[patch.crates-io]
+android-activity = { version = "0.5.2", features = ["native-activity"] }
+ndk = "=0.8.0"
+ndk-sys = "=0.5.0"
