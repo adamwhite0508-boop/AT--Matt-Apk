@@ -7,11 +7,9 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-eframe = { version = "0.27.2", default-features = false, features = ["glow"] }
-egui = "0.27.2"
-android_logger = "0.13"
+eframe = { version = "0.27.2", features = ["glow"] }
+ndk-context = "0.1.1"
 log = "0.4"
-winit = { version = "0.29", features = ["android-native-activity"] }
 
 [package.metadata.android]
 package = "com.atworld.matter"
