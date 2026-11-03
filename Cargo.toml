@@ -8,15 +8,15 @@ name = "at_world_matter"
 crate-type = ["cdylib"]
 
 [dependencies]
-eframe = { version = "0.27", features = ["glow"] }
+eframe = { version = "0.27", default-features = false, features = ["glow", "default_fonts"] }
 egui = "0.27"
-android-activity = { version = "0.5", features = ["native-activity"] }
+winit = { version = "0.29", features = ["android-native-activity"] }
+android-activity = "0.6"
 
 [profile.release]
 panic = "abort"
 lto = true
 opt-level = "s"
-strip = true
 
 [package.metadata.android]
 package = "com.atworld.matter"
