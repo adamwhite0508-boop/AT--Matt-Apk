@@ -1,7 +1,5 @@
 name: build
-
 on: [push]
-
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -19,15 +17,20 @@ jobs:
           pip install --upgrade pip
           pip install Cython==0.29.33 buildozer
 
-      - name: Aggressive Clean
+      - name: Aggressive Clean - Force delete r28c
         run: |
           rm -rf .buildozer bin
-          rm -rf ~/.buildozer /home/runner/.buildozer || true
+          sudo rm -rf /home/runner/.buildozer
+          sudo rm -rf ~/.buildozer
           sudo rm -rf /root/.buildozer || true
+          mkdir -p ~/.buildozer
+          echo "Cache Cleaned - No more r28c"
+
+      - name: Verify spec
+        run: cat buildozer.spec | grep android
 
       - name: Build APK
-        run: |
-          yes | buildozer android debug
+        run: yes | buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
