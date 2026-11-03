@@ -16,7 +16,7 @@ jobs:
           pip install Cython==0.29.33 buildozer
       - name: Build APK
         run: |
-          rm -rf .buildozer bin
+          rm -rf .buildozer bin ~/.buildozer
           yes | buildozer android debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
