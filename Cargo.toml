@@ -9,9 +9,14 @@ crate-type = ["cdylib"]
 [dependencies]
 eframe = { version = "0.27.2", features = ["glow"] }
 ndk-context = "0.1.1"
-android-activity = { version = "0.5.2", features = ["native-activity", "game-activity"] }
+android-activity = { version = "0.5.2", features = ["native-activity"] }
 ndk = "=0.8.0"
 ndk-sys = "=0.5.0"
+
+[patch.crates-io]
+android-activity = { git = "https://github.com/rust-mobile/android-activity", branch = "main" }
+ndk = { git = "https://github.com/rust-mobile/ndk", branch = "main" }
+ndk-sys = { git = "https://github.com/rust-mobile/ndk", branch = "main" }
 
 [package.metadata.android]
 package = "com.atworld.matter"
