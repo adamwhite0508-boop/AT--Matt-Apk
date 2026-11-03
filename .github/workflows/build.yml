@@ -1,45 +1,23 @@
-name: build
-on: [push]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+[package]
+name = "at_world_matter"
+version = "0.1.0"
+edition = "2021"
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
+[lib]
+crate-type = ["cdylib"]
 
-      - name: Install NDK r25b
-        id: ndk
-        uses: nttld/setup-ndk@v1
-        with:
-          ndk-version: r25b
+[dependencies]
+eframe = { version = "0.27.2", default-features = false, features = ["glow"] }
+egui = "0.27.2"
+android_logger = "0.13"
+log = "0.4"
+winit = { version = "0.29", features = ["android-native-activity"] }
 
-      - name: Install Android Platform
-        run: |
-          echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-30" "platforms;android-33" "build-tools;30.0.3" "build-tools;33.0.2" "platform-tools"
+[package.metadata.android]
+package = "com.atworld.matter"
+build_targets = ["aarch64-linux-android"]
+app_name = "AT World Matter"
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-linux-android
-
-      - name: Install cargo-apk
-        run: cargo install cargo-apk
-
-      - name: Build APK
-        env:
-          ANDROID_HOME: /usr/local/lib/android/sdk
-          ANDROID_NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
-        run: |
-          unset ANDROID_SDK_ROOT
-          cargo apk build --release
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: AT-World-Matter-Full-APK
-          path: target/**/*.apk
+[package.metadata.android.sdk]
+min_sdk_version = 23
+target_sdk_version = 33
