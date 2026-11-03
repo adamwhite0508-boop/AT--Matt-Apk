@@ -20,8 +20,7 @@ jobs:
 
       - name: Install Android Platform
         run: |
-          echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-33" "build-tools;33.0.2" "platform-tools"
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list | grep platforms
+          echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-30" "platforms;android-33" "build-tools;30.0.3" "build-tools;33.0.2" "platform-tools"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -35,7 +34,9 @@ jobs:
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
           ANDROID_NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
-        run: cargo apk build --release
+        run: |
+          unset ANDROID_SDK_ROOT
+          cargo apk build --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
