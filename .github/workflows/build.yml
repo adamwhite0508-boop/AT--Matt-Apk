@@ -5,25 +5,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
-      - name: Install NDK r25b
+      - uses: nttld/setup-ndk@v1
         id: ndk
-        uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r25b
-      - name: Install Android Platform
-        run: |
-          echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-30" "platforms;android-33" "build-tools;30.0.3" "build-tools;33.0.2" "platform-tools"
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+          ndk-version: r26b
+      - run: echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-33" "build-tools;33.0.2" "platform-tools"
+      - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android
-      - name: Install cargo-apk
-        run: cargo install cargo-apk
+      - run: cargo install cargo-apk
       - name: Build APK
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
@@ -32,8 +26,7 @@ jobs:
           unset ANDROID_SDK_ROOT
           keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
           cargo apk build --release
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: AT-World-Matter-Full-APK
+          name: AT-APK-Final
           path: target/**/*.apk
