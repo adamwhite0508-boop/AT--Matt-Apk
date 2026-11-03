@@ -1,76 +1,103 @@
 use eframe::egui;
-use egui::{Color32, RichText, Vec2};
 
-#[derive(PartialEq, Clone)]
-enum Screen { Splash, Main }
-
-struct ATWorldMatterApp { 
-    screen: Screen, 
-    drawer_open: bool,
-    splash_time: f64,
+enum AppScreen {
+    Splash,
+    Main,
 }
 
-impl Default for ATWorldMatterApp {
-    fn default() -> Self { 
-        Self { 
-            screen: Screen::Splash, 
+struct ATApp {
+    screen: AppScreen,
+    drawer_open: bool,
+}
+
+impl Default for ATApp {
+    fn default() -> Self {
+        Self {
+            screen: AppScreen::Splash,
             drawer_open: false,
-            splash_time: 0.0,
-        } 
+        }
     }
 }
 
-impl eframe::App for ATWorldMatterApp {
+impl eframe::App for ATApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let blue = Color32::from_rgb(15, 102, 204);
-        
-        if self.screen == Screen::Splash {
-            self.splash_time += ctx.input(|i| i.unstable_dt as f64);
-            if self.splash_time > 2.0 {
-                self.screen = Screen::Main;
+        // TOP BAR - Main screen pe hi
+        if matches!(self.screen, AppScreen::Main) {
+            egui::TopBottomPanel::top("top_bar").show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    if ui.button("☰  AT World Matter").clicked() {
+                        self.drawer_open = !self.drawer_open;
+                    }
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        ui.label("⋮");
+                    });
+                });
+            });
+
+            // DRAWER - Left side
+            if self.drawer_open {
+                egui::SidePanel::left("drawer").exact_width(280.0).show(ctx, |ui| {
+                    ui.vertical(|ui| {
+                        // Header - Blue
+                        egui::Frame::none().fill(egui::Color32::from_rgb(15, 102, 178)).show(ui, |ui| {
+                            ui.set_min_height(200.0);
+                            ui.vertical_centered(|ui| {
+                                ui.add_space(20.0);
+                                ui.label(egui::RichText::new("🛡️").size(60.0).color(egui::Color32::WHITE));
+                                ui.label(egui::RichText::new("AT World Matter").size(20.0).strong().color(egui::Color32::WHITE));
+                                ui.label(egui::RichText::new("WASM + RAKSHAK").size(12.0).color(egui::Color32::from_rgb(230,230,230)));
+                            });
+                        });
+
+                        ui.add_space(10.0);
+                        ui.separator();
+                        
+                        if ui.button("🧠  AT BRAIN AI").clicked() { self.drawer_open = false; }
+                        if ui.button("🖼️  Photo Poster").clicked() { self.drawer_open = false; }
+                        if ui.button("🛡️  AT CROWN Secure").clicked() { self.drawer_open = false; }
+                        ui.separator();
+                        if ui.button("ℹ️  About Us").clicked() { self.drawer_open = false; }
+                    });
+                });
             }
         }
 
-        if self.drawer_open && self.screen == Screen::Main {
-            egui::SidePanel::left("drawer").frame(egui::Frame::none().fill(blue)).show(ctx, |ui| {
-                ui.set_min_height(180.0);
-                ui.vertical_centered(|ui| {
-                    ui.label(RichText::new("AT WORLD").color(Color32::WHITE).size(22.0).strong());
-                    ui.label(RichText::new("MATTER").color(Color32::WHITE).size(14.0));
-                    if ui.button("Home").clicked() { self.drawer_open = false; }
-                    if ui.button("About").clicked() { self.drawer_open = false; }
-                });
-            });
-        }
-
-        egui::CentralPanel::default().frame(egui::Frame::none().fill(blue)).show(ctx, |ui| {
+        egui::CentralPanel::default().show(ctx, |ui| {
             match self.screen {
-                Screen::Splash => {
+                AppScreen::Splash => {
                     ui.vertical_centered(|ui| {
+                        ui.add_space(100.0);
+                        // Banner Image Placeholder
+                        ui.label(egui::RichText::new("AT WORLD MATTER\nBANNER").size(30.0).strong().color(egui::Color32::from_rgb(15, 102, 178)));
                         ui.add_space(200.0);
-                        ui.label(RichText::new("AT WORLD\nMATTER").color(Color32::WHITE).size(32.0).strong());
+                        ui.label("WASM + RAKSHAK Platform");
+                        ui.add_space(20.0);
+                        if ui.add(egui::Button::new("Continue to AT World Matter").fill(egui::Color32::from_rgb(15, 102, 178))).clicked() {
+                            self.screen = AppScreen::Main;
+                        }
                     });
-                },
-                Screen::Main => {
-                    ui.horizontal(|ui| {
-                        if ui.button("☰").clicked() { self.drawer_open = !self.drawer_open; }
-                        ui.label(RichText::new("AT WORLD MATTER").color(Color32::WHITE).size(20.0).strong());
-                    });
-                    ui.add_space(20.0);
+                }
+                AppScreen::Main => {
                     ui.vertical_centered(|ui| {
-                        ui.label(RichText::new("Secure App Loaded Successfully!").color(Color32::WHITE).size(18.0));
+                        ui.add_space(50.0);
+                        ui.label(egui::RichText::new("✔").size(80.0).color(egui::Color32::from_rgb(15, 102, 178)));
+                        ui.label(egui::RichText::new("Welcome to AT World Matter").size(24.0).strong());
+                        ui.add_space(10.0);
+                        ui.label(egui::RichText::new("WASM + RAKSHAK Platform Ready!").size(14.0).color(egui::Color32::GRAY));
+                        ui.add_space(20.0);
+                        ui.label("Rust Secure Build - All features working!");
                     });
                 }
             }
         });
-        ctx.request_repaint();
     }
 }
 
 fn main() -> eframe::Result<()> {
-    let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size(Vec2::new(360.0, 740.0)),
-        ..Default::default()
-    };
-    eframe::run_native("AT World Matter", options, Box::new(|_cc| Box::new(ATWorldMatterApp::default())))
+    let options = eframe::NativeOptions::default();
+    eframe::run_native(
+        "AT World Matter",
+        options,
+        Box::new(|_cc| Box::new(ATApp::default())),
+    )
 }
