@@ -1,8 +1,16 @@
 [package]
-name = "at_world_secure"
+name = "at_world_matter"
 version = "1.0.0"
 edition = "2021"
+description = "AT World Matter Secure App"
 
 [dependencies]
 eframe = { version = "0.27", features = ["default", "glow"] }
 egui = "0.27"
+winit = "0.29"
+
+[profile.release]
+panic = "abort"
+lto = true
+opt-level = "s"
+strip = true
