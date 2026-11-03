@@ -21,3 +21,9 @@ app_name = "AT World Matter"
 [package.metadata.android.sdk]
 min_sdk_version = 23
 target_sdk_version = 33
+
+[package.metadata.android.signing.release]
+path = "debug.keystore"
+keystore_password = "android"
+key_alias = "androiddebugkey"
+key_password = "android"
