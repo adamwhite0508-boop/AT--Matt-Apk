@@ -1,9 +1,9 @@
 use eframe::egui;
 
 #[derive(Default)]
-struct ATWorldApp {
-    name: String,
-    message: String,
+struct ATWorldApp { 
+    name: String, 
+    message: String 
 }
 
 impl eframe::App for ATWorldApp {
@@ -21,13 +21,17 @@ impl eframe::App for ATWorldApp {
                 self.message = format!("Welcome {}!", self.name);
             }
             ui.add_space(10.0);
-            ui.heading(&self.message);
+            ui.colored_label(egui::Color32::GREEN, &self.message);
         });
     }
 }
 
-#[cfg_attr(target_os = "android", ndk_context::main)]
+#[cfg_attr(target_os="android", ndk_context::main)]
 fn main() {
     let options = eframe::NativeOptions::default();
-    eframe::run_native("AT World Matter", options, Box::new(|_cc| Box::new(ATWorldApp::default()))).unwrap();
+    eframe::run_native(
+        "AT World Matter", 
+        options, 
+        Box::new(|_cc| Box::new(ATWorldApp::default()))
+    ).unwrap();
 }
