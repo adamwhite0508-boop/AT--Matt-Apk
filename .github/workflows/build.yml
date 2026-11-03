@@ -18,8 +18,7 @@ jobs:
         with:
           targets: aarch64-linux-android
       - run: cargo install cargo-apk
-      - name: Build APK
-        env:
+      - env:
           ANDROID_HOME: /usr/local/lib/android/sdk
           ANDROID_NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
         run: |
