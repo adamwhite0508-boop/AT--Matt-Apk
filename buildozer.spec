@@ -13,7 +13,6 @@ log_level = 2
 
 [app:android]
 bootstrap = sdl2
-p4a.branch = develop
 android.api = 33
 android.minapi = 24
 android.ndk = 25b
@@ -22,4 +21,3 @@ android.build_tools_version = 33.0.2
 android.accept_sdk_license_agreement = True
 android.archs = arm64-v8a
 android.permissions = INTERNET
-android.ant = auto
