@@ -11,6 +11,7 @@ eframe = { version = "0.27.2", features = ["glow"] }
 ndk-context = "0.1.1"
 ndk-glue = "0.6.2"
 android-activity = { version = "0.5.2", features = ["native-activity"] }
+ndk = "0.9"
 
 [package.metadata.android]
 package = "com.atworld.matter"
@@ -26,4 +27,3 @@ path = "debug.keystore"
 keystore_password = "android"
 key_alias = "androiddebugkey"
 key_password = "android"
-ndk = "0.9"
