@@ -78,6 +78,12 @@ impl eframe::App for ATWorldApp {
 }
 
 #[cfg_attr(target_os = "android", ndk_glue::main)]
+fn android_main(_app: ndk_glue::NativeActivity) {
+    let options = eframe::NativeOptions::default();
+    eframe::run_native("AT World Matter", options, Box::new(|_cc| Box::new(ATWorldApp::default()))).unwrap();
+}
+
+#[cfg(not(target_os = "android"))]
 fn main() {
     let options = eframe::NativeOptions::default();
     eframe::run_native("AT World Matter", options, Box::new(|_cc| Box::new(ATWorldApp::default()))).unwrap();
