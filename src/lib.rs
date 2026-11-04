@@ -77,7 +77,7 @@ impl eframe::App for ATWorldApp {
     }
 }
 
-#[cfg_attr(target_os="android", ndk_context::main)]
+#[cfg_attr(target_os = "android", ndk_glue::main)]
 fn main() {
     let options = eframe::NativeOptions::default();
     eframe::run_native("AT World Matter", options, Box::new(|_cc| Box::new(ATWorldApp::default()))).unwrap();
