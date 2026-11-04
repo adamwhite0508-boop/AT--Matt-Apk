@@ -8,12 +8,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 eframe = { version = "0.27.2", features = ["glow"] }
-# Ye line sabse jaruri hai - isse game-activity wala jhagda khatam
-winit = { version = "0.29.15", features = ["android-native-activity"] }
-android-activity = { version = "0.5.2", features = ["native-activity"] }
 ndk-context = "0.1.1"
-ndk = "=0.8.0"
-ndk-sys = "=0.5.0"
+ndk-glue = "0.6.2"
+android-activity = { version = "0.5.2", features = ["native-activity"] }
 
 [package.metadata.android]
 package = "com.atworld.matter"
