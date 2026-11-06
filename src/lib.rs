@@ -77,17 +77,47 @@ impl eframe::App for ATWorldApp {
     }
 }
 
+// Android ke liye - sahi entry point
+#[cfg(target_os = "android")]
+use android_activity::{AndroidApp, MainEventsPoll, AndroidEvent, InputEvent};
+use winit::event_loop::{ControlFlow, EventLoop};
+use winit::event::{Event, WindowEvent};
+
+#[cfg(target_os = "android")]
+#[no_mangle]
+pub fn android_main(app: AndroidApp) {
+    android_logger::init_once(android_logger::Config::default().with_tag("at-matt-apk"));
+    let event_loop = EventLoop::new().unwrap();
+    event_loop.set_control_flow(ControlFlow::Poll);
+    
+    let mut app_state = ATWorldApp::default();
+    
+    event_loop.run(|event, elwt| {
+        match event {
+            Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
+                elwt.exit();
+            },
+            Event::MainEventsCleared => {
+                // Poll Android events
+                while let Some(event) = app.poll_events::<MainEventsPoll>() {
+                    if let AndroidEvent::Input(_) = event {
+                        // handle input
+                    }
+                }
+            },
+            _ => {}
+        }
+    }).unwrap();
+    
+    // eframe run karne ke liye winit event loop ke saath jodna hota hai
+    // abhi ke liye test ke taur par NativeOptions se run
+    let options = eframe::NativeOptions::default();
+    let _ = eframe::run_native("AT World Matter", options, Box::new(|_cc| Box::new(ATWorldApp::default())));
+}
+
 // Desktop ke liye
 #[cfg(not(target_os = "android"))]
 fn main() {
-    let options = eframe::NativeOptions::default();
-    eframe::run_native("AT World Matter", options, Box::new(|_cc| Box::new(ATWorldApp::default()))).unwrap();
-}
-
-// Android ke liye
-#[cfg(target_os = "android")]
-#[ndk_glue::main]
-fn android_main(_app: ndk_glue::NativeActivity) {
     let options = eframe::NativeOptions::default();
     eframe::run_native("AT World Matter", options, Box::new(|_cc| Box::new(ATWorldApp::default()))).unwrap();
 }
