@@ -8,12 +8,13 @@ crate-type = ["cdylib"]
 
 [dependencies]
 eframe = { version = "0.27.2", features = ["glow"] }
+ndk-glue = "0.7"
 ndk-context = "0.1.1"
-ndk-glue = "0.6.2"
+ndk = "0.7"
 
 [package.metadata.android]
 package = "com.atworld.matter"
-build_targets = ["aarch64-linux-android"]
+build_targets = ["aarch64-linux-android", "armv7-linux-androideabi", "x86_64-linux-android"]
 app_name = "AT World Matter"
 
 [package.metadata.android.sdk]
