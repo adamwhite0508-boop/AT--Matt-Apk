@@ -6,6 +6,9 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[package.metadata.android]
+platform = 33
+
 [dependencies]
 eframe = { version = "0.31.1", features = ["glow"] }
 android-activity = { version = "0.6.1", features = ["game-activity"] }
