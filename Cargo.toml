@@ -7,10 +7,10 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-eframe = { version = "0.31.1", features = ["glow"] }
-ndk-glue = "0.9.0"
+eframe = { version = "0.29.1", features = ["glow"] }
+ndk-glue = "0.7.0"
 ndk-context = "0.1.1"
-ndk = "0.9.0"
+ndk = "0.7.0"
 
 [package.metadata.android]
 package = "com.atworld.matter"
