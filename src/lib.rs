@@ -77,7 +77,6 @@ impl eframe::App for ATWorldApp {
     }
 }
 
-// Android entry point
 #[cfg(target_os = "android")]
 #[no_mangle]
 pub fn android_main(_app: android_activity::AndroidApp) {
@@ -86,12 +85,11 @@ pub fn android_main(_app: android_activity::AndroidApp) {
         viewport: egui::ViewportBuilder::default().with_active(true),
         ..Default::default()
     };
-    let _ = eframe::run_native("AT World Matter", options, Box::new(|_cc| Box::new(ATWorldApp::default())));
+    let _ = eframe::run_native("AT World Matter", options, Box::new(|_cc| Ok(Box::new(ATWorldApp::default()))));
 }
 
-// Desktop entry point
 #[cfg(not(target_os = "android"))]
 fn main() {
     let options = eframe::NativeOptions::default();
-    eframe::run_native("AT World Matter", options, Box::new(|_cc| Box::new(ATWorldApp::default()))).unwrap();
+    eframe::run_native("AT World Matter", options, Box::new(|_cc| Ok(Box::new(ATWorldApp::default())))).unwrap();
 }
