@@ -21,7 +21,7 @@ jobs:
         run: |
           export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin
           yes | sdkmanager --licenses
-          sdkmanager "ndk;26.1.10909125"
+          sdkmanager "ndk;26.1.10909125" "platforms;android-30" "build-tools;30.0.3"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.1.10909125" >> $GITHUB_ENV
 
       - name: Install cargo-apk
