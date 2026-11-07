@@ -1,5 +1,5 @@
 [package]
-name = "AT-Matt-apk"
+name = "at-world-matter"
 version = "0.1.0"
 edition = "2021"
 
@@ -16,5 +16,6 @@ android-activity = { version = "0.6", features = ["native-activity"] }
 
 [package.metadata.android]
 activity = "android.app.NativeActivity"
-package = "com.example.at_matt"
+package = "com.example.atworldmatter"
 icon = "assets/icon.png"
+name = "AT World Matter"
