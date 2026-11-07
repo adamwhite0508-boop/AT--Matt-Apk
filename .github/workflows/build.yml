@@ -10,10 +10,11 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Install Android SDK
+      - name: Install Android SDK and NDK
         run: |
           echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> $GITHUB_ENV
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -21,9 +22,7 @@ jobs:
       - name: Install cargo-apk
         run: cargo install cargo-apk
       - name: Build APK
-        run: |
-          unset ANDROID_SDK_ROOT
-          cargo apk build --release
+        run: cargo apk build --release
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
