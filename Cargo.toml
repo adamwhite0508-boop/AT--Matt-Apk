@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
+name = "at_matt_apk"
 crate-type = ["cdylib"]
 
 [dependencies]
@@ -16,6 +17,6 @@ android-activity = { version = "0.6", features = ["native-activity"] }
 
 [package.metadata.android]
 activity = "android.app.NativeActivity"
-package = "com.example.atworldmatter"
+package = "com.atmattapk.app"
 icon = "assets/icon.png"
 name = "AT World Matter"
