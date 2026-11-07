@@ -28,10 +28,10 @@ jobs:
         run: cargo install cargo-apk
 
       - name: Build APK
-        run: cargo apk build --release
+        run: cargo apk build
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release.apk
+          name: app-debug.apk
           path: target/android/artifacts/*.apk
