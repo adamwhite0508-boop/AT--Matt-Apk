@@ -80,11 +80,8 @@ impl eframe::App for ATWorldApp {
 #[cfg(target_os = "android")]
 #[no_mangle]
 pub fn android_main(_app: android_activity::AndroidApp) {
-    android_logger::init_once(android_logger::Config::default().with_tag("at-matt-apk"));
-    let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_active(true),
-        ..Default::default()
-    };
+    android_logger::init_once(android_logger::Config::default().with_tag("at-world-matter"));
+    let options = eframe::NativeOptions::default();
     let _ = eframe::run_native("AT World Matter", options, Box::new(|_cc| Ok(Box::new(ATWorldApp::default()))));
 }
 
