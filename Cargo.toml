@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
+name = "at_matt_apk"
 crate-type = ["cdylib", "rlib"]
 
 [package.metadata.android]
