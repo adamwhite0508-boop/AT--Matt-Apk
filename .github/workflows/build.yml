@@ -28,7 +28,7 @@ jobs:
         run: cargo install cargo-ndk
 
       - name: Build APK
-        run: cargo ndk -t aarch64-linux-android --output-dir ./apk -o ./apk build --release
+        run: cargo ndk -t aarch64-linux-android -o ./apk build --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
