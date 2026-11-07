@@ -30,8 +30,11 @@ jobs:
       - name: Build APK
         run: cargo apk build
 
+      - name: Find APK
+        run: find target -name "*.apk" -type f
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug.apk
-          path: target/android/artifacts/*.apk
+          path: "**/*.apk"
