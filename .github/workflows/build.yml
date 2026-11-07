@@ -19,8 +19,6 @@ jobs:
 
       - name: Install Android NDK
         run: |
-          sudo apt-get update
-          sudo apt-get install -y cmdline-tools
           yes | sdkmanager --licenses
           sdkmanager "ndk;26.1.10909125"
           echo "ANDROID_NDK_HOME=$HOME/Android/Sdk/ndk/26.1.10909125" >> $GITHUB_ENV
