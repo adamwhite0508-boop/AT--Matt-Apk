@@ -4,14 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "at_matt_apk"
-crate-type = ["cdylib", "rlib"]
-
-[package.metadata.android]
-platform = 33
+crate-type = ["cdylib"]
 
 [dependencies]
-eframe = { version = "0.31.1", features = ["glow"] }
-android-activity = { version = "0.6.1", features = ["game-activity"] }
-egui = "0.31.1"
-winit = "0.30.12"
+eframe = "0.31.1"
+
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger = "0.13"
