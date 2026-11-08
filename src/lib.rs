@@ -46,7 +46,7 @@ use winit::platform::android::EventLoopBuilderExtAndroid;
 pub fn android_main(app: AndroidApp) {
     android_logger::init_once(Config::default().with_tag("AT_MATT"));
     let options = eframe::NativeOptions {
-        event_loop_builder: Some(Box::new(|builder| {
+        event_loop_builder: Some(Box::new(move |builder| {
             builder.with_android_app(app.clone());
         })),
         ..Default::default()
