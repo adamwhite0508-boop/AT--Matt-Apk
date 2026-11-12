@@ -37,7 +37,6 @@ impl eframe::App for MyApp {
     }
 }
 
-// Android pe khul ke band hone ka fix - yahi sahi tarika hai
 #[cfg(target_os = "android")]
 #[no_mangle]
 pub fn android_main(app: winit::platform::android::activity::AndroidApp) {
