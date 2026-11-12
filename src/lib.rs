@@ -2,9 +2,7 @@ use eframe::egui;
 
 #[derive(Default)]
 pub struct MyApp {
-    header: Option<egui::TextureHandle>,
     icon: Option<egui::TextureHandle>,
-    banner: Option<egui::TextureHandle>,
 }
 
 fn load_image(cc: &eframe::CreationContext<'_>, bytes: &[u8], name: &str) -> Option<egui::TextureHandle> {
@@ -20,9 +18,7 @@ fn load_image(cc: &eframe::CreationContext<'_>, bytes: &[u8], name: &str) -> Opt
 impl MyApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         Self {
-            header: load_image(cc, include_bytes!("../assets/main_header.png"), "header"),
             icon: load_image(cc, include_bytes!("../assets/icon.png"), "icon"),
-            banner: load_image(cc, include_bytes!("../assets/login_banner.png"), "banner"),
         }
     }
 }
@@ -32,16 +28,10 @@ impl eframe::App for MyApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("AT World Matter");
 
-            if let Some(tex) = &self.banner {
-                ui.image(tex);
-            }
-            ui.add_space(10.0);
-            if let Some(tex) = &self.header {
-                ui.image(tex);
-            }
-            ui.add_space(10.0);
             if let Some(tex) = &self.icon {
                 ui.image(tex);
+            } else {
+                ui.label("Welcome to AT World Matter App");
             }
         });
     }
