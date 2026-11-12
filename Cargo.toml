@@ -4,28 +4,18 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "at_matt_apk"
-crate-type = ["cdylib"]
+name = "at_world_matter"
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 eframe = "0.31"
 egui = "0.31"
 image = { version = "0.25", default-features = false, features = ["png"] }
-android_logger = "0.13"
-log = "0.4"
-
-[target.'cfg(target_os = "android")'.dependencies]
-android_logger = "0.13"
-android-activity = { version = "0.6", features = ["native-activity"] }
 
 [package.metadata.android]
-activity = "android.app.NativeActivity"
 package = "com.atmattapk.app"
-name = "AT World Matter"
-
-[package.metadata.android.permissions]
-permissions = ["android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.READ_EXTERNAL_STORAGE", "android.permission.INTERNET"]
+apk_name = "AT World Matter"
 
 [package.metadata.android.sdk]
-min_sdk_version = 26
+min_sdk_version = 21
 target_sdk_version = 34
