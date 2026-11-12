@@ -10,6 +10,7 @@ crate-type = ["cdylib"]
 [dependencies]
 eframe = "0.31.1"
 winit = { version = "0.30", features = ["android-native-activity"] }
+image = "0.25"
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.13"
@@ -19,7 +20,6 @@ android-activity = { version = "0.6", features = ["native-activity"] }
 activity = "android.app.NativeActivity"
 package = "com.atmattapk.app"
 name = "AT World Matter"
-# icon wali line hata di hai - agar assets/icon.png nahi hai to build fail ho jata hai
 
 [package.metadata.android.permissions]
 permissions = ["android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.READ_EXTERNAL_STORAGE", "android.permission.INTERNET"]
