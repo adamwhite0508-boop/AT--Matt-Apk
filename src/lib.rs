@@ -39,7 +39,7 @@ impl eframe::App for MyApp {
 
 #[cfg(target_os = "android")]
 #[no_mangle]
-pub fn android_main(app: winit::platform::android::activity::AndroidApp) {
+pub fn android_main(app: android_activity::AndroidApp) {
     let options = eframe::NativeOptions {
         android_app: Some(app),
         ..Default::default()
