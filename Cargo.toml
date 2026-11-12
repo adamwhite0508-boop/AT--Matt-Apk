@@ -12,6 +12,10 @@ eframe = "0.31"
 egui = "0.31"
 image = { version = "0.25", default-features = false, features = ["png"] }
 
+# Ye wala part hi takkar kara raha tha, isliye isko ek hi version pe lock kar diya
+[target.'cfg(target_os = "android")'.dependencies]
+android-activity = { version = "0.6", features = ["native-activity"] }
+
 [package.metadata.android]
 package = "com.atmattapk.app"
 apk_name = "AT World Matter"
