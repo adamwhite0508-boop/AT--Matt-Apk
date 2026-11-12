@@ -84,7 +84,8 @@ pub fn android_main(app: AndroidApp) {
     );
 
     if let Err(e) = result {
-        write_crash_log("AT_MATT RUN_NATIVE FAILED");
+        let msg = format!("AT_MATT RUN_NATIVE FAILED Error: {}", e);
+        write_crash_log(&msg);
     }
 }
 
