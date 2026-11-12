@@ -10,7 +10,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 eframe = "0.31"
 egui = "0.31"
-image = { version = "0.25", default-features = false, features = ["png"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 
 # Ye wala part hi takkar kara raha tha, isliye isko ek hi version pe lock kar diya
 [target.'cfg(target_os = "android")'.dependencies]
