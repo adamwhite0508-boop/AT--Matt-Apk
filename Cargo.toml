@@ -18,5 +18,12 @@ android-activity = { version = "0.6", features = ["native-activity"] }
 [package.metadata.android]
 activity = "android.app.NativeActivity"
 package = "com.atmattapk.app"
-icon = "assets/icon.png"
 name = "AT World Matter"
+# icon wali line hata di hai - agar assets/icon.png nahi hai to build fail ho jata hai
+
+[package.metadata.android.permissions]
+permissions = ["android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.READ_EXTERNAL_STORAGE", "android.permission.INTERNET"]
+
+[package.metadata.android.sdk]
+min_sdk_version = 26
+target_sdk_version = 34
