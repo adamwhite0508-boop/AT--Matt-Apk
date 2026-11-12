@@ -8,9 +8,11 @@ name = "at_matt_apk"
 crate-type = ["cdylib"]
 
 [dependencies]
-eframe = "0.31.1"
-winit = { version = "0.30", features = ["android-native-activity"] }
-image = "0.25"
+eframe = "0.31"
+egui = "0.31"
+image = { version = "0.25", default-features = false, features = ["png"] }
+android_logger = "0.13"
+log = "0.4"
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.13"
