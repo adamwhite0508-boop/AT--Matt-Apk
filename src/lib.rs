@@ -1,4 +1,5 @@
 use eframe::egui;
+use std::io::Write;
 
 #[derive(Default)]
 struct App {
@@ -34,6 +35,28 @@ impl eframe::App for App {
     }
 }
 
+// --- CRASH LOG ---
+fn write_crash_log(msg: &str) {
+    if let Ok(mut f) = std::fs::File::create("/sdcard/Download/crash_log.txt") {
+        let _ = f.write_all(msg.as_bytes());
+    }
+}
+
+fn setup_crash_log() {
+    std::panic::set_hook(Box::new(|info| {
+        let payload = if let Some(s) = info.payload().downcast_ref::<&str>() {
+            s.to_string()
+        } else if let Some(s) = info.payload().downcast_ref::<String>() {
+            s.clone()
+        } else {
+            "unknown panic".to_string()
+        };
+        let loc = info.location().map(|l| format!("{}:{}:{}", l.file(), l.line(), l.column())).unwrap_or("unknown".to_string());
+        let msg = format!("AT_MATT CRASH\nError: {}\nLocation: {}\n", payload, loc);
+        write_crash_log(&msg);
+    }));
+}
+
 #[cfg(target_os = "android")]
 use android_logger::Config;
 #[cfg(target_os = "android")]
@@ -44,17 +67,6 @@ use winit::platform::android::EventLoopBuilderExtAndroid;
 #[cfg(target_os = "android")]
 #[no_mangle]
 pub fn android_main(app: AndroidApp) {
+    setup_crash_log();
     android_logger::init_once(Config::default().with_tag("AT_MATT"));
-    let options = eframe::NativeOptions {
-        event_loop_builder: Some(Box::new(move |builder| {
-            builder.with_android_app(app.clone());
-        })),
-        ..Default::default()
-    };
-
-    let _ = eframe::run_native(
-        "AT World Matter",
-        options,
-        Box::new(|_cc| Ok(Box::<App>::default())),
-    );
-}
+    write_crash_log("AT_MATT START
