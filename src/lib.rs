@@ -26,12 +26,24 @@ impl MyApp {
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
+            // Upar status bar se takrane ka fix
+            ui.add_space(40.0);
             ui.heading("AT World Matter");
-            ui.add_space(10.0);
+            ui.add_space(20.0);
+
             if let Some(tex) = &self.icon {
-                ui.image(tex);
+                // Photo ko center me aur chhota karke dikhao
+                let size = tex.size_vec2();
+                let max_w = 250.0;
+                let scale = max_w / size.x;
+                let show_size = egui::vec2(max_w, size.y * scale);
+                ui.horizontal(|ui| {
+                    ui.add_space((ui.available_width() - show_size.x) / 2.0);
+                    ui.image((tex.id(), show_size));
+                });
             } else {
                 ui.label("Welcome to AT World Matter App");
+                ui.label("Icon load nahi hua - icon.png check karo");
             }
         });
     }
