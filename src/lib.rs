@@ -29,13 +29,12 @@ impl eframe::App for App {
             ui.separator();
             ui.checkbox(&mut self.checked, "Enable Feature");
             if self.checked {
-                ui.label(format!("Hello {}, Slider = {:.0}", self.name, self.slider));
+                ui.label(format!("Hello {} Slider = {}", self.name, self.slider));
             }
         });
     }
 }
 
-// --- CRASH LOG ---
 fn write_crash_log(msg: &str) {
     if let Ok(mut f) = std::fs::File::create("/sdcard/Download/crash_log.txt") {
         let _ = f.write_all(msg.as_bytes());
@@ -51,8 +50,8 @@ fn setup_crash_log() {
         } else {
             "unknown panic".to_string()
         };
-        let loc = info.location().map(|l| format!("{}:{}:{}", l.file(), l.line(), l.column())).unwrap_or("unknown".to_string());
-        let msg = format!("AT_MATT CRASH\nError: {}\nLocation: {}\n", payload, loc);
+        let loc = info.location().map(|l| format!("{} {} {}", l.file(), l.line(), l.column())).unwrap_or("unknown".to_string());
+        let msg = format!("AT_MATT CRASH Error: {} Location: {}", payload, loc);
         write_crash_log(&msg);
     }));
 }
@@ -69,4 +68,33 @@ use winit::platform::android::EventLoopBuilderExtAndroid;
 pub fn android_main(app: AndroidApp) {
     setup_crash_log();
     android_logger::init_once(Config::default().with_tag("AT_MATT"));
-    write_crash_log("AT_MATT START
+    write_crash_log("AT_MATT STARTED");
+
+    let options = eframe::NativeOptions {
+        event_loop_builder: Some(Box::new(move |builder| {
+            builder.with_android_app(app.clone());
+        })),
+        ..Default::default()
+    };
+
+    let result = eframe::run_native(
+        "AT World Matter",
+        options,
+        Box::new(|_cc| Ok(Box::<App>::default())),
+    );
+
+    if let Err(e) = result {
+        write_crash_log("AT_MATT RUN_NATIVE FAILED");
+    }
+}
+
+#[cfg(not(target_os = "android"))]
+fn main() {
+    setup_crash_log();
+    let options = eframe::NativeOptions::default();
+    let _ = eframe::run_native(
+        "AT World Matter",
+        options,
+        Box::new(|_cc| Ok(Box::<App>::default())),
+    );
+}
